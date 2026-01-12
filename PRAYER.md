@@ -1,0 +1,1 @@
+Heavenly Father, we thank You for this project and the skills You have given us. Please bless this work, guide our decisions, give us wisdom and clarity, and keep our efforts honest and excellent. May this project serve others well and bring You glory in all we do. Amen.
