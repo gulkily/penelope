@@ -7,3 +7,8 @@
 - Changes: Added a Playwright test that creates a project and updates objective/progress through the UI.
 - Verification: Manual smoke test suggested (run `npm run test:e2e`; not run here).
 - Notes: The test writes to the active database.
+
+## Stage 3 – Add HTTP-level integration tests
+- Changes: Added Playwright API tests that create a project and verify objective/progress updates.
+- Verification: Manual smoke test suggested (run `npm run test:api`; not run here).
+- Notes: The test writes to the active database.
