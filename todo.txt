@@ -7,6 +7,7 @@
 - Auto-save North Star field and remove [Save objective] button
 - Maybe add checkboxes for the list items?
 - Add placeholders and make it easier to select them for progress bar
+- Add support for adding and archiving of projects.
 
 - Design things:
 	- Style the sections consistently (border and white background for Questions and others)
