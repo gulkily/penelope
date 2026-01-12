@@ -22,3 +22,8 @@
 - Changes: Added dashboard styling for layout, cards, progress bar, and form controls; introduced responsive rules.
 - Verification: Started `uvicorn app.main:app` and visually checked the layout on desktop width.
 - Notes: Styling uses a subtle background gradient and a custom font to keep the UI crisp.
+
+## Stage 6 - Manual QA and documentation touch-up
+- Changes: Added README with run instructions and storage notes.
+- Verification: Started `uvicorn app.main:app`, loaded `/`, selected a project, added an item, and updated questions.
+- Notes: Seed data is created on first run; SQLite file stays untracked.
