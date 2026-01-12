@@ -1,0 +1,8 @@
+- Add ability to update the project progress numeric value.
+- Make progress a slider.
+- Add URL saving project selector.
+- Removing and editing list items.
+- Replace prompt() with something nicer.
+- Add some simple prompting integration, like add suggestions as a mentor.
+	- Need to have project summaries for this, ideally.
+- Idempotency of database init.
