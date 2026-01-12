@@ -7,3 +7,8 @@
 - Changes: Added an E2E test that adds, edits, and deletes a Summary item.
 - Verification: Manual smoke test suggested (run `pytest tests/e2e/test_items_flow.py`; not run here).
 - Notes: The test creates a new project and writes to the active database.
+
+## Stage 3 – Add archive/unarchive coverage
+- Changes: Added an E2E test that archives and unarchives a project in the manage view.
+- Verification: Manual smoke test suggested (run `pytest tests/e2e/test_archive_project.py`; not run here).
+- Notes: The test creates a new project and writes to the active database.
