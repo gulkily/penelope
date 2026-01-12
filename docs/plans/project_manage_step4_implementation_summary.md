@@ -17,3 +17,8 @@
 - Changes: Added JS to load projects, create new projects, toggle archive checkboxes, and sync dashboard selection via URL params.
 - Verification: Not run yet; please add a project, toggle archived, and click a project link to open the dashboard.
 - Notes: Project links use `?project=`; archived projects are still accessible via direct link.
+
+## Stage 5 - Styling and UX polish
+- Changes: Added table, form, and button styling for the management page.
+- Verification: Not run yet; please check table layout and spacing on desktop and mobile widths.
+- Notes: Archived rows are visually muted.
