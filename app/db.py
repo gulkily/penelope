@@ -166,3 +166,12 @@ def update_objective(project_id: int, objective: str) -> None:
             (objective, project_id),
         )
         conn.commit()
+
+
+def update_progress(project_id: int, progress: int) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE projects SET progress = ? WHERE id = ?",
+            (progress, project_id),
+        )
+        conn.commit()

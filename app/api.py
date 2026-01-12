@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException
 
 from app import db
-from app.schemas import ItemCreate, ObjectiveUpdate, QuestionsUpdate
+from app.schemas import ItemCreate, ObjectiveUpdate, ProgressUpdate, QuestionsUpdate
 
 router = APIRouter()
 
@@ -47,3 +47,12 @@ def update_objective(project_id: int, payload: ObjectiveUpdate) -> dict:
         raise HTTPException(status_code=404, detail="Project not found")
     db.update_objective(project_id, payload.objective)
     return {"objective": payload.objective}
+
+
+@router.put("/projects/{project_id}/progress")
+def update_progress(project_id: int, payload: ProgressUpdate) -> dict:
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    db.update_progress(project_id, payload.progress)
+    return {"progress": payload.progress}

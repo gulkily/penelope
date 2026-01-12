@@ -12,3 +12,7 @@ class QuestionsUpdate(BaseModel):
 
 class ObjectiveUpdate(BaseModel):
     objective: str = Field("", description="North Star objective for the project.")
+
+
+class ProgressUpdate(BaseModel):
+    progress: int = Field(0, ge=0, le=100, description="Progress percentage 0-100.")
