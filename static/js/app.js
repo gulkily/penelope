@@ -2,6 +2,7 @@ const state = {
   projectId: null,
   questionTimer: null,
   progressTimer: null,
+  projectsLoaded: false,
 };
 
 const projectSelect = document.getElementById("project-select");
@@ -54,19 +55,41 @@ async function requestJSON(url, options) {
 }
 
 async function loadProjects() {
-  const data = await requestJSON("/api/projects");
+  const urlProjectId = readProjectFromUrl();
+  const includeArchived = urlProjectId !== null;
+  const listUrl = includeArchived
+    ? "/api/projects?include_archived=1"
+    : "/api/projects";
+  const data = await requestJSON(listUrl);
   data.projects.forEach((project) => {
     const option = document.createElement("option");
     option.value = project.id;
     option.textContent = project.name;
     projectSelect.append(option);
   });
+  state.projectsLoaded = true;
+
+  if (includeArchived) {
+    projectSelect.value = String(urlProjectId);
+  }
+
+  if (includeArchived && !projectSelect.value) {
+    resetEmptyState();
+    clearProjectInUrl();
+    return;
+  }
 
   if (projectSelect.value) {
     state.projectId = Number(projectSelect.value);
     emptyState.hidden = true;
     setInteractivity(true);
-    await loadProject(state.projectId);
+    const projectData = await loadProject(state.projectId);
+    if (!projectData && includeArchived) {
+      projectSelect.value = "";
+      resetEmptyState();
+      clearProjectInUrl();
+      return;
+    }
     return;
   }
 
@@ -140,6 +163,34 @@ function updateProgressDisplay(value) {
   progressSlider.style.setProperty("--progress", `${normalized}%`);
 }
 
+function readProjectFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("project");
+  if (!raw) {
+    return null;
+  }
+  const parsed = Number(raw);
+  if (!Number.isInteger(parsed) || parsed <= 0) {
+    return null;
+  }
+  return parsed;
+}
+
+function setProjectInUrl(projectId) {
+  const params = new URLSearchParams(window.location.search);
+  params.set("project", String(projectId));
+  const url = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, "", url);
+}
+
+function clearProjectInUrl() {
+  const params = new URLSearchParams(window.location.search);
+  params.delete("project");
+  const query = params.toString();
+  const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
+  window.history.replaceState({}, "", url);
+}
+
 function autoGrow(input) {
   input.style.height = "auto";
   input.style.height = `${input.scrollHeight}px`;
@@ -196,8 +247,14 @@ function renderProject(project) {
 }
 
 async function loadProject(projectId) {
-  const data = await requestJSON(`/api/projects/${projectId}`);
-  renderProject(data);
+  try {
+    const data = await requestJSON(`/api/projects/${projectId}`);
+    renderProject(data);
+    return data;
+  } catch (error) {
+    console.warn("Failed to load project", error);
+    return null;
+  }
 }
 
 async function handleInlineAdd(section, input) {
@@ -267,12 +324,14 @@ projectSelect.addEventListener("change", async (event) => {
   const selected = event.target.value;
   if (!selected) {
     resetEmptyState();
+    clearProjectInUrl();
     return;
   }
 
   state.projectId = Number(selected);
   emptyState.hidden = true;
   setInteractivity(true);
+  setProjectInUrl(state.projectId);
   await loadProject(state.projectId);
 });
 
@@ -452,7 +511,15 @@ loadProjects().catch((error) => {
 });
 
 window.addEventListener("pageshow", () => {
+  if (!state.projectsLoaded) {
+    return;
+  }
   if (!projectSelect.value) {
     resetEmptyState();
+    const urlProjectId = readProjectFromUrl();
+    if (urlProjectId) {
+      projectSelect.value = String(urlProjectId);
+      projectSelect.dispatchEvent(new Event("change"));
+    }
   }
 });

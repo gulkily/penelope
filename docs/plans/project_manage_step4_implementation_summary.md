@@ -12,3 +12,8 @@
 - Changes: Added a dedicated project management page with an add form and projects table.
 - Verification: Not run yet; please load `/projects` and confirm the layout renders.
 - Notes: Project names link to the dashboard with `?project=` query param.
+
+## Stage 4 - Wire UI actions to the API
+- Changes: Added JS to load projects, create new projects, toggle archive checkboxes, and sync dashboard selection via URL params.
+- Verification: Not run yet; please add a project, toggle archived, and click a project link to open the dashboard.
+- Notes: Project links use `?project=`; archived projects are still accessible via direct link.
