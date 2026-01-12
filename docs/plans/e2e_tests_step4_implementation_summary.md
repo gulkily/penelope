@@ -2,3 +2,8 @@
 - Changes: Added Playwright configuration, scripts, and a basic smoke test; updated gitignore for Playwright artifacts.
 - Verification: Manual smoke test suggested (start the app and run `npm run test:e2e`; not run here).
 - Notes: Tests expect the app to be running locally.
+
+## Stage 2 – Add core UI E2E coverage
+- Changes: Added a Playwright test that creates a project and updates objective/progress through the UI.
+- Verification: Manual smoke test suggested (run `npm run test:e2e`; not run here).
+- Notes: The test writes to the active database.
