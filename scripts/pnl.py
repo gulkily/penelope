@@ -41,13 +41,14 @@ def run_tests(scope: str | None) -> int:
     return run_command(["python3", "-m", "pytest"])
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     parser = argparse.ArgumentParser(
         prog="pnl",
         description="Penelope task runner.",
     )
-    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers = parser.add_subparsers(dest="command")
 
+    subparsers.add_parser("help", help="Show help output.")
     subparsers.add_parser("venv", help="Show venv activation help.")
     subparsers.add_parser("install", help="Install Python dependencies.")
     subparsers.add_parser("start", help="Start the development server.")
@@ -60,12 +61,16 @@ def parse_args() -> argparse.Namespace:
         help="Optional scope: e2e or http (default: all).",
     )
 
-    return parser.parse_args()
+    return parser, parser.parse_args()
 
 
 def main() -> int:
-    args = parse_args()
+    parser, args = parse_args()
     os.chdir(REPO_ROOT)
+
+    if args.command in (None, "help"):
+        parser.print_help()
+        return 0
 
     if args.command == "venv":
         return print_venv_help()
