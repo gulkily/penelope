@@ -32,6 +32,7 @@ function toggleInlineAdds(enabled) {
     input.disabled = !enabled;
     if (!enabled) {
       input.value = "";
+      autoGrow(input);
     }
   });
 }
@@ -139,6 +140,11 @@ function updateProgressDisplay(value) {
   progressSlider.style.setProperty("--progress", `${normalized}%`);
 }
 
+function autoGrow(input) {
+  input.style.height = "auto";
+  input.style.height = `${input.scrollHeight}px`;
+}
+
 function showUndoToast(text, anchor) {
   if (undoState.timer) {
     window.clearTimeout(undoState.timer);
@@ -208,6 +214,7 @@ async function handleInlineAdd(section, input) {
     body: JSON.stringify({ section, text }),
   });
   input.value = "";
+  autoGrow(input);
   await loadProject(state.projectId);
 }
 
@@ -291,6 +298,8 @@ inlineAddInputs.forEach((input) => {
       }
     }
   });
+  input.addEventListener("input", () => autoGrow(input));
+  autoGrow(input);
 });
 
 document.addEventListener("click", async (event) => {
@@ -334,14 +343,16 @@ document.addEventListener("click", async (event) => {
     const currentText = textNode.textContent || "";
     listItem.dataset.originalText = currentText;
 
-    const input = document.createElement("input");
-    input.type = "text";
+    const input = document.createElement("textarea");
     input.className = "item-input";
+    input.rows = 1;
     input.value = currentText;
     textNode.replaceWith(input);
     listItem.classList.add("is-editing");
+    autoGrow(input);
     input.focus();
     input.select();
+    input.addEventListener("input", () => autoGrow(input));
     return;
   }
 
@@ -394,7 +405,7 @@ document.addEventListener("keydown", async (event) => {
   if (!listItem) {
     return;
   }
-  if (event.key === "Enter") {
+  if (event.key === "Enter" && !event.shiftKey) {
     event.preventDefault();
     const saveButton = listItem.querySelector(".item-action-save");
     if (saveButton) {
