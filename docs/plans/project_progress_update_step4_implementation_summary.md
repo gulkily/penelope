@@ -12,3 +12,8 @@
 - Changes: Added slider input handling with a short debounce to persist progress updates immediately while dragging.
 - Verification: Not run yet; please move the slider and reselect the project to confirm persistence.
 - Notes: Updates use the new progress endpoint without a separate save action.
+
+## Stage 4 - Styling and UX polish
+- Changes: Styled the progress slider to match the existing progress bar look with a filled track and thumb.
+- Verification: Not run yet; please check the slider appearance on desktop and mobile widths.
+- Notes: Slider uses a CSS variable to render the fill based on current value.

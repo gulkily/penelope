@@ -75,17 +75,46 @@ body {
 }
 
 .progress-track {
-  height: 8px;
-  background: #d7dae1;
-  border-radius: 999px;
-  overflow: hidden;
+  display: flex;
+  align-items: center;
+  padding: 2px 0;
 }
 
-.progress-fill {
-  height: 100%;
-  background: #3b73ff;
+.progress-slider {
+  width: 100%;
+  height: 10px;
   border-radius: 999px;
-  transition: width 200ms ease;
+  appearance: none;
+  background: linear-gradient(
+    90deg,
+    #3b73ff var(--progress, 0%),
+    #d7dae1 var(--progress, 0%)
+  );
+  outline: none;
+}
+
+.progress-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #3b73ff;
+  box-shadow: 0 2px 6px rgba(30, 51, 95, 0.2);
+}
+
+.progress-slider::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #ffffff;
+  border: 2px solid #3b73ff;
+  box-shadow: 0 2px 6px rgba(30, 51, 95, 0.2);
+}
+
+.progress-slider:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .cards {
