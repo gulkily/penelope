@@ -597,3 +597,24 @@ body {
     font-size: 11px;
   }
 }
+
+@media (min-width: 1280px) {
+  .page {
+    max-width: 1360px;
+    gap: 16px;
+  }
+
+  .page-header {
+    gap: 16px;
+  }
+
+  .cards {
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .page {
+    max-width: 1480px;
+  }
+}
