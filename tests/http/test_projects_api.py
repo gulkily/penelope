@@ -11,7 +11,7 @@ def test_project_endpoints_accept_updates(playwright):
 
     request_context = playwright.request.new_context(base_url=base_url)
 
-    create_response = request_context.post("/api/projects", json={"name": name})
+    create_response = request_context.post("/api/projects", data={"name": name})
     assert create_response.ok
     create_payload = create_response.json()
     project_id = create_payload.get("project", {}).get("id")
@@ -19,13 +19,13 @@ def test_project_endpoints_accept_updates(playwright):
 
     objective_response = request_context.put(
         f"/api/projects/{project_id}/objective",
-        json={"objective": objective},
+        data={"objective": objective},
     )
     assert objective_response.ok
 
     progress_response = request_context.put(
         f"/api/projects/{project_id}/progress",
-        json={"progress": progress},
+        data={"progress": progress},
     )
     assert progress_response.ok
 
