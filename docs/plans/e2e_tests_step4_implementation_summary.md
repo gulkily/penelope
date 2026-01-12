@@ -12,3 +12,8 @@
 - Changes: Added Playwright API tests that create a project and verify objective/progress updates.
 - Verification: Manual smoke test suggested (run `npm run test:api`; not run here).
 - Notes: The test writes to the active database.
+
+## Stage 4 – Document test workflows
+- Changes: Documented Playwright setup and commands in README and updated repository command guidance.
+- Verification: Manual smoke test suggested (follow README steps to run tests; not run here).
+- Notes: Tests assume a locally running server and use `E2E_BASE_URL` if set.
