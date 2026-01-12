@@ -6,9 +6,9 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 1. Create a virtual environment and install dependencies:
    - `python -m venv .venv`
    - `source .venv/bin/activate`
-   - `pip install fastapi uvicorn`
+   - `pip install -r requirements.txt`
 2. Run the server:
-   - `uvicorn app.main:app --reload`
+   - `./start.sh
 3. Open `http://127.0.0.1:8000/`.
 
 ## Data & persistence
