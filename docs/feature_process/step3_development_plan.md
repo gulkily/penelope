@@ -28,4 +28,4 @@ Additional requirements:
 - Keep Stage count manageable; if work exceeds about eight stages or a day of effort, recommend splitting into separate features before moving on
 
 ## Next
-Send the plan for review and wait for “Approved Step 3.” Only after approval should you commit Steps 1–3 (if not already) and move on to `docs/dev/feature_process/step4_implementation.md`.
+Send the plan for review and wait for “Approved Step 3.” Only after approval should you commit Steps 1–3 (if not already) and move on to `docs/feature_process/step4_implementation.md`.

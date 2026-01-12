@@ -19,4 +19,4 @@ Resolve uncertainty when there are multiple viable approaches, complex trade-off
 - Favor bullets over paragraphs for fast comparisons
 
 ## Next
-Share the document for review and stop. Do not create Step 2 until the user explicitly responds with “Approved Step 1.” When approval arrives, continue with `docs/dev/feature_process/step2_feature_description.md`.
+Share the document for review and stop. Do not create Step 2 until the user explicitly responds with “Approved Step 1.” When approval arrives, continue with `docs/feature_process/step2_feature_description.md`.

@@ -11,15 +11,15 @@ Before drafting Step 1 (or jumping straight to Step 2 on simple work), skim th
 
 ## How to Use This Chain
 1. Start with the highest-numbered approved step (usually Step 1 unless explicitly skipped).
-2. Read only the dedicated step file in `docs/dev/feature_process/`, complete that deliverable, and request approval in the format “Approved Step N.”
+2. Read only the dedicated step file in `docs/feature_process/`, complete that deliverable, and request approval in the format “Approved Step N.”
 3. Do not open the next file until the user replies with the exact approval phrase.
 4. Reprint the instructions from the relevant file before you begin working on that step’s deliverable.
 
 ## Step Guide
-- **Step 1 – Solution Assessment (Optional)**: resolve uncertainty across multiple approaches. `docs/dev/feature_process/step1_solution_assessment.md`
-- **Step 2 – Feature Description**: capture problem framing, user stories, requirements, and success criteria. `docs/dev/feature_process/step2_feature_description.md`
-- **Step 3 – Development Plan**: break the work into atomic stages with dependencies, verification notes, and shared component references. `docs/dev/feature_process/step3_development_plan.md`
-- **Step 4 – Implementation**: execute staged work on a feature branch and maintain the implementation summary. `docs/dev/feature_process/step4_implementation.md`
+- **Step 1 – Solution Assessment (Optional)**: resolve uncertainty across multiple approaches. `docs/feature_process/step1_solution_assessment.md`
+- **Step 2 – Feature Description**: capture problem framing, user stories, requirements, and success criteria. `docs/feature_process/step2_feature_description.md`
+- **Step 3 – Development Plan**: break the work into atomic stages with dependencies, verification notes, and shared component references. `docs/feature_process/step3_development_plan.md`
+- **Step 4 – Implementation**: execute staged work on a feature branch and maintain the implementation summary. `docs/feature_process/step4_implementation.md`
 
 Each file ends with instructions for when to proceed to the next step so you never overrun the context window.
 
