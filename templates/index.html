@@ -22,35 +22,37 @@
         </header>
       </section>
 
-      <section class="objective">
-        <div class="field">
-          <label class="field-label" for="objective-input"
-            >North Star Objective</label
-          >
-          <input
-            id="objective-input"
-            class="field-input"
-            type="text"
-            autocomplete="off"
-            placeholder="e.g. Reach 10 paying customers"
-          />
-        </div>
-        <div class="progress">
-          <div class="progress-labels">
-            <span>North Star progress</span>
-            <span id="progress-percent">0%</span>
-          </div>
-          <div class="progress-track">
+      <section class="card">
+        <div class="objective">
+          <div class="field">
+            <label class="field-label" for="objective-input"
+              >North Star Objective</label
+            >
             <input
-              id="progress-slider"
-              class="progress-slider"
-              type="range"
-              min="0"
-              max="100"
-              value="0"
-              step="1"
-              aria-label="North Star progress"
+              id="objective-input"
+              class="field-input"
+              type="text"
+              autocomplete="off"
+              placeholder="e.g. Reach 10 paying customers"
             />
+          </div>
+          <div class="progress">
+            <div class="progress-labels">
+              <span>North Star progress</span>
+              <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-track">
+              <input
+                id="progress-slider"
+                class="progress-slider"
+                type="range"
+                min="0"
+                max="100"
+                value="0"
+                step="1"
+                aria-label="North Star progress"
+              />
+            </div>
           </div>
         </div>
       </section>
