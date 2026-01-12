@@ -3,3 +3,4 @@
 	- Need to have project summaries for this, ideally.
 - Idempotency of database init.
 - Style the Questions section the same as the others.
+- Set up an E2E test and run it 1000 times
