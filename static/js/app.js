@@ -46,6 +46,16 @@ async function loadProjects() {
     option.textContent = project.name;
     projectSelect.append(option);
   });
+
+  if (projectSelect.value) {
+    state.projectId = Number(projectSelect.value);
+    emptyState.hidden = true;
+    setInteractivity(true);
+    await loadProject(state.projectId);
+    return;
+  }
+
+  resetEmptyState();
 }
 
 function renderSections(sections) {
@@ -59,6 +69,16 @@ function renderSections(sections) {
       list.append(li);
     });
   });
+}
+
+function resetEmptyState() {
+  state.projectId = null;
+  emptyState.hidden = false;
+  setInteractivity(false);
+  updateProgressDisplay(0);
+  renderSections({});
+  objectiveInput.value = "";
+  questionsInput.value = "";
 }
 
 function updateProgressDisplay(value) {
@@ -145,13 +165,7 @@ function scheduleQuestionsSave() {
 projectSelect.addEventListener("change", async (event) => {
   const selected = event.target.value;
   if (!selected) {
-    state.projectId = null;
-    emptyState.hidden = false;
-    setInteractivity(false);
-    updateProgressDisplay(0);
-    renderSections({});
-    objectiveInput.value = "";
-    questionsInput.value = "";
+    resetEmptyState();
     return;
   }
 
@@ -175,6 +189,13 @@ objectiveSave.addEventListener("click", handleObjectiveSave);
 questionsInput.addEventListener("input", scheduleQuestionsSave);
 
 setInteractivity(false);
+resetEmptyState();
 loadProjects().catch((error) => {
   console.error(error);
+});
+
+window.addEventListener("pageshow", () => {
+  if (!projectSelect.value) {
+    resetEmptyState();
+  }
 });

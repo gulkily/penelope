@@ -17,3 +17,8 @@
 - Changes: Styled the progress slider to match the existing progress bar look with a filled track and thumb.
 - Verification: Not run yet; please check the slider appearance on desktop and mobile widths.
 - Notes: Slider uses a CSS variable to render the fill based on current value.
+
+## Stage 5 - Reset stale form state on reload
+- Changes: Added client-side reset logic to clear progress/objective/questions when no project is selected; disabled browser autocomplete on objective and questions fields.
+- Verification: Not run yet; please soft-reload in Firefox and confirm fields reset when no project is selected.
+- Notes: Uses a pageshow handler to override form state restoration.
