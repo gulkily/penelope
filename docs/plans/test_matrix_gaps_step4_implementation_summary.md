@@ -17,3 +17,8 @@
 - Changes: Added an E2E test that cycles the theme toggle and verifies theme attributes.
 - Verification: Manual smoke test suggested (run `pytest tests/e2e/test_theme_toggle.py`; not run here).
 - Notes: The test expects a fresh localStorage state per test.
+
+## Stage 5 – Update the test matrix
+- Changes: Marked newly covered UI flows in the test matrix and cleared the gaps list.
+- Verification: Manual smoke test suggested (review `docs/test_matrix.md`; not run here).
+- Notes: None.
