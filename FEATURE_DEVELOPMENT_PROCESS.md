@@ -32,7 +32,7 @@ Each step MUST be a separate file in `docs/plans/`:
 
 **Directory structure**: When a feature accumulates four or more planning artifacts (e.g., all Step 1–4 docs plus auxiliary notes), move them into `docs/plans/{feature_name}/`. Keep smaller efforts at the root until they grow, and update `docs/plans/README.md` when a new folder appears so others can navigate.
 
-**Commit discipline**: Keep each stage’s document uncommitted until the user reviews it. Commit only after approval and immediately before starting the next stage to keep IDE “dirty file” views meaningful.
+**Commit discipline**: Draft the current step’s file for review but keep it uncommitted until the user approves. Commit only after approval and immediately before starting the next stage to keep IDE “dirty file” views meaningful.
 
 **Plan review**: Do not commit Step 1–3 plan files until the user explicitly reviews and approves them. Deliver the drafts for feedback, wait for “Approved Step N,” then commit before beginning the next step. Step 4 must start on a feature branch with the approved plan already committed.
 
@@ -42,7 +42,7 @@ Each step MUST be a separate file in `docs/plans/`:
 - Recommend Step 1 for complex features or whenever multiple solutions exist
 - Stay in the current step; do not draft/edit later deliverables without approval
 - After delivering each step, explicitly request “Approved Step N” and pause until the user responds with that exact phrase
-- Create separate files for each step only after receiving the relevant approval
+- Create the current step’s draft file before requesting approval; do not create the next step’s file until the current step is approved
 - ALWAYS create a feature branch before Step 4 implementation
 - Prefer shared components/API contracts first; reuse or extend instead of forking markup, CSS, or payloads
 - Flag scope creep early and bounce back to planning steps rather than improvising mid-implementation
