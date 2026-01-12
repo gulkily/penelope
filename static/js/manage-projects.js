@@ -31,14 +31,7 @@ function renderProjects(projects) {
     checkbox.addEventListener("change", handleArchiveToggle);
     archiveCell.append(checkbox);
 
-    const openCell = document.createElement("td");
-    const openLink = document.createElement("a");
-    openLink.href = `/?project=${project.id}`;
-    openLink.textContent = "View";
-    openLink.className = "link-button small";
-    openCell.append(openLink);
-
-    row.append(nameCell, archiveCell, openCell);
+    row.append(nameCell, archiveCell);
     tableBody.append(row);
   });
 }
