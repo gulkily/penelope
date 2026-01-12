@@ -1,4 +1,5 @@
 const root = document.documentElement;
+const themeSelect = document.getElementById("theme-select");
 const themeState = {
   preference: "system",
 };
@@ -17,6 +18,18 @@ function resolveTheme(preference) {
 function applyTheme(preference) {
   themeState.preference = preference;
   root.dataset.theme = resolveTheme(preference);
+  if (themeSelect && themeSelect.value !== preference) {
+    themeSelect.value = preference;
+  }
 }
 
 applyTheme(themeState.preference);
+
+if (themeSelect) {
+  themeSelect.addEventListener("change", (event) => {
+    const { value } = event.target;
+    if (value === "light" || value === "dark" || value === "system") {
+      applyTheme(value);
+    }
+  });
+}
