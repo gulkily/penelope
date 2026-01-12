@@ -17,3 +17,8 @@
 - Changes: Added a compact card modifier to keep the Project selector card from forcing extra height.
 - Verification: Manual smoke test suggested (confirm the Project card feels compact and spacing remains consistent; not run here).
 - Notes: None.
+
+## Stage 5 – Compact Objective and Questions cards
+- Changes: Applied the compact card modifier to the Objective and Questions containers to reduce excess vertical space.
+- Verification: Manual smoke test suggested (confirm Objective and Questions cards shrink to content height and remain usable; not run here).
+- Notes: None.
