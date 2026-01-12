@@ -608,6 +608,10 @@ body {
     gap: 16px;
   }
 
+  .card {
+    min-height: 200px;
+  }
+
   .cards {
     gap: 16px;
   }
