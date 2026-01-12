@@ -17,4 +17,8 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - The seed data includes a few example projects and items to populate the UI.
 
 ## Notes
-- Item additions use a prompt dialog; questions auto-save while typing.
+- Item additions use inline add rows; edit and delete are available per item with an undo toast.
+- The North Star objective can be updated per project via the Save button.
+- Progress updates happen immediately via the integrated slider.
+- Questions auto-save while typing.
+- Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.
