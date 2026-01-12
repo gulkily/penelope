@@ -230,11 +230,60 @@ body {
   padding: 4px 6px;
   border: 1px solid #cfd5e2;
   border-radius: 4px;
+  resize: none;
+  overflow: hidden;
 }
 
 .item-input:focus {
   outline: 2px solid #c6d4ff;
   border-color: #9ab2ff;
+}
+
+.inline-add {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.inline-add-input {
+  width: 100%;
+  border: 1px solid #cfd5e2;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 13px;
+  resize: none;
+  overflow: hidden;
+}
+
+.inline-add-input:focus {
+  outline: 2px solid #c6d4ff;
+  border-color: #9ab2ff;
+}
+
+.inline-add-button {
+  padding: 6px 12px;
+  border: 1px solid #d1d6e2;
+  border-radius: 6px;
+  background: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.inline-add-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 .item-action:focus {

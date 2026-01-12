@@ -12,3 +12,8 @@
 - Changes: Added auto-growing textareas for inline add rows and inline edit mode.
 - Verification: Not run yet; please enter longer text and confirm inputs expand.
 - Notes: Enter submits; Shift+Enter inserts a newline.
+
+## Stage 4 - Styling and UX polish
+- Changes: Styled inline add rows, inputs, and accessibility-only labels for a clean card layout.
+- Verification: Not run yet; please check spacing and focus styles on desktop and mobile widths.
+- Notes: Inline add rows use a two-column layout to keep buttons aligned.
