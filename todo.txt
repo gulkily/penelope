@@ -8,6 +8,5 @@
 
 - Design things:
 	- Style the sections consistently (border and white background for Questions and others)
-	- Combine progress bar and North Star text field
 	- Improve layout for large screens
 	- Dark mode support
