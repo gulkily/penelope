@@ -94,6 +94,30 @@ body {
   gap: 20px;
 }
 
+.objective {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.action-button {
+  padding: 10px 16px;
+  border: 1px solid #c8d4ff;
+  border-radius: 6px;
+  background: #e7edff;
+  color: #1c3f8f;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
 .card {
   background: #ffffff;
   border: 1px solid #e2e4ea;

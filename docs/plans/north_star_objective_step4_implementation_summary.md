@@ -12,3 +12,8 @@
 - Changes: Added objective input and save action in the dashboard markup; wired client-side save via the objective endpoint.
 - Verification: Manual (select a project, edit objective, click save, then reload and reselect).
 - Notes: Objective input is disabled until a project is selected.
+
+## Stage 4 - Styling and layout refinement
+- Changes: Styled the objective section and save button to match the dashboard controls.
+- Verification: Manual (check the objective area alignment on desktop and mobile widths).
+- Notes: Objective section uses the existing form field styles for consistency.
