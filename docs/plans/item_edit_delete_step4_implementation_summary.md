@@ -27,3 +27,8 @@
 - Changes: Enter saves and Escape cancels while editing an item.
 - Verification: Not run yet; please edit an item and press Enter/Escape to confirm behavior.
 - Notes: Uses event delegation on the inline input.
+
+## Stage 7 - Add undo for deletes
+- Changes: Added an undo toast that re-adds the deleted item within a short window.
+- Verification: Not run yet; please delete an item, click Undo, and confirm the item returns.
+- Notes: Undo restores the item text and section; a new item ID is created.

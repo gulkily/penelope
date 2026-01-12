@@ -12,12 +12,22 @@ const objectiveInput = document.getElementById("objective-input");
 const objectiveSave = document.getElementById("objective-save");
 const questionsInput = document.getElementById("questions-input");
 const addButtons = document.querySelectorAll(".add-button");
+const undoToast = document.getElementById("undo-toast");
+const undoDelete = document.getElementById("undo-delete");
+const undoMessage = document.getElementById("undo-message");
 
 const sectionLabels = {
   summary: "summary item",
   challenges: "challenge",
   opportunities: "opportunity",
   milestones: "milestone",
+};
+
+const undoState = {
+  projectId: null,
+  section: null,
+  text: "",
+  timer: null,
 };
 
 function setInteractivity(enabled) {
@@ -115,6 +125,7 @@ function resetEmptyState() {
   renderSections({});
   objectiveInput.value = "";
   questionsInput.value = "";
+  hideUndoToast();
 }
 
 function updateProgressDisplay(value) {
@@ -122,6 +133,28 @@ function updateProgressDisplay(value) {
   progressSlider.value = normalized;
   progressPercent.textContent = `${normalized}%`;
   progressSlider.style.setProperty("--progress", `${normalized}%`);
+}
+
+function showUndoToast(text) {
+  if (undoState.timer) {
+    window.clearTimeout(undoState.timer);
+  }
+  undoMessage.textContent = text || "Item deleted.";
+  undoToast.hidden = false;
+  undoState.timer = window.setTimeout(() => {
+    hideUndoToast();
+  }, 5000);
+}
+
+function hideUndoToast() {
+  if (undoState.timer) {
+    window.clearTimeout(undoState.timer);
+  }
+  undoToast.hidden = true;
+  undoState.projectId = null;
+  undoState.section = null;
+  undoState.text = "";
+  undoState.timer = null;
 }
 
 function renderProject(project) {
@@ -230,10 +263,18 @@ document.addEventListener("click", async (event) => {
   }
 
   if (button.dataset.action === "delete") {
+    const textNode = listItem.querySelector(".item-text");
+    const inputNode = listItem.querySelector(".item-input");
+    const textValue = (inputNode ? inputNode.value : textNode?.textContent || "")
+      .trim();
+    undoState.projectId = state.projectId;
+    undoState.section = listItem.dataset.section || "";
+    undoState.text = textValue;
     await requestJSON(`/api/items/${itemId}`, { method: "DELETE" });
     if (state.projectId) {
       await loadProject(state.projectId);
     }
+    showUndoToast("Item deleted.");
     return;
   }
 
@@ -321,6 +362,22 @@ document.addEventListener("keydown", async (event) => {
       cancelButton.click();
     }
   }
+});
+
+undoDelete.addEventListener("click", async () => {
+  if (!undoState.projectId || !undoState.section) {
+    hideUndoToast();
+    return;
+  }
+  await requestJSON(`/api/projects/${undoState.projectId}/items`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ section: undoState.section, text: undoState.text }),
+  });
+  if (state.projectId === undoState.projectId) {
+    await loadProject(state.projectId);
+  }
+  hideUndoToast();
 });
 
 progressSlider.addEventListener("input", (event) => {

@@ -274,6 +274,38 @@ body {
   gap: 8px;
 }
 
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: #1f2430;
+  color: #f6f7fb;
+  padding: 10px 16px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+  box-shadow: 0 12px 24px rgba(15, 20, 30, 0.25);
+  z-index: 10;
+}
+
+.toast[hidden] {
+  display: none;
+}
+
+.toast-action {
+  border: none;
+  background: #3b73ff;
+  color: #ffffff;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 @media (max-width: 720px) {
   .page {
     margin-top: 24px;
