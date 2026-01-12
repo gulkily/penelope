@@ -8,19 +8,8 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
    - `source .venv/bin/activate`
    - `pip install -r requirements.txt`
 2. Run the server:
-   - `./start.sh`
+   - `./start.sh
 3. Open `http://127.0.0.1:8000/`.
-
-## Testing
-1. Install Playwright dependencies:
-   - `npm install`
-   - `npx playwright install`
-2. Start the server in a separate terminal:
-   - `./start.sh`
-3. Run tests:
-   - `npm run test:e2e` (browser-driven E2E)
-   - `npm run test:api` (HTTP-level integration)
-   - `npm run test` (all Playwright tests)
 
 ## Data & persistence
 - Default storage is SQLite at `data/north_star.db` (created automatically on first run).

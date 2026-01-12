@@ -10,12 +10,10 @@
 If a different layout is introduced, update this guide and keep directory names stable.
 
 ## Build, Test, and Development Commands
-- `./start.sh` for local development.
-- `npm install` to install Playwright dependencies.
-- `npx playwright install` to download Playwright browser binaries.
-- `npm run test:e2e` for browser-driven E2E tests (requires the app to be running).
-- `npm run test:api` for HTTP-level integration tests (requires the app to be running).
-- `npm run test` to run all Playwright tests.
+No commands are standardized yet. Once tooling is added, keep this section current, for example:
+- `uvicorn app.main:app --reload` for local development.
+- `pytest` for tests.
+- `python -m app.db.init` for local DB bootstrap if applicable.
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, type hints where practical, `snake_case` for functions/modules, `PascalCase` for classes.
