@@ -35,6 +35,7 @@
   --shadow-toast: rgba(15, 20, 30, 0.25);
   --slider-track: #d7dae1;
   --slider-thumb-bg: #ffffff;
+  --progress-marker: #b7c1d6;
   --toast-bg: #1f2430;
   --toast-text: #f6f7fb;
   --table-header: #4a4f59;
@@ -73,6 +74,7 @@
   --shadow-toast: rgba(0, 0, 0, 0.45);
   --slider-track: #2b3345;
   --slider-thumb-bg: #1b2334;
+  --progress-marker: #3a4761;
   --toast-bg: #0f1420;
   --toast-text: #e7ebf5;
   --table-header: #b9c2d3;
@@ -163,6 +165,7 @@ body {
   display: flex;
   align-items: center;
   padding: 2px 0;
+  position: relative;
 }
 
 .progress-slider {
@@ -176,6 +179,8 @@ body {
     var(--slider-track) var(--progress, 0%)
   );
   outline: none;
+  position: relative;
+  z-index: 1;
 }
 
 .progress-slider::-webkit-slider-thumb {
@@ -200,6 +205,27 @@ body {
 .progress-slider:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.progress-markers {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 10px;
+  transform: translateY(-50%);
+  pointer-events: none;
+  z-index: 2;
+}
+
+.progress-marker {
+  position: absolute;
+  left: calc(var(--marker) * 1%);
+  width: 2px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--progress-marker);
+  transform: translateX(-1px);
 }
 
 .cards {
