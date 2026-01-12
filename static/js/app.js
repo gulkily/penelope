@@ -230,10 +230,6 @@ document.addEventListener("click", async (event) => {
   }
 
   if (button.dataset.action === "delete") {
-    const confirmed = window.confirm("Delete this item?");
-    if (!confirmed) {
-      return;
-    }
     await requestJSON(`/api/items/${itemId}`, { method: "DELETE" });
     if (state.projectId) {
       await loadProject(state.projectId);
@@ -300,6 +296,30 @@ document.addEventListener("click", async (event) => {
       await loadProject(state.projectId);
     }
     return;
+  }
+});
+
+document.addEventListener("keydown", async (event) => {
+  const input = event.target.closest(".item-input");
+  if (!input) {
+    return;
+  }
+  const listItem = input.closest(".section-item");
+  if (!listItem) {
+    return;
+  }
+  if (event.key === "Enter") {
+    event.preventDefault();
+    const saveButton = listItem.querySelector(".item-action-save");
+    if (saveButton) {
+      saveButton.click();
+    }
+  } else if (event.key === "Escape") {
+    event.preventDefault();
+    const cancelButton = listItem.querySelector(".item-action-cancel");
+    if (cancelButton) {
+      cancelButton.click();
+    }
   }
 });
 

@@ -14,11 +14,16 @@
 - Notes: Cancel restores the original value without API calls.
 
 ## Stage 4 - Implement delete flow with confirmation
-- Changes: Added delete confirmation and refresh after removal.
+- Changes: Added delete action and refresh after removal.
 - Verification: Not run yet; please delete an item and confirm it no longer appears after refresh.
-- Notes: Uses a simple confirm dialog.
+- Notes: No confirmation dialog; deletion is immediate.
 
 ## Stage 5 - Styling and UX polish
 - Changes: Styled action buttons, editing state, and input field to fit the card layout.
 - Verification: Not run yet; please check hover/focus visibility and edit styling on desktop and mobile widths.
 - Notes: Hover and keyboard focus reveal the same affordances.
+
+## Stage 6 - Keyboard save/cancel shortcuts
+- Changes: Enter saves and Escape cancels while editing an item.
+- Verification: Not run yet; please edit an item and press Enter/Escape to confirm behavior.
+- Notes: Uses event delegation on the inline input.
