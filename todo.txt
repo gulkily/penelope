@@ -3,7 +3,6 @@
 - Idempotency of database init.
 - Set up an E2E test and run it 1000 times
 - Add local DM Sans font files and wire up @font-face in CSS (replace external Google Fonts import).
-- Auto-save North Star field and remove [Save objective] button
 - Maybe add checkboxes for the list items?
 - Add placeholders and make it easier to select them for progress bar
 
