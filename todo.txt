@@ -1,5 +1,3 @@
-- Add ability to update the project progress numeric value.
-- Make progress a slider.
 - Add URL saving project selector.
 - Removing and editing list items.
 - Replace prompt() with something nicer.
