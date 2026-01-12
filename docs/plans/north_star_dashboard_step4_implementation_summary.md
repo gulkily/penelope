@@ -12,3 +12,8 @@
 - Changes: Created the dashboard layout with project selector, progress bar, four section cards, and questions area.
 - Verification: Started `uvicorn app.main:app` and loaded `/` in the browser.
 - Notes: CSS and JS hooks are stubbed for later stages.
+
+## Stage 4 - Implement vanilla JS rendering and interactions
+- Changes: Added client-side data loading, section rendering, add-item prompts, and debounced questions updates.
+- Verification: Started `uvicorn app.main:app`, loaded `/`, selected a project, and added a sample summary item.
+- Notes: API errors currently surface in the console only.
