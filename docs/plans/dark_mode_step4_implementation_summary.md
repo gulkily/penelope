@@ -12,3 +12,8 @@
 - Changes: Converted shared styles to use theme variables and added dark-mode overrides, including layout tweaks for the theme selector.
 - Verification: Manual smoke test suggested (switch themes and check contrast on dashboard and project management pages; not run here).
 - Notes: Focus styles and key component colors are now theme-driven.
+
+## Stage 4 – Persist theme preference and sync with system
+- Changes: Added local storage persistence, system theme detection updates, and cross-tab sync for the theme preference.
+- Verification: Manual smoke test suggested (set theme, reload to confirm persistence, and switch OS theme while in system mode; not run here).
+- Notes: Storage access failures fall back to system.
