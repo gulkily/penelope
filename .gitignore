@@ -1,1 +1,5 @@
 screenshot/
+__pycache__/
+*.pyc
+data/
+*.db

@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>North Star Dashboard</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <script src="/static/js/app.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <div class="field">
+          <label class="field-label" for="project-select">Project</label>
+          <select id="project-select" class="field-input">
+            <option value="">Select a project</option>
+          </select>
+        </div>
+        <div class="progress">
+          <div class="progress-labels">
+            <span>North Star progress</span>
+            <span id="progress-percent">0%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+          </div>
+        </div>
+      </header>
+
+      <section class="objective">
+        <div class="field">
+          <label class="field-label" for="objective-input"
+            >North Star objective</label
+          >
+          <input
+            id="objective-input"
+            class="field-input"
+            type="text"
+            placeholder="e.g. Reach 10 paying customers"
+          />
+        </div>
+        <button type="button" class="action-button" id="objective-save">
+          Save objective
+        </button>
+      </section>
+
+      <section class="cards">
+        <article class="card">
+          <h2>Summary</h2>
+          <ul class="section-list" data-section="summary"></ul>
+          <button type="button" class="add-button" data-section="summary">
+            Add summary item
+          </button>
+        </article>
+        <article class="card">
+          <h2>Challenges</h2>
+          <ul class="section-list" data-section="challenges"></ul>
+          <button type="button" class="add-button" data-section="challenges">
+            Add challenge
+          </button>
+        </article>
+        <article class="card">
+          <h2>Opportunities</h2>
+          <ul class="section-list" data-section="opportunities"></ul>
+          <button type="button" class="add-button" data-section="opportunities">
+            Add opportunity
+          </button>
+        </article>
+        <article class="card">
+          <h2>Milestones</h2>
+          <ul class="section-list" data-section="milestones"></ul>
+          <button type="button" class="add-button" data-section="milestones">
+            Add milestone
+          </button>
+        </article>
+      </section>
+
+      <p class="hint" id="empty-state">Select a project to see its North Star.</p>
+
+      <section class="questions">
+        <label class="field-label" for="questions-input">Questions</label>
+        <textarea
+          id="questions-input"
+          class="field-input field-textarea"
+          rows="4"
+          placeholder="Capture any open questions, risks, or clarifications needed..."
+        ></textarea>
+      </section>
+    </main>
+  </body>
+</html>

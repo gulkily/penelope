@@ -31,6 +31,7 @@ No test framework is set up yet. When added:
 - Mirror structure between `app/` and `tests/`.
 - Name tests by module and behavior (e.g., `tests/test_projects_api.py`).
 - Add a single command to run all tests and a smaller command for focused runs.
+- Do not start the server for manual testing; ask the user to run any manual verification steps.
 
 ## Commit & Pull Request Guidelines
 - Use clear, scoped messages (e.g., `feat: add project selector`, `fix: handle empty questions`).
