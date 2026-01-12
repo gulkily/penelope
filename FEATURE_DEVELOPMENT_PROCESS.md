@@ -48,7 +48,6 @@ Each step MUST be a separate file in `docs/plans/`:
 - Flag scope creep early and bounce back to planning steps rather than improvising mid-implementation
 - Keep projected work within roughly a day or eight Step 3 stages; otherwise recommend splitting the feature
 - Avoid database schema changes when possible—lean on existing models/fields
-- Reprint each step’s instructions (from the linked file) before you begin that step
 
 **User**
 - Review and approve explicitly at each step
