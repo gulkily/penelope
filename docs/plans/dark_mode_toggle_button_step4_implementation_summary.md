@@ -7,3 +7,8 @@
 - Changes: Updated theme logic to drive a floating toggle button that cycles theme preferences and updates its label/aria text.
 - Verification: Manual smoke test suggested (click the toggle to cycle themes and reload to confirm persistence; not run here).
 - Notes: The toggle cycles System → Dark → Light.
+
+## Stage 3 – Style floating toggle
+- Changes: Added fixed-position styling for the corner toggle and removed unused theme selector layout styles.
+- Verification: Manual smoke test suggested (resize to mobile and confirm the toggle stays visible without covering key UI; not run here).
+- Notes: The toggle uses theme variables for background and focus state.
