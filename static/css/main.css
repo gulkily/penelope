@@ -612,6 +612,10 @@ body {
     min-height: 200px;
   }
 
+  .card-compact {
+    min-height: auto;
+  }
+
   .cards {
     gap: 16px;
   }
