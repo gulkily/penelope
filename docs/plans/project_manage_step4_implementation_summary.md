@@ -7,3 +7,8 @@
 - Changes: Added project creation and archive toggle endpoints plus request schemas; added `include_archived` flag to list projects.
 - Verification: Not run yet; please `POST /api/projects` and `PUT /api/projects/{id}/archive`, then re-fetch the list.
 - Notes: Archive toggles use boolean payloads.
+
+## Stage 3 - Build the management page UI
+- Changes: Added a dedicated project management page with an add form and projects table.
+- Verification: Not run yet; please load `/projects` and confirm the layout renders.
+- Notes: Project names link to the dashboard with `?project=` query param.

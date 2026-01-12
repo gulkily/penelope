@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project Management</title>
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <script src="/static/js/manage-projects.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <header class="page-header">
+        <div>
+          <h1>Project Management</h1>
+          <p class="hint">Add new projects and archive completed work.</p>
+        </div>
+        <a class="link-button" href="/">Back to dashboard</a>
+      </header>
+
+      <section class="card manage-card">
+        <h2>Add project</h2>
+        <form id="add-project-form" class="manage-form">
+          <label class="field-label" for="project-name">Project name</label>
+          <div class="manage-form-row">
+            <input
+              id="project-name"
+              class="field-input"
+              type="text"
+              placeholder="e.g. Project Atlas"
+              required
+            />
+            <button type="submit" class="action-button">Add project</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card manage-card">
+        <div class="manage-table-header">
+          <h2>Projects</h2>
+          <span class="hint">Archived projects are hidden from the main selector.</span>
+        </div>
+        <div class="table-wrapper">
+          <table class="project-table">
+            <thead>
+              <tr>
+                <th>Project</th>
+                <th>Archived</th>
+                <th>Open</th>
+              </tr>
+            </thead>
+            <tbody id="project-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

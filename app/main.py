@@ -25,3 +25,8 @@ def startup() -> None:
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("index.html", {"request": request})
+
+
+@app.get("/projects", response_class=HTMLResponse)
+def manage_projects(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("manage_projects.html", {"request": request})
