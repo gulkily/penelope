@@ -10,10 +10,13 @@
 If a different layout is introduced, update this guide and keep directory names stable.
 
 ## Build, Test, and Development Commands
-No commands are standardized yet. Once tooling is added, keep this section current, for example:
-- `uvicorn app.main:app --reload` for local development.
-- `pytest` for tests.
-- `python -m app.db.init` for local DB bootstrap if applicable.
+- `./start.sh` for local development.
+- `pip install -r requirements.txt` to install Python dependencies.
+- `python -m playwright install` to download Playwright browser binaries.
+- `pytest tests/e2e` for browser-driven E2E tests (requires the app to be running).
+- `pytest tests/http` for HTTP-level integration tests (requires the app to be running).
+- `pytest` to run all tests.
+- Do not use npm; use Python tooling for tests and scripts.
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, type hints where practical, `snake_case` for functions/modules, `PascalCase` for classes.
@@ -28,9 +31,9 @@ No commands are standardized yet. Once tooling is added, keep this section curre
 - Avoid schema changes unless required; document any changes in `docs/`.
 
 ## Testing Guidelines
-No test framework is set up yet. When added:
-- Mirror structure between `app/` and `tests/`.
-- Name tests by module and behavior (e.g., `tests/test_projects_api.py`).
+- Test framework: pytest + Playwright.
+- Mirror structure between `app/` and `tests/` where practical.
+- Name tests by module and behavior (e.g., `tests/http/test_projects_api.py`).
 - Add a single command to run all tests and a smaller command for focused runs.
 - Do not start the server for manual testing; ask the user to run any manual verification steps.
 

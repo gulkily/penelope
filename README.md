@@ -8,8 +8,20 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
    - `source .venv/bin/activate`
    - `pip install -r requirements.txt`
 2. Run the server:
-   - `./start.sh
+   - `./start.sh`
 3. Open `http://127.0.0.1:8000/`.
+
+## Testing
+1. Install test dependencies:
+   - `pip install -r requirements.txt`
+   - `python -m playwright install`
+2. Start the server in a separate terminal:
+   - `./start.sh`
+3. Run tests:
+   - `pytest tests/e2e` (browser-driven E2E)
+   - `pytest tests/http` (HTTP-level integration)
+   - `pytest` (all tests)
+4. Optional: set `E2E_BASE_URL` to point at a non-default server.
 
 ## Data & persistence
 - Default storage is SQLite at `data/north_star.db` (created automatically on first run).
