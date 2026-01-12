@@ -7,6 +7,8 @@ const projectSelect = document.getElementById("project-select");
 const progressFill = document.getElementById("progress-fill");
 const progressPercent = document.getElementById("progress-percent");
 const emptyState = document.getElementById("empty-state");
+const objectiveInput = document.getElementById("objective-input");
+const objectiveSave = document.getElementById("objective-save");
 const questionsInput = document.getElementById("questions-input");
 const addButtons = document.querySelectorAll(".add-button");
 
@@ -21,6 +23,8 @@ function setInteractivity(enabled) {
   addButtons.forEach((button) => {
     button.disabled = !enabled;
   });
+  objectiveInput.disabled = !enabled;
+  objectiveSave.disabled = !enabled;
   questionsInput.disabled = !enabled;
 }
 
@@ -58,6 +62,7 @@ function renderSections(sections) {
 function renderProject(project) {
   progressFill.style.width = `${project.progress}%`;
   progressPercent.textContent = `${project.progress}%`;
+  objectiveInput.value = project.objective || "";
   questionsInput.value = project.questions || "";
   renderSections(project.sections || {});
 }
@@ -82,6 +87,18 @@ async function handleAddItem(section) {
     body: JSON.stringify({ section, text }),
   });
   await loadProject(state.projectId);
+}
+
+async function handleObjectiveSave() {
+  if (!state.projectId) {
+    return;
+  }
+  const objective = objectiveInput.value.trim();
+  await requestJSON(`/api/projects/${state.projectId}/objective`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ objective }),
+  });
 }
 
 function scheduleQuestionsSave() {
@@ -109,6 +126,7 @@ projectSelect.addEventListener("change", async (event) => {
     progressFill.style.width = "0%";
     progressPercent.textContent = "0%";
     renderSections({});
+    objectiveInput.value = "";
     questionsInput.value = "";
     return;
   }
@@ -123,6 +141,7 @@ addButtons.forEach((button) => {
   button.addEventListener("click", () => handleAddItem(button.dataset.section));
 });
 
+objectiveSave.addEventListener("click", handleObjectiveSave);
 questionsInput.addEventListener("input", scheduleQuestionsSave);
 
 setInteractivity(false);

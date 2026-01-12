@@ -7,3 +7,8 @@
 - Changes: Added request schema and API route to update objectives per project.
 - Verification: Manual (run the server and `PUT /api/projects/{id}/objective`, then re-fetch the project).
 - Notes: Endpoint mirrors the questions update flow.
+
+## Stage 3 - Add objective display and edit UI
+- Changes: Added objective input and save action in the dashboard markup; wired client-side save via the objective endpoint.
+- Verification: Manual (select a project, edit objective, click save, then reload and reselect).
+- Notes: Objective input is disabled until a project is selected.
