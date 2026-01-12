@@ -17,3 +17,8 @@
 - Changes: Added client-side data loading, section rendering, add-item prompts, and debounced questions updates.
 - Verification: Started `uvicorn app.main:app`, loaded `/`, selected a project, and added a sample summary item.
 - Notes: API errors currently surface in the console only.
+
+## Stage 5 - Apply CSS styling to match spacing and card visuals
+- Changes: Added dashboard styling for layout, cards, progress bar, and form controls; introduced responsive rules.
+- Verification: Started `uvicorn app.main:app` and visually checked the layout on desktop width.
+- Notes: Styling uses a subtle background gradient and a custom font to keep the UI crisp.
