@@ -11,17 +11,11 @@ const emptyState = document.getElementById("empty-state");
 const objectiveInput = document.getElementById("objective-input");
 const objectiveSave = document.getElementById("objective-save");
 const questionsInput = document.getElementById("questions-input");
-const addButtons = document.querySelectorAll(".add-button");
+const inlineAddButtons = document.querySelectorAll(".inline-add-button");
+const inlineAddInputs = document.querySelectorAll(".inline-add-input");
 const undoToast = document.getElementById("undo-toast");
 const undoDelete = document.getElementById("undo-delete");
 const undoMessage = document.getElementById("undo-message");
-
-const sectionLabels = {
-  summary: "summary item",
-  challenges: "challenge",
-  opportunities: "opportunity",
-  milestones: "milestone",
-};
 
 const undoState = {
   projectId: null,
@@ -30,10 +24,20 @@ const undoState = {
   timer: null,
 };
 
-function setInteractivity(enabled) {
-  addButtons.forEach((button) => {
+function toggleInlineAdds(enabled) {
+  inlineAddButtons.forEach((button) => {
     button.disabled = !enabled;
   });
+  inlineAddInputs.forEach((input) => {
+    input.disabled = !enabled;
+    if (!enabled) {
+      input.value = "";
+    }
+  });
+}
+
+function setInteractivity(enabled) {
+  toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
   objectiveInput.disabled = !enabled;
   objectiveSave.disabled = !enabled;
@@ -190,12 +194,11 @@ async function loadProject(projectId) {
   renderProject(data);
 }
 
-async function handleAddItem(section) {
+async function handleInlineAdd(section, input) {
   if (!state.projectId) {
     return;
   }
-  const label = sectionLabels[section] || "item";
-  const text = window.prompt(`Add ${label}`);
+  const text = input.value.trim();
   if (!text) {
     return;
   }
@@ -204,6 +207,7 @@ async function handleAddItem(section) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ section, text }),
   });
+  input.value = "";
   await loadProject(state.projectId);
 }
 
@@ -265,8 +269,28 @@ projectSelect.addEventListener("change", async (event) => {
   await loadProject(state.projectId);
 });
 
-addButtons.forEach((button) => {
-  button.addEventListener("click", () => handleAddItem(button.dataset.section));
+inlineAddButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const wrapper = button.closest(".inline-add");
+    const input = wrapper?.querySelector(".inline-add-input");
+    const section = button.dataset.section;
+    if (input && section) {
+      handleInlineAdd(section, input);
+    }
+  });
+});
+
+inlineAddInputs.forEach((input) => {
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      const wrapper = input.closest(".inline-add");
+      const section = wrapper?.dataset.section;
+      if (section) {
+        handleInlineAdd(section, input);
+      }
+    }
+  });
 });
 
 document.addEventListener("click", async (event) => {
