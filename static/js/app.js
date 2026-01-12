@@ -135,12 +135,15 @@ function updateProgressDisplay(value) {
   progressSlider.style.setProperty("--progress", `${normalized}%`);
 }
 
-function showUndoToast(text) {
+function showUndoToast(text, anchor) {
   if (undoState.timer) {
     window.clearTimeout(undoState.timer);
   }
   undoMessage.textContent = text || "Item deleted.";
   undoToast.hidden = false;
+  if (anchor) {
+    positionUndoToast(anchor);
+  }
   undoState.timer = window.setTimeout(() => {
     hideUndoToast();
   }, 5000);
@@ -151,10 +154,28 @@ function hideUndoToast() {
     window.clearTimeout(undoState.timer);
   }
   undoToast.hidden = true;
+  undoToast.style.left = "";
+  undoToast.style.top = "";
   undoState.projectId = null;
   undoState.section = null;
   undoState.text = "";
   undoState.timer = null;
+}
+
+function positionUndoToast(anchor) {
+  const rect = anchor.getBoundingClientRect();
+  const toastRect = undoToast.getBoundingClientRect();
+  const margin = 8;
+  let top = rect.top - toastRect.height - margin;
+  if (top < margin) {
+    top = rect.bottom + margin;
+  }
+  let left = rect.left + rect.width / 2;
+  const minLeft = toastRect.width / 2 + margin;
+  const maxLeft = window.innerWidth - toastRect.width / 2 - margin;
+  left = Math.min(Math.max(left, minLeft), maxLeft);
+  undoToast.style.top = `${Math.round(top)}px`;
+  undoToast.style.left = `${Math.round(left)}px`;
 }
 
 function renderProject(project) {
@@ -274,7 +295,7 @@ document.addEventListener("click", async (event) => {
     if (state.projectId) {
       await loadProject(state.projectId);
     }
-    showUndoToast("Item deleted.");
+    showUndoToast("Item deleted.", listItem);
     return;
   }
 
