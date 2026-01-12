@@ -33,12 +33,15 @@ def start_server() -> int:
     return run_command(["./start.sh"])
 
 
-def run_tests(scope: str | None) -> int:
+def run_tests(scope: str | None, headed: bool) -> int:
+    command = ["python3", "-m", "pytest"]
     if scope == "e2e":
-        return run_command(["python3", "-m", "pytest", "tests/e2e"])
-    if scope == "http":
-        return run_command(["python3", "-m", "pytest", "tests/http"])
-    return run_command(["python3", "-m", "pytest"])
+        command.append("tests/e2e")
+    elif scope == "http":
+        command.append("tests/http")
+    if headed:
+        command.append("--headed")
+    return run_command(command)
 
 
 def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
@@ -60,6 +63,11 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         choices=["e2e", "http"],
         help="Optional scope: e2e or http (default: all).",
     )
+    test_parser.add_argument(
+        "--headed",
+        action="store_true",
+        help="Run E2E tests with a visible browser.",
+    )
 
     return parser, parser.parse_args()
 
@@ -79,7 +87,7 @@ def main() -> int:
     if args.command == "start":
         return start_server()
     if args.command == "test":
-        return run_tests(args.scope)
+        return run_tests(args.scope, args.headed)
 
     return 1
 

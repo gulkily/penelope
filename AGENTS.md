@@ -21,8 +21,9 @@ If a different layout is introduced, update this guide and keep directory names 
   - `./pnl venv` for virtual environment setup help.
   - `./pnl install` to install dependencies.
   - `./pnl start` to run the server.
-  - `./pnl test` to run all tests.
-  - `./pnl test e2e` or `./pnl test http` for focused test runs.
+- `./pnl test` to run all tests.
+- `./pnl test e2e` or `./pnl test http` for focused test runs.
+- `./pnl test e2e --headed` for visible browser runs.
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, type hints where practical, `snake_case` for functions/modules, `PascalCase` for classes.

@@ -17,6 +17,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl start` to run the server.
 - `./pnl test` to run all tests.
 - `./pnl test e2e` or `./pnl test http` for focused test runs.
+- `./pnl test e2e --headed` for visible browser runs.
 
 ## Testing
 1. Install test dependencies:
