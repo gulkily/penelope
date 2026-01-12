@@ -2,6 +2,7 @@ const state = {
   projectId: null,
   questionTimer: null,
   progressTimer: null,
+  objectiveTimer: null,
   projectsLoaded: false,
 };
 
@@ -42,7 +43,9 @@ function setInteractivity(enabled) {
   toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
   objectiveInput.disabled = !enabled;
-  objectiveSave.disabled = !enabled;
+  if (objectiveSave) {
+    objectiveSave.disabled = !enabled;
+  }
   questionsInput.disabled = !enabled;
 }
 
@@ -304,6 +307,23 @@ async function handleObjectiveSave() {
   });
 }
 
+function scheduleObjectiveSave() {
+  if (!state.projectId) {
+    return;
+  }
+  if (state.objectiveTimer) {
+    window.clearTimeout(state.objectiveTimer);
+  }
+  state.objectiveTimer = window.setTimeout(async () => {
+    const objective = objectiveInput.value.trim();
+    await requestJSON(`/api/projects/${state.projectId}/objective`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ objective }),
+    });
+  }, 500);
+}
+
 function scheduleQuestionsSave() {
   if (!state.projectId) {
     return;
@@ -501,7 +521,10 @@ progressSlider.addEventListener("input", (event) => {
   scheduleProgressSave(value);
 });
 
-objectiveSave.addEventListener("click", handleObjectiveSave);
+if (objectiveSave) {
+  objectiveSave.addEventListener("click", handleObjectiveSave);
+}
+objectiveInput.addEventListener("input", scheduleObjectiveSave);
 questionsInput.addEventListener("input", scheduleQuestionsSave);
 
 setInteractivity(false);
