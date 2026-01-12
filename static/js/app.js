@@ -1,6 +1,7 @@
 const state = {
   projectId: null,
   questionTimer: null,
+  progressTimer: null,
 };
 
 const projectSelect = document.getElementById("project-select");
@@ -96,6 +97,23 @@ async function handleAddItem(section) {
   await loadProject(state.projectId);
 }
 
+function scheduleProgressSave(value) {
+  if (!state.projectId) {
+    return;
+  }
+  if (state.progressTimer) {
+    window.clearTimeout(state.progressTimer);
+  }
+  const normalized = Number(value) || 0;
+  state.progressTimer = window.setTimeout(async () => {
+    await requestJSON(`/api/projects/${state.projectId}/progress`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ progress: normalized }),
+    });
+  }, 250);
+}
+
 async function handleObjectiveSave() {
   if (!state.projectId) {
     return;
@@ -145,6 +163,12 @@ projectSelect.addEventListener("change", async (event) => {
 
 addButtons.forEach((button) => {
   button.addEventListener("click", () => handleAddItem(button.dataset.section));
+});
+
+progressSlider.addEventListener("input", (event) => {
+  const value = event.target.value;
+  updateProgressDisplay(value);
+  scheduleProgressSave(value);
 });
 
 objectiveSave.addEventListener("click", handleObjectiveSave);
