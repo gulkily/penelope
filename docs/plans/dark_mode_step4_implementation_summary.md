@@ -7,3 +7,8 @@
 - Changes: Added a theme selector to both headers and wired it to switch the active theme preference in the shared script.
 - Verification: Manual smoke test suggested (change the theme select and confirm the page colors update; not run here).
 - Notes: Preference is not persisted yet.
+
+## Stage 3 – Implement dark theme styling
+- Changes: Converted shared styles to use theme variables and added dark-mode overrides, including layout tweaks for the theme selector.
+- Verification: Manual smoke test suggested (switch themes and check contrast on dashboard and project management pages; not run here).
+- Notes: Focus styles and key component colors are now theme-driven.
