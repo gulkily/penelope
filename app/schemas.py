@@ -8,3 +8,7 @@ class ItemCreate(BaseModel):
 
 class QuestionsUpdate(BaseModel):
     questions: str = Field("", description="Free-form questions or risks text.")
+
+
+class ObjectiveUpdate(BaseModel):
+    objective: str = Field("", description="North Star objective for the project.")
