@@ -12,3 +12,8 @@
 - Changes: Placed the Questions block inside a card container while keeping the existing label and textarea.
 - Verification: Manual smoke test suggested (confirm Questions renders inside a card and remains usable; not run here).
 - Notes: None.
+
+## Stage 4 – Adjust spacing for card layout
+- Changes: Added a compact card modifier to keep the Project selector card from forcing extra height.
+- Verification: Manual smoke test suggested (confirm the Project card feels compact and spacing remains consistent; not run here).
+- Notes: None.

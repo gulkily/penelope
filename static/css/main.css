@@ -243,6 +243,10 @@ body {
   box-shadow: 0 10px 20px var(--shadow-card);
 }
 
+.card-compact {
+  min-height: auto;
+}
+
 .card h2 {
   margin: 0;
   font-size: 15px;
