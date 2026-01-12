@@ -20,6 +20,7 @@ No commands are standardized yet. Once tooling is added, keep this section curre
 - JS/CSS/HTML: 2-space indentation, `kebab-case` for filenames, `data-*` attributes for JS hooks.
 - Avoid third-party frontend frameworks (no React/Tailwind); use plain HTML/CSS/JS.
 - Store HTML templates in separate files under `templates/`, not inline in Python.
+- Keep Python modules under ~200 lines; refactor into additional files when they grow beyond that.
 
 ## Data & Persistence
 - Default database: SQLite (local dev), with an easy switch to Postgres via `DATABASE_URL`.
