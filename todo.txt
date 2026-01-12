@@ -1,5 +1,4 @@
 - Add URL saving project selector.
-- Replace prompt() with something nicer.
 - Add some simple prompting integration, like add suggestions as a mentor.
 	- Need to have project summaries for this, ideally.
 - Idempotency of database init.
