@@ -12,3 +12,8 @@
 - Changes: Added an E2E test that archives and unarchives a project in the manage view.
 - Verification: Manual smoke test suggested (run `pytest tests/e2e/test_archive_project.py`; not run here).
 - Notes: The test creates a new project and writes to the active database.
+
+## Stage 4 – Add theme toggle coverage
+- Changes: Added an E2E test that cycles the theme toggle and verifies theme attributes.
+- Verification: Manual smoke test suggested (run `pytest tests/e2e/test_theme_toggle.py`; not run here).
+- Notes: The test expects a fresh localStorage state per test.
