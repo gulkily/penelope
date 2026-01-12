@@ -11,7 +11,6 @@ const progressSlider = document.getElementById("progress-slider");
 const progressPercent = document.getElementById("progress-percent");
 const emptyState = document.getElementById("empty-state");
 const objectiveInput = document.getElementById("objective-input");
-const objectiveSave = document.getElementById("objective-save");
 const questionsInput = document.getElementById("questions-input");
 const inlineAddButtons = document.querySelectorAll(".inline-add-button");
 const inlineAddInputs = document.querySelectorAll(".inline-add-input");
@@ -43,9 +42,6 @@ function setInteractivity(enabled) {
   toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
   objectiveInput.disabled = !enabled;
-  if (objectiveSave) {
-    objectiveSave.disabled = !enabled;
-  }
   questionsInput.disabled = !enabled;
 }
 
@@ -295,18 +291,6 @@ function scheduleProgressSave(value) {
   }, 250);
 }
 
-async function handleObjectiveSave() {
-  if (!state.projectId) {
-    return;
-  }
-  const objective = objectiveInput.value.trim();
-  await requestJSON(`/api/projects/${state.projectId}/objective`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ objective }),
-  });
-}
-
 function scheduleObjectiveSave() {
   if (!state.projectId) {
     return;
@@ -521,9 +505,6 @@ progressSlider.addEventListener("input", (event) => {
   scheduleProgressSave(value);
 });
 
-if (objectiveSave) {
-  objectiveSave.addEventListener("click", handleObjectiveSave);
-}
 objectiveInput.addEventListener("input", scheduleObjectiveSave);
 questionsInput.addEventListener("input", scheduleQuestionsSave);
 
