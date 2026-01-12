@@ -175,10 +175,77 @@ body {
   color: #3d4047;
 }
 
-.section-list li {
+.section-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 6px 8px;
   border-radius: 6px;
   background: #f6f7fb;
+}
+
+.item-text {
+  flex: 1 1 auto;
+}
+
+.item-actions {
+  display: inline-flex;
+  gap: 6px;
+  opacity: 0;
+}
+
+.section-item:hover .item-actions,
+.section-item:focus-within .item-actions {
+  opacity: 1;
+}
+
+.item-action {
+  border: 1px solid #d1d6e2;
+  background: #ffffff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.item-action-save,
+.item-action-cancel {
+  display: none;
+}
+
+.section-item.is-editing .item-action-edit,
+.section-item.is-editing .item-delete {
+  display: none;
+}
+
+.section-item.is-editing .item-action-save,
+.section-item.is-editing .item-action-cancel {
+  display: inline-flex;
+}
+
+.item-input {
+  flex: 1 1 auto;
+  font-size: 13px;
+  padding: 4px 6px;
+  border: 1px solid #cfd5e2;
+  border-radius: 4px;
+}
+
+.item-input:focus {
+  outline: 2px solid #c6d4ff;
+  border-color: #9ab2ff;
+}
+
+.item-action:focus {
+  outline: 2px solid #c6d4ff;
+  outline-offset: 2px;
+}
+
+.item-delete {
+  color: #8a1f1f;
+  border-color: #e7b8b8;
+  background: #fff2f2;
 }
 
 .add-button {

@@ -150,6 +150,29 @@ def add_item(project_id: int, section: str, text: str) -> dict:
     return {"id": item_id, "section": section, "text": text}
 
 
+def update_item(item_id: int, text: str) -> dict | None:
+    with _connect() as conn:
+        row = conn.execute(
+            "SELECT id, section FROM items WHERE id = ?",
+            (item_id,),
+        ).fetchone()
+        if not row:
+            return None
+        conn.execute(
+            "UPDATE items SET content = ? WHERE id = ?",
+            (text, item_id),
+        )
+        conn.commit()
+    return {"id": row["id"], "section": row["section"], "text": text}
+
+
+def delete_item(item_id: int) -> bool:
+    with _connect() as conn:
+        cursor = conn.execute("DELETE FROM items WHERE id = ?", (item_id,))
+        conn.commit()
+    return cursor.rowcount > 0
+
+
 def update_questions(project_id: int, questions: str) -> None:
     with _connect() as conn:
         conn.execute(

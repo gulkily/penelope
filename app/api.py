@@ -1,7 +1,13 @@
 from fastapi import APIRouter, HTTPException
 
 from app import db
-from app.schemas import ItemCreate, ObjectiveUpdate, ProgressUpdate, QuestionsUpdate
+from app.schemas import (
+    ItemCreate,
+    ItemUpdate,
+    ObjectiveUpdate,
+    ProgressUpdate,
+    QuestionsUpdate,
+)
 
 router = APIRouter()
 
@@ -29,6 +35,22 @@ def add_item(project_id: int, payload: ItemCreate) -> dict:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"item": item}
+
+
+@router.put("/items/{item_id}")
+def update_item(item_id: int, payload: ItemUpdate) -> dict:
+    item = db.update_item(item_id, payload.text.strip())
+    if not item:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"item": item}
+
+
+@router.delete("/items/{item_id}")
+def delete_item(item_id: int) -> dict:
+    deleted = db.delete_item(item_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Item not found")
+    return {"deleted": True}
 
 
 @router.put("/projects/{project_id}/questions")

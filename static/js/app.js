@@ -65,7 +65,43 @@ function renderSections(sections) {
     const items = sections[section] || [];
     items.forEach((item) => {
       const li = document.createElement("li");
-      li.textContent = item.text;
+      li.className = "section-item";
+      li.dataset.itemId = item.id;
+      li.dataset.section = section;
+
+      const actions = document.createElement("span");
+      actions.className = "item-actions";
+
+      const editButton = document.createElement("button");
+      editButton.type = "button";
+      editButton.className = "item-action item-action-edit";
+      editButton.textContent = "Edit";
+      editButton.dataset.action = "edit";
+
+      const saveButton = document.createElement("button");
+      saveButton.type = "button";
+      saveButton.className = "item-action item-action-save";
+      saveButton.textContent = "Save";
+      saveButton.dataset.action = "save";
+
+      const cancelButton = document.createElement("button");
+      cancelButton.type = "button";
+      cancelButton.className = "item-action item-action-cancel";
+      cancelButton.textContent = "Cancel";
+      cancelButton.dataset.action = "cancel";
+
+      const deleteButton = document.createElement("button");
+      deleteButton.type = "button";
+      deleteButton.className = "item-action item-delete";
+      deleteButton.textContent = "Delete";
+      deleteButton.dataset.action = "delete";
+
+      const text = document.createElement("span");
+      text.className = "item-text";
+      text.textContent = item.text;
+
+      actions.append(editButton, saveButton, cancelButton, deleteButton);
+      li.append(text, actions);
       list.append(li);
     });
   });
@@ -177,6 +213,94 @@ projectSelect.addEventListener("change", async (event) => {
 
 addButtons.forEach((button) => {
   button.addEventListener("click", () => handleAddItem(button.dataset.section));
+});
+
+document.addEventListener("click", async (event) => {
+  const button = event.target.closest(".item-action");
+  if (!button) {
+    return;
+  }
+  const listItem = button.closest(".section-item");
+  if (!listItem) {
+    return;
+  }
+  const itemId = listItem.dataset.itemId;
+  if (!itemId) {
+    return;
+  }
+
+  if (button.dataset.action === "delete") {
+    const confirmed = window.confirm("Delete this item?");
+    if (!confirmed) {
+      return;
+    }
+    await requestJSON(`/api/items/${itemId}`, { method: "DELETE" });
+    if (state.projectId) {
+      await loadProject(state.projectId);
+    }
+    return;
+  }
+
+  if (button.dataset.action === "edit") {
+    if (listItem.classList.contains("is-editing")) {
+      return;
+    }
+    const textNode = listItem.querySelector(".item-text");
+    if (!textNode) {
+      return;
+    }
+    const currentText = textNode.textContent || "";
+    listItem.dataset.originalText = currentText;
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.className = "item-input";
+    input.value = currentText;
+    textNode.replaceWith(input);
+    listItem.classList.add("is-editing");
+    input.focus();
+    input.select();
+    return;
+  }
+
+  if (button.dataset.action === "cancel") {
+    const original = listItem.dataset.originalText || "";
+    const input = listItem.querySelector(".item-input");
+    if (input) {
+      const text = document.createElement("span");
+      text.className = "item-text";
+      text.textContent = original;
+      input.replaceWith(text);
+    }
+    listItem.classList.remove("is-editing");
+    return;
+  }
+
+  if (button.dataset.action === "save") {
+    const input = listItem.querySelector(".item-input");
+    if (!input) {
+      return;
+    }
+    const updated = input.value.trim();
+    const original = listItem.dataset.originalText || "";
+    if (!updated || updated === original.trim()) {
+      listItem.classList.remove("is-editing");
+      const text = document.createElement("span");
+      text.className = "item-text";
+      text.textContent = original;
+      input.replaceWith(text);
+      return;
+    }
+    await requestJSON(`/api/items/${itemId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: updated }),
+    });
+    if (state.projectId) {
+      await loadProject(state.projectId);
+    }
+    return;
+  }
 });
 
 progressSlider.addEventListener("input", (event) => {

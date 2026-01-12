@@ -6,6 +6,10 @@ class ItemCreate(BaseModel):
     text: str = Field(..., min_length=1)
 
 
+class ItemUpdate(BaseModel):
+    text: str = Field(..., min_length=1)
+
+
 class QuestionsUpdate(BaseModel):
     questions: str = Field("", description="Free-form questions or risks text.")
 
