@@ -36,18 +36,23 @@ def test_item_add_edit_delete(page):
     item_row = page.locator(
         ".section-list[data-section='summary'] .section-item",
         has_text=item_text,
-    )
+    ).first
     expect(item_row).to_be_visible()
+    item_id = item_row.get_attribute("data-item-id")
+    assert item_id
+
+    row_by_id = page.locator(f'.section-item[data-item-id="{item_id}"]')
 
     with page.expect_response(
         lambda response: "/items/" in response.url
         and response.request.method == "PUT"
         and response.status == 200
     ):
-        item_row.locator(".item-action-edit").click()
-        edit_input = item_row.locator(".item-input")
+        row_by_id.locator(".item-action-edit").click()
+        edit_input = row_by_id.locator(".item-input")
+        expect(edit_input).to_be_visible()
         edit_input.fill(updated_text)
-        item_row.locator(".item-action-save").click()
+        row_by_id.locator(".item-action-save").click()
 
     updated_row = page.locator(
         ".section-list[data-section='summary'] .section-item",
@@ -60,11 +65,6 @@ def test_item_add_edit_delete(page):
         and response.request.method == "DELETE"
         and response.status == 200
     ):
-        updated_row.locator(".item-delete").click()
+        row_by_id.locator(".item-delete").click()
 
-    expect(
-        page.locator(
-            ".section-list[data-section='summary'] .section-item",
-            has_text=updated_text,
-        )
-    ).to_have_count(0)
+    expect(row_by_id).to_have_count(0)
