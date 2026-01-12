@@ -4,7 +4,7 @@ const state = {
 };
 
 const projectSelect = document.getElementById("project-select");
-const progressFill = document.getElementById("progress-fill");
+const progressSlider = document.getElementById("progress-slider");
 const progressPercent = document.getElementById("progress-percent");
 const emptyState = document.getElementById("empty-state");
 const objectiveInput = document.getElementById("objective-input");
@@ -23,6 +23,7 @@ function setInteractivity(enabled) {
   addButtons.forEach((button) => {
     button.disabled = !enabled;
   });
+  progressSlider.disabled = !enabled;
   objectiveInput.disabled = !enabled;
   objectiveSave.disabled = !enabled;
   questionsInput.disabled = !enabled;
@@ -59,9 +60,15 @@ function renderSections(sections) {
   });
 }
 
+function updateProgressDisplay(value) {
+  const normalized = Number(value) || 0;
+  progressSlider.value = normalized;
+  progressPercent.textContent = `${normalized}%`;
+  progressSlider.style.setProperty("--progress", `${normalized}%`);
+}
+
 function renderProject(project) {
-  progressFill.style.width = `${project.progress}%`;
-  progressPercent.textContent = `${project.progress}%`;
+  updateProgressDisplay(project.progress);
   objectiveInput.value = project.objective || "";
   questionsInput.value = project.questions || "";
   renderSections(project.sections || {});
@@ -123,8 +130,7 @@ projectSelect.addEventListener("change", async (event) => {
     state.projectId = null;
     emptyState.hidden = false;
     setInteractivity(false);
-    progressFill.style.width = "0%";
-    progressPercent.textContent = "0%";
+    updateProgressDisplay(0);
     renderSections({});
     objectiveInput.value = "";
     questionsInput.value = "";
