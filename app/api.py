@@ -6,6 +6,8 @@ from app.schemas import (
     ItemUpdate,
     ObjectiveUpdate,
     ProgressUpdate,
+    ProjectArchiveUpdate,
+    ProjectCreate,
     QuestionsUpdate,
 )
 
@@ -13,8 +15,8 @@ router = APIRouter()
 
 
 @router.get("/projects")
-def list_projects() -> dict:
-    return {"projects": db.list_projects()}
+def list_projects(include_archived: bool = False) -> dict:
+    return {"projects": db.list_projects(include_archived=include_archived)}
 
 
 @router.get("/projects/{project_id}")
@@ -23,6 +25,20 @@ def get_project(project_id: int) -> dict:
     if not project:
         raise HTTPException(status_code=404, detail="Project not found")
     return project
+
+
+@router.post("/projects")
+def create_project(payload: ProjectCreate) -> dict:
+    project = db.create_project(payload.name.strip())
+    return {"project": project}
+
+
+@router.put("/projects/{project_id}/archive")
+def update_project_archive(project_id: int, payload: ProjectArchiveUpdate) -> dict:
+    updated = db.set_project_archived(project_id, payload.archived)
+    if not updated:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return {"archived": payload.archived}
 
 
 @router.post("/projects/{project_id}/items")

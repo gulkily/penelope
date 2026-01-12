@@ -10,6 +10,14 @@ class ItemUpdate(BaseModel):
     text: str = Field(..., min_length=1)
 
 
+class ProjectCreate(BaseModel):
+    name: str = Field(..., min_length=1)
+
+
+class ProjectArchiveUpdate(BaseModel):
+    archived: bool = Field(False)
+
+
 class QuestionsUpdate(BaseModel):
     questions: str = Field("", description="Free-form questions or risks text.")
 
