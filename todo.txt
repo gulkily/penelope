@@ -6,3 +6,4 @@
 - Add some simple prompting integration, like add suggestions as a mentor.
 	- Need to have project summaries for this, ideally.
 - Idempotency of database init.
+- Style the Questions section the same as the others.
