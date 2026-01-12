@@ -41,7 +41,8 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 progress INTEGER NOT NULL,
-                questions TEXT NOT NULL DEFAULT ''
+                questions TEXT NOT NULL DEFAULT '',
+                objective TEXT NOT NULL DEFAULT ''
             )
             """
         )
@@ -57,7 +58,15 @@ def init_db() -> None:
             )
             """
         )
+        _ensure_objective_column(conn)
         _seed_if_empty(conn)
+
+
+def _ensure_objective_column(conn: sqlite3.Connection) -> None:
+    columns = conn.execute("PRAGMA table_info(projects)").fetchall()
+    if any(column["name"] == "objective" for column in columns):
+        return
+    conn.execute("ALTER TABLE projects ADD COLUMN objective TEXT NOT NULL DEFAULT ''")
 
 
 def _seed_if_empty(conn: sqlite3.Connection) -> None:
@@ -66,12 +75,13 @@ def _seed_if_empty(conn: sqlite3.Connection) -> None:
         return
 
     projects = [
-        ("Project North", 40, ""),
-        ("Project Aurora", 62, ""),
-        ("Project Horizon", 25, ""),
+        ("Project North", 40, "", "Reach 10 paying customers."),
+        ("Project Aurora", 62, "", "Process 10GB of data per day."),
+        ("Project Horizon", 25, "", "Launch to three design partners."),
     ]
     conn.executemany(
-        "INSERT INTO projects (name, progress, questions) VALUES (?, ?, ?)", projects
+        "INSERT INTO projects (name, progress, questions, objective) VALUES (?, ?, ?, ?)",
+        projects,
     )
     items = [
         (1, "summary", "Shared vision defined across teams."),
@@ -99,7 +109,7 @@ def list_projects() -> list[dict]:
 def get_project(project_id: int) -> dict | None:
     with _connect() as conn:
         project_row = conn.execute(
-            "SELECT id, name, progress, questions FROM projects WHERE id = ?",
+            "SELECT id, name, progress, questions, objective FROM projects WHERE id = ?",
             (project_id,),
         ).fetchone()
         if not project_row:
@@ -118,6 +128,7 @@ def get_project(project_id: int) -> dict | None:
         "id": project_row["id"],
         "name": project_row["name"],
         "progress": project_row["progress"],
+        "objective": project_row["objective"],
         "sections": sections,
         "questions": project_row["questions"],
     }
@@ -144,5 +155,14 @@ def update_questions(project_id: int, questions: str) -> None:
         conn.execute(
             "UPDATE projects SET questions = ? WHERE id = ?",
             (questions, project_id),
+        )
+        conn.commit()
+
+
+def update_objective(project_id: int, objective: str) -> None:
+    with _connect() as conn:
+        conn.execute(
+            "UPDATE projects SET objective = ? WHERE id = ?",
+            (objective, project_id),
         )
         conn.commit()
