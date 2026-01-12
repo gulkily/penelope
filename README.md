@@ -11,6 +11,13 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
    - `./start.sh`
 3. Open `http://127.0.0.1:8000/`.
 
+## Task runner
+- `./pnl venv` for virtual environment setup help.
+- `./pnl install` to install dependencies.
+- `./pnl start` to run the server.
+- `./pnl test` to run all tests.
+- `./pnl test e2e` or `./pnl test http` for focused test runs.
+
 ## Testing
 1. Install test dependencies:
    - `pip install -r requirements.txt`

@@ -17,6 +17,12 @@ If a different layout is introduced, update this guide and keep directory names 
 - `pytest tests/http` for HTTP-level integration tests (requires the app to be running).
 - `pytest` to run all tests.
 - Do not use npm; use Python tooling for tests and scripts.
+- Task runner:
+  - `./pnl venv` for virtual environment setup help.
+  - `./pnl install` to install dependencies.
+  - `./pnl start` to run the server.
+  - `./pnl test` to run all tests.
+  - `./pnl test e2e` or `./pnl test http` for focused test runs.
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, type hints where practical, `snake_case` for functions/modules, `PascalCase` for classes.
