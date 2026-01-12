@@ -30,6 +30,9 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
    - `pytest` (all tests)
 4. Optional: set `E2E_BASE_URL` to point at a non-default server.
 
+## Test coverage matrix
+- See `docs/test_matrix.md` for frontend flow coverage and gaps.
+
 ## Data & persistence
 - Default storage is SQLite at `data/north_star.db` (created automatically on first run).
 - Override the database location with `DATABASE_URL` (use `sqlite:///path/to.db`).
