@@ -12,3 +12,8 @@
 - Changes: Added `--workers`, `--dist`, and `--duration` support in `scripts/pnl.py`, and broadened loop mode to all scopes while preserving existing flags.
 - Verification: Ran `./pnl test --help`.
 - Notes: `--dist` now requires `--workers` to avoid confusing no-op runs.
+
+## Stage 4 – Document the parallel/load workflow
+- Changes: Updated `README.md` and `AGENTS.md` with new parallel and loop usage guidance for manual-server testing.
+- Verification: Ran `./pnl help` and cross-checked documentation against the updated CLI output.
+- Notes: None.

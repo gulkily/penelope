@@ -24,7 +24,9 @@ If a different layout is introduced, update this guide and keep directory names 
   - `./pnl test` to run all tests.
   - `./pnl test e2e` or `./pnl test http` for focused test runs.
   - `./pnl test e2e --headed` for visible browser runs.
-  - `./pnl test --help` for loop options.
+  - `./pnl test --workers 4` for parallel runs against a running server.
+  - `./pnl test --duration 60 --workers 2` for load-style loops.
+  - `./pnl test --help` for loop/parallel options.
   - `./pnl seed-demo` to add demo data.
 
 ## Coding Style & Naming Conventions
