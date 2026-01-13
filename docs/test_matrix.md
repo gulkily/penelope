@@ -13,6 +13,7 @@ This matrix maps key frontend flows to current automated coverage.
 | Item add/edit/delete (UI) | tests/e2e/test_items_flow.py | — | Covers Summary item CRUD flow. |
 | Archive/unarchive project (UI) | tests/e2e/test_archive_project.py | — | Toggles archive checkbox in Manage Projects. |
 | Theme toggle (UI) | tests/e2e/test_theme_toggle.py | — | Cycles theme preferences and checks attributes. |
+| Full data population (UI) | tests/e2e/test_full_data_coverage.py | — | Populates objective, progress, questions, and all section items. |
 | Project create + updates (API) | — | tests/http/test_projects_api.py | Covers create + objective/progress via API. |
 
 ## Gaps
