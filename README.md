@@ -38,6 +38,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Default storage is SQLite at `data/north_star.db` (created automatically on first run).
 - Override the database location with `DATABASE_URL` (use `sqlite:///path/to.db`).
 - The seed data includes a few example projects and items to populate the UI.
+- To add additional demo data, run `python scripts/seed_demo_data.py`.
 
 ## Notes
 - Item additions use inline add rows; edit and delete are available per item with an undo toast.
