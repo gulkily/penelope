@@ -12,3 +12,8 @@
 - Changes: Added backup download UI to `templates/settings.html` plus `static/js/settings.js` to fetch and download the backup, with basic status messaging and error styling in `static/css/main.css`.
 - Verification: Not run here (requires loading `/settings` and clicking the backup button).
 - Notes: Uses the API-provided filename when available.
+
+## Stage 4 – Document backup usage
+- Changes: Documented the Settings backup entry point in `README.md`.
+- Verification: Not run here (documentation update only).
+- Notes: None.
