@@ -528,6 +528,21 @@ body {
   font-weight: 600;
 }
 
+.table-sort {
+  border: none;
+  background: none;
+  padding: 0;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.table-sort:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .project-link {
   color: var(--link);
   text-decoration: none;

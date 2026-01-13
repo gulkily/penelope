@@ -1,6 +1,13 @@
 const form = document.getElementById("add-project-form");
 const nameInput = document.getElementById("project-name");
 const tableBody = document.getElementById("project-table-body");
+const sortButtons = document.querySelectorAll(".table-sort");
+
+const state = {
+  projects: [],
+  sortKey: "id",
+  sortDirection: "asc",
+};
 
 async function requestJSON(url, options) {
   const response = await fetch(url, options);
@@ -12,9 +19,13 @@ async function requestJSON(url, options) {
 
 function renderProjects(projects) {
   tableBody.innerHTML = "";
-  projects.forEach((project) => {
+  const sorted = [...projects].sort(compareProjects);
+  sorted.forEach((project) => {
     const row = document.createElement("tr");
     row.className = project.archived ? "is-archived" : "";
+
+    const idCell = document.createElement("td");
+    idCell.textContent = String(project.id);
 
     const nameCell = document.createElement("td");
     const link = document.createElement("a");
@@ -31,14 +42,60 @@ function renderProjects(projects) {
     checkbox.addEventListener("change", handleArchiveToggle);
     archiveCell.append(checkbox);
 
-    row.append(nameCell, archiveCell);
+    row.append(idCell, nameCell, archiveCell);
     tableBody.append(row);
+  });
+}
+
+function compareProjects(a, b) {
+  const key = state.sortKey;
+  let left = a[key];
+  let right = b[key];
+  if (key === "name") {
+    left = String(left || "").toLowerCase();
+    right = String(right || "").toLowerCase();
+  }
+  if (key === "archived") {
+    left = left ? 1 : 0;
+    right = right ? 1 : 0;
+  }
+  if (left < right) {
+    return state.sortDirection === "asc" ? -1 : 1;
+  }
+  if (left > right) {
+    return state.sortDirection === "asc" ? 1 : -1;
+  }
+  return 0;
+}
+
+function updateSortIndicators() {
+  sortButtons.forEach((button) => {
+    const key = button.dataset.sort;
+    if (!key) {
+      return;
+    }
+    let label = button.textContent?.replace(/\s\[(asc|desc)\]$/i, "").trim() || "";
+    const header = button.closest("th");
+    if (key === state.sortKey) {
+      label += state.sortDirection === "asc" ? " [asc]" : " [desc]";
+      if (header) {
+        header.setAttribute(
+          "aria-sort",
+          state.sortDirection === "asc" ? "ascending" : "descending"
+        );
+      }
+    } else if (header) {
+      header.setAttribute("aria-sort", "none");
+    }
+    button.textContent = label;
   });
 }
 
 async function loadProjects() {
   const data = await requestJSON("/api/projects?include_archived=1");
-  renderProjects(data.projects);
+  state.projects = data.projects;
+  renderProjects(state.projects);
+  updateSortIndicators();
 }
 
 async function handleArchiveToggle(event) {
@@ -83,6 +140,23 @@ form.addEventListener("submit", async (event) => {
   } finally {
     form.querySelector("button").disabled = false;
   }
+});
+
+sortButtons.forEach((button) => {
+  button.addEventListener("click", () => {
+    const key = button.dataset.sort;
+    if (!key) {
+      return;
+    }
+    if (state.sortKey === key) {
+      state.sortDirection = state.sortDirection === "asc" ? "desc" : "asc";
+    } else {
+      state.sortKey = key;
+      state.sortDirection = "asc";
+    }
+    renderProjects(state.projects);
+    updateSortIndicators();
+  });
 });
 
 loadProjects().catch((error) => {
