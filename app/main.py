@@ -30,3 +30,8 @@ def index(request: Request) -> HTMLResponse:
 @app.get("/projects", response_class=HTMLResponse)
 def manage_projects(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("manage_projects.html", {"request": request})
+
+
+@app.get("/settings", response_class=HTMLResponse)
+def settings(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("settings.html", {"request": request})

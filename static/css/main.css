@@ -451,6 +451,12 @@ body {
   color: var(--text-link-button);
 }
 
+.link-button-group {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
 .link-button.small {
   padding: 4px 10px;
   font-size: 11px;
