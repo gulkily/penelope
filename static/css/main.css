@@ -528,6 +528,19 @@ body {
   font-weight: 600;
 }
 
+.project-table .column-id {
+  width: 60px;
+  white-space: nowrap;
+}
+
+.project-table tbody tr:nth-child(even) {
+  background: var(--surface-alt);
+}
+
+.project-table tbody tr:nth-child(even) td {
+  border-bottom-color: transparent;
+}
+
 .table-sort {
   border: none;
   background: none;
@@ -547,8 +560,7 @@ body {
 }
 
 .table-sort-indicator {
-  min-width: 4ch;
-  text-transform: lowercase;
+  min-width: 1.5ch;
   color: var(--text-subtle);
 }
 

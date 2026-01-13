@@ -78,7 +78,7 @@ function updateSortIndicators() {
     const indicator = button.querySelector(".table-sort-indicator");
     if (key === state.sortKey) {
       if (indicator) {
-        indicator.textContent = state.sortDirection === "asc" ? "asc" : "desc";
+        indicator.textContent = state.sortDirection === "asc" ? "↑" : "↓";
       }
       if (header) {
         header.setAttribute(
