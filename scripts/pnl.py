@@ -33,7 +33,23 @@ def start_server() -> int:
     return run_command(["./start.sh"])
 
 
-def run_tests(scope: str | None, headed: bool) -> int:
+def run_tests(
+    scope: str | None,
+    headed: bool,
+    loop_count: int | None,
+    delay: float,
+    keep_going: bool,
+) -> int:
+    if loop_count is not None:
+        command = ["python3", "scripts/run_e2e_loop.py", str(loop_count)]
+        if headed:
+            command.append("--headed")
+        if delay > 0:
+            command.extend(["--delay", str(delay)])
+        if keep_going:
+            command.append("--keep-going")
+        return run_command(command)
+
     command = ["python3", "-m", "pytest"]
     if scope == "e2e":
         command.append("tests/e2e")
@@ -41,6 +57,13 @@ def run_tests(scope: str | None, headed: bool) -> int:
         command.append("tests/http")
     if headed:
         command.append("--headed")
+    return run_command(command)
+
+
+def run_seed_demo(allow_duplicates: bool) -> int:
+    command = ["python3", "scripts/seed_demo_data.py"]
+    if allow_duplicates:
+        command.append("--allow-duplicates")
     return run_command(command)
 
 
@@ -56,7 +79,23 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     subparsers.add_parser("install", help="Install Python dependencies.")
     subparsers.add_parser("start", help="Start the development server.")
 
-    test_parser = subparsers.add_parser("test", help="Run tests.")
+    test_parser = subparsers.add_parser(
+        "test",
+        help="Run tests.",
+        description=(
+            "Run test suites. Default runs all tests. "
+            "Use --loop to repeat E2E tests."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  ./pnl test\n"
+            "  ./pnl test e2e\n"
+            "  ./pnl test e2e --headed\n"
+            "  ./pnl test e2e --loop 100\n"
+            "  ./pnl test e2e --loop 10 --delay 1 --keep-going\n"
+        ),
+    )
     test_parser.add_argument(
         "scope",
         nargs="?",
@@ -67,6 +106,32 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         "--headed",
         action="store_true",
         help="Run E2E tests with a visible browser.",
+    )
+    test_parser.add_argument(
+        "--loop",
+        type=int,
+        help="Repeat E2E tests N times using scripts/run_e2e_loop.py.",
+    )
+    test_parser.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help="Delay between looped E2E runs (seconds).",
+    )
+    test_parser.add_argument(
+        "--keep-going",
+        action="store_true",
+        help="Continue looping after a test failure.",
+    )
+
+    seed_parser = subparsers.add_parser(
+        "seed-demo",
+        help="Seed the database with demo data.",
+    )
+    seed_parser.add_argument(
+        "--allow-duplicates",
+        action="store_true",
+        help="Insert demo projects even if names already exist.",
     )
 
     return parser, parser.parse_args()
@@ -87,7 +152,12 @@ def main() -> int:
     if args.command == "start":
         return start_server()
     if args.command == "test":
-        return run_tests(args.scope, args.headed)
+        if args.loop is not None and args.scope == "http":
+            print("Loop mode is only supported for E2E tests.", file=sys.stderr)
+            return 2
+        return run_tests(args.scope, args.headed, args.loop, args.delay, args.keep_going)
+    if args.command == "seed-demo":
+        return run_seed_demo(args.allow_duplicates)
 
     return 1
 
