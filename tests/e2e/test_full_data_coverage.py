@@ -4,6 +4,8 @@ import time
 
 from playwright.sync_api import expect
 
+from tests.e2e.data_factory import unique_project_name
+
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 SECTIONS = {
@@ -36,7 +38,7 @@ def add_item(page, section, text):
 
 def test_populates_all_fields(page):
     timestamp = int(time.time())
-    project_name = f"E2E Full Data {timestamp}"
+    project_name = unique_project_name()
     objective_text = f"E2E Objective {timestamp}"
     question_lines = random.randint(1, 3)
     questions_text = "\n".join(

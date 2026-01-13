@@ -3,12 +3,14 @@ import time
 
 from playwright.sync_api import expect
 
+from tests.e2e.data_factory import unique_project_name
+
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
 def test_can_create_project_and_update_north_star(page):
     timestamp = int(time.time())
-    project_name = f"E2E Project {timestamp}"
+    project_name = unique_project_name()
     objective = f"E2E Objective {timestamp}"
 
     page.goto(f"{BASE_URL}/projects")

@@ -3,6 +3,8 @@ import time
 
 from playwright.sync_api import expect
 
+from tests.e2e.data_factory import unique_project_name
+
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
@@ -16,7 +18,7 @@ def create_project(page, project_name):
 
 def test_item_add_edit_delete(page):
     timestamp = int(time.time())
-    project_name = f"E2E Items {timestamp}"
+    project_name = unique_project_name()
     item_text = f"E2E Item {timestamp}"
     updated_text = f"E2E Item Updated {timestamp}"
 

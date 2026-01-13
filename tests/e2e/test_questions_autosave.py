@@ -3,6 +3,8 @@ import time
 
 from playwright.sync_api import expect
 
+from tests.e2e.data_factory import unique_project_name
+
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
@@ -16,7 +18,7 @@ def create_project(page, project_name):
 
 def test_questions_autosave(page):
     timestamp = int(time.time())
-    project_name = f"E2E Questions {timestamp}"
+    project_name = unique_project_name()
     questions = f"E2E Questions {timestamp}"
 
     create_project(page, project_name)

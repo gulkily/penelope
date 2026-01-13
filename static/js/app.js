@@ -81,13 +81,16 @@ async function loadProjects() {
   if (projectSelect.value) {
     state.projectId = Number(projectSelect.value);
     emptyState.hidden = true;
-    setInteractivity(true);
+    setInteractivity(false);
     const projectData = await loadProject(state.projectId);
     if (!projectData && includeArchived) {
       projectSelect.value = "";
       resetEmptyState();
       clearProjectInUrl();
       return;
+    }
+    if (projectData) {
+      setInteractivity(true);
     }
     return;
   }
@@ -334,9 +337,12 @@ projectSelect.addEventListener("change", async (event) => {
 
   state.projectId = Number(selected);
   emptyState.hidden = true;
-  setInteractivity(true);
+  setInteractivity(false);
   setProjectInUrl(state.projectId);
-  await loadProject(state.projectId);
+  const projectData = await loadProject(state.projectId);
+  if (projectData) {
+    setInteractivity(true);
+  }
 });
 
 inlineAddButtons.forEach((button) => {
