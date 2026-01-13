@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import subprocess
 import sys
@@ -15,6 +16,10 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 def run_command(command: list[str]) -> int:
     result = subprocess.run(command, check=False)
     return result.returncode
+
+
+def has_xdist() -> bool:
+    return importlib.util.find_spec("xdist") is not None
 
 
 def print_venv_help() -> int:
@@ -60,6 +65,14 @@ def run_tests(
         return 2
     if dist is not None and workers is None:
         print("--dist requires --workers.", file=sys.stderr)
+        return 2
+    if workers is not None and not has_xdist():
+        print(
+            "pytest-xdist is required for --workers. "
+            "Install dependencies with `./pnl install` or "
+            "`pip install -r requirements.txt`.",
+            file=sys.stderr,
+        )
         return 2
 
     if loop_count is not None or duration is not None:

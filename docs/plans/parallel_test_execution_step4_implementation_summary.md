@@ -4,12 +4,12 @@
 - Notes: None.
 
 ## Stage 2 – Generalize loop runner for parallel + full suite
-- Changes: Expanded `scripts/run_e2e_loop.py` to support full-suite or HTTP scope, loop duration, xdist worker options, and reusable command building.
+- Changes: Expanded `scripts/run_e2e_loop.py` to support full-suite or HTTP scope, loop duration, xdist worker options, reusable command building, and a preflight error when xdist is missing.
 - Verification: Ran `python3 scripts/run_e2e_loop.py --help`.
 - Notes: Default scope remains `e2e` for backward compatibility.
 
 ## Stage 3 – Expose parallel/load options via `./pnl test`
-- Changes: Added `--workers`, `--dist`, and `--duration` support in `scripts/pnl.py`, and broadened loop mode to all scopes while preserving existing flags.
+- Changes: Added `--workers`, `--dist`, and `--duration` support in `scripts/pnl.py`, broadened loop mode to all scopes while preserving existing flags, and added a clear error when xdist is missing.
 - Verification: Ran `./pnl test --help`.
 - Notes: `--dist` now requires `--workers` to avoid confusing no-op runs.
 

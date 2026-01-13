@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import os
 import subprocess
 import sys
@@ -94,6 +95,10 @@ def run_once(command: list[str]) -> int:
     return result.returncode
 
 
+def has_xdist() -> bool:
+    return importlib.util.find_spec("xdist") is not None
+
+
 def validate_args(args: argparse.Namespace) -> None:
     if args.count is None and args.duration is None:
         raise SystemExit("count or --duration is required")
@@ -107,6 +112,14 @@ def validate_args(args: argparse.Namespace) -> None:
         raise SystemExit("--delay cannot be negative")
     if args.workers is not None and args.workers <= 0:
         raise SystemExit("--workers must be a positive integer")
+    if args.dist is not None and args.workers is None:
+        raise SystemExit("--dist requires --workers")
+    if args.workers is not None and not has_xdist():
+        raise SystemExit(
+            "pytest-xdist is required for --workers. "
+            "Install dependencies with `./pnl install` or "
+            "`pip install -r requirements.txt`."
+        )
 
 
 def main() -> int:
