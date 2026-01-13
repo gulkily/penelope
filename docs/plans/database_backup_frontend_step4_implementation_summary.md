@@ -7,3 +7,8 @@
 - Changes: Added `GET /api/backup` to return the SQLite file with a timestamped filename, plus a shared DB path helper in `app/db_connection.py`.
 - Verification: Not run here (requires running the server and requesting the endpoint).
 - Notes: Endpoint returns a 404 if the database file is missing.
+
+## Stage 3 – Wire backup UI on settings page
+- Changes: Added backup download UI to `templates/settings.html` plus `static/js/settings.js` to fetch and download the backup, with basic status messaging and error styling in `static/css/main.css`.
+- Verification: Not run here (requires loading `/settings` and clicking the backup button).
+- Notes: Uses the API-provided filename when available.

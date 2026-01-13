@@ -589,6 +589,19 @@ body {
   color: var(--link-muted);
 }
 
+.settings-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.status-error {
+  color: var(--danger);
+  font-weight: 600;
+}
+
 .pagination {
   display: flex;
   flex-wrap: wrap;

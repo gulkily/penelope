@@ -6,6 +6,7 @@
     <title>Settings</title>
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
+    <script src="/static/js/settings.js" defer></script>
   </head>
   <body>
     <main class="page">
@@ -21,10 +22,18 @@
       </header>
 
       <section class="card card-compact">
-        <h2>Database backup</h2>
-        <p class="hint">
-          Backup controls will appear here once configured.
-        </p>
+        <div class="settings-row">
+          <div>
+            <h2>Database backup</h2>
+            <p class="hint">
+              Download a full backup to store with your project.
+            </p>
+          </div>
+          <button type="button" class="action-button" id="backup-download">
+            Download backup
+          </button>
+        </div>
+        <p class="hint" id="backup-status" role="status" aria-live="polite"></p>
       </section>
     </main>
     <button type="button" class="theme-toggle" id="theme-toggle">
