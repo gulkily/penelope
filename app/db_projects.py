@@ -3,18 +3,29 @@ from app.db_constants import SECTIONS
 from app.db_items import list_items_for_project
 
 
-def list_projects(include_archived: bool = False) -> list[dict]:
+def list_projects(
+    include_archived: bool = False,
+    limit: int | None = None,
+    offset: int = 0,
+) -> tuple[list[dict], int]:
     query = "SELECT id, name, archived FROM projects"
-    params: tuple = ()
+    count_query = "SELECT COUNT(*) FROM projects"
+    params: list[int] = []
     if not include_archived:
         query += " WHERE archived = 0"
+        count_query += " WHERE archived = 0"
     query += " ORDER BY id"
+    if limit is not None:
+        query += " LIMIT ? OFFSET ?"
+        params.extend([limit, offset])
     with connect() as conn:
-        rows = conn.execute(query, params).fetchall()
-    return [
+        rows = conn.execute(query, tuple(params)).fetchall()
+        total = conn.execute(count_query).fetchone()[0]
+    projects = [
         {"id": row["id"], "name": row["name"], "archived": bool(row["archived"])}
         for row in rows
     ]
+    return projects, total
 
 
 def get_project(project_id: int) -> dict | None:
