@@ -15,6 +15,7 @@ const state = {
   page: 1,
   pageSize: PAGE_SIZE,
   total: 0,
+  sortMode: "client",
 };
 
 async function requestJSON(url, options) {
@@ -27,8 +28,9 @@ async function requestJSON(url, options) {
 
 function renderProjects(projects) {
   tableBody.innerHTML = "";
-  const sorted = [...projects].sort(compareProjects);
-  sorted.forEach((project) => {
+  const rows =
+    state.sortMode === "client" ? [...projects].sort(compareProjects) : projects;
+  rows.forEach((project) => {
     const row = document.createElement("tr");
     row.className = project.archived ? "is-archived" : "";
 
@@ -121,10 +123,23 @@ function updateSortIndicators() {
 async function loadProjects() {
   const params = new URLSearchParams({ include_archived: "1" });
   params.set("page", String(state.page));
+  if (state.sortMode === "server") {
+    params.set("sort_key", state.sortKey);
+    params.set("sort_dir", state.sortDirection);
+  }
   const data = await requestJSON(`/api/projects?${params.toString()}`);
   const total = Number.isFinite(data.total) ? data.total : data.projects.length;
   const pageSize = data.page_size || PAGE_SIZE;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  if (total > pageSize && state.sortMode !== "server") {
+    state.sortMode = "server";
+    return loadProjects();
+  }
+
+  if (total <= pageSize && state.sortMode !== "client") {
+    state.sortMode = "client";
+  }
 
   if (state.page > totalPages && totalPages > 0) {
     state.page = totalPages;
@@ -196,9 +211,16 @@ sortButtons.forEach((button) => {
       state.sortKey = key;
       state.sortDirection = "asc";
     }
-    renderProjects(state.projects);
     updateSortIndicators();
-    updatePaginationControls();
+    if (state.sortMode === "server") {
+      state.page = 1;
+      loadProjects().catch((error) => {
+        console.error(error);
+      });
+    } else {
+      renderProjects(state.projects);
+      updatePaginationControls();
+    }
   });
 });
 

@@ -16,18 +16,33 @@ PROJECTS_PAGE_SIZE = 100
 
 
 @router.get("/projects")
-def list_projects(include_archived: bool = False, page: int | None = None) -> dict:
-    if page is None:
-        projects, total = db.list_projects(include_archived=include_archived)
-        return {"projects": projects, "total": total}
-    if page < 1:
-        raise HTTPException(status_code=400, detail="page must be >= 1")
-    offset = (page - 1) * PROJECTS_PAGE_SIZE
-    projects, total = db.list_projects(
-        include_archived=include_archived,
-        limit=PROJECTS_PAGE_SIZE,
-        offset=offset,
-    )
+def list_projects(
+    include_archived: bool = False,
+    page: int | None = None,
+    sort_key: str = "id",
+    sort_dir: str = "asc",
+) -> dict:
+    try:
+        if page is None:
+            projects, total = db.list_projects(
+                include_archived=include_archived,
+                sort_key=sort_key,
+                sort_direction=sort_dir,
+            )
+            return {"projects": projects, "total": total}
+        if page < 1:
+            raise HTTPException(status_code=400, detail="page must be >= 1")
+        offset = (page - 1) * PROJECTS_PAGE_SIZE
+        projects, total = db.list_projects(
+            include_archived=include_archived,
+            limit=PROJECTS_PAGE_SIZE,
+            offset=offset,
+            sort_key=sort_key,
+            sort_direction=sort_dir,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
     return {
         "projects": projects,
         "total": total,

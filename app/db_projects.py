@@ -7,14 +7,33 @@ def list_projects(
     include_archived: bool = False,
     limit: int | None = None,
     offset: int = 0,
+    sort_key: str = "id",
+    sort_direction: str = "asc",
 ) -> tuple[list[dict], int]:
+    order_map = {
+        "id": "id",
+        "name": "name COLLATE NOCASE",
+        "archived": "archived",
+    }
+    if sort_key not in order_map:
+        raise ValueError("sort_key must be one of: id, name, archived")
+    if sort_direction not in ("asc", "desc"):
+        raise ValueError("sort_dir must be asc or desc")
+    if offset < 0:
+        raise ValueError("offset must be >= 0")
+
+    direction = "ASC" if sort_direction == "asc" else "DESC"
+    order_clause = f"{order_map[sort_key]} {direction}"
+    if sort_key != "id":
+        order_clause += ", id ASC"
+
     query = "SELECT id, name, archived FROM projects"
     count_query = "SELECT COUNT(*) FROM projects"
     params: list[int] = []
     if not include_archived:
         query += " WHERE archived = 0"
         count_query += " WHERE archived = 0"
-    query += " ORDER BY id"
+    query += f" ORDER BY {order_clause}"
     if limit is not None:
         query += " LIMIT ? OFFSET ?"
         params.extend([limit, offset])
