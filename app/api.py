@@ -1,4 +1,7 @@
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import FileResponse
 
 from app import db
 from app.schemas import (
@@ -13,6 +16,20 @@ from app.schemas import (
 
 router = APIRouter()
 PROJECTS_PAGE_SIZE = 100
+
+
+@router.get("/backup")
+def backup_database() -> FileResponse:
+    db_path = db.get_db_path()
+    if not db_path.exists():
+        raise HTTPException(status_code=404, detail="Database not found")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    filename = f"north_star_backup_{timestamp}.sqlite"
+    return FileResponse(
+        path=db_path,
+        filename=filename,
+        media_type="application/x-sqlite3",
+    )
 
 
 @router.get("/projects")

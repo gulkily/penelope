@@ -27,3 +27,7 @@ def connect() -> sqlite3.Connection:
     connection = sqlite3.connect(db_path)
     connection.row_factory = sqlite3.Row
     return connection
+
+
+def get_db_path() -> Path:
+    return resolve_sqlite_path()
