@@ -198,6 +198,7 @@ sortButtons.forEach((button) => {
     }
     renderProjects(state.projects);
     updateSortIndicators();
+    updatePaginationControls();
   });
 });
 

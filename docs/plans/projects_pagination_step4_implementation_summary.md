@@ -7,3 +7,8 @@
 - Changes: Added pagination controls to `templates/manage_projects.html`, styled them in `static/css/main.css`, and introduced pagination state in `static/js/manage-projects.js`.
 - Verification: Not run here (requires loading the management page in a browser).
 - Notes: Pagination defaults to 100 items per page and uses API-provided totals.
+
+## Stage 3 – Preserve sorting and actions with pagination
+- Changes: Kept per-page sorting with pagination state by refreshing pagination status after sort interactions.
+- Verification: Not run here (requires exercising sort, add, and archive flows in the UI).
+- Notes: Sorting remains client-side on the current page; add/archive reloads the current page.
