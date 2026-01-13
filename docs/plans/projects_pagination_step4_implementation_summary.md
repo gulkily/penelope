@@ -12,3 +12,8 @@
 - Changes: Kept per-page sorting with pagination state by refreshing pagination status after sort interactions.
 - Verification: Not run here (requires exercising sort, add, and archive flows in the UI).
 - Notes: Sorting remains client-side on the current page; add/archive reloads the current page.
+
+## Stage 4 – Document pagination behavior
+- Changes: Documented the 100-item pagination behavior in `README.md`.
+- Verification: Not run here (documentation update only).
+- Notes: None.

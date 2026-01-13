@@ -48,6 +48,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 
 ## Notes
 - Item additions use inline add rows; edit and delete are available per item with an undo toast.
+- Project Management lists are paginated at 100 items per page with next/previous controls.
 - The North Star objective can be updated per project via the Save button.
 - Progress updates happen immediately via the integrated slider.
 - Questions auto-save while typing.
