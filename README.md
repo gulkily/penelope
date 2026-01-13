@@ -30,6 +30,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
    - `pytest tests/http` (HTTP-level integration)
    - `pytest` (all tests)
 4. Optional: set `E2E_BASE_URL` to point at a non-default server.
+5. Optional: loop E2E tests with `python scripts/run_e2e_loop.py 10` (uses the current database).
 
 ## Test coverage matrix
 - See `docs/test_matrix.md` for frontend flow coverage and gaps.
