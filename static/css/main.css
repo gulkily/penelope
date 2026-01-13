@@ -535,12 +535,21 @@ body {
   color: inherit;
   font: inherit;
   cursor: pointer;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
 }
 
 .table-sort:focus {
   outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+.table-sort-indicator {
+  min-width: 4ch;
+  text-transform: lowercase;
+  color: var(--text-subtle);
 }
 
 .project-link {

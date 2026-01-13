@@ -74,20 +74,26 @@ function updateSortIndicators() {
     if (!key) {
       return;
     }
-    let label = button.textContent?.replace(/\s\[(asc|desc)\]$/i, "").trim() || "";
     const header = button.closest("th");
+    const indicator = button.querySelector(".table-sort-indicator");
     if (key === state.sortKey) {
-      label += state.sortDirection === "asc" ? " [asc]" : " [desc]";
+      if (indicator) {
+        indicator.textContent = state.sortDirection === "asc" ? "asc" : "desc";
+      }
       if (header) {
         header.setAttribute(
           "aria-sort",
           state.sortDirection === "asc" ? "ascending" : "descending"
         );
       }
-    } else if (header) {
-      header.setAttribute("aria-sort", "none");
+    } else {
+      if (indicator) {
+        indicator.textContent = "";
+      }
+      if (header) {
+        header.setAttribute("aria-sort", "none");
+      }
     }
-    button.textContent = label;
   });
 }
 
