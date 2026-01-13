@@ -3,3 +3,4 @@
 - Idempotency of database init.
 - Add local DM Sans font files and wire up @font-face in CSS (replace external Google Fonts import).
 - Maybe add checkboxes for the list items?
+- Add tracking of updated times so that we can sort projects by last touched.
