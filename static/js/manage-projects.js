@@ -7,11 +7,15 @@ const paginationNext = document.getElementById("pagination-next");
 const paginationStatus = document.getElementById("pagination-status");
 
 const PAGE_SIZE = 100;
+const DEFAULT_SORT_KEY = "id";
+const DEFAULT_SORT_DIRECTION = "asc";
+const SORT_KEYS = new Set(["id", "name", "archived"]);
+const SORT_DIRECTIONS = new Set(["asc", "desc"]);
 
 const state = {
   projects: [],
-  sortKey: "id",
-  sortDirection: "asc",
+  sortKey: DEFAULT_SORT_KEY,
+  sortDirection: DEFAULT_SORT_DIRECTION,
   page: 1,
   pageSize: PAGE_SIZE,
   total: 0,
@@ -120,6 +124,32 @@ function updateSortIndicators() {
   });
 }
 
+function readStateFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  const pageParam = Number.parseInt(params.get("page"), 10);
+  state.page = Number.isInteger(pageParam) && pageParam > 0 ? pageParam : 1;
+
+  const sortKey = params.get("sort_key");
+  state.sortKey = SORT_KEYS.has(sortKey) ? sortKey : DEFAULT_SORT_KEY;
+
+  const sortDir = params.get("sort_dir");
+  state.sortDirection = SORT_DIRECTIONS.has(sortDir)
+    ? sortDir
+    : DEFAULT_SORT_DIRECTION;
+}
+
+function syncUrl(replace = true) {
+  const url = new URL(window.location.href);
+  url.searchParams.set("page", String(state.page));
+  url.searchParams.set("sort_key", state.sortKey);
+  url.searchParams.set("sort_dir", state.sortDirection);
+  if (replace) {
+    window.history.replaceState({}, "", url);
+  } else {
+    window.history.pushState({}, "", url);
+  }
+}
+
 async function loadProjects() {
   const params = new URLSearchParams({ include_archived: "1" });
   params.set("page", String(state.page));
@@ -153,6 +183,7 @@ async function loadProjects() {
   renderProjects(state.projects);
   updateSortIndicators();
   updatePaginationControls(totalPages);
+  syncUrl(true);
 }
 
 async function handleArchiveToggle(event) {
@@ -214,12 +245,14 @@ sortButtons.forEach((button) => {
     updateSortIndicators();
     if (state.sortMode === "server") {
       state.page = 1;
+      syncUrl(false);
       loadProjects().catch((error) => {
         console.error(error);
       });
     } else {
       renderProjects(state.projects);
       updatePaginationControls();
+      syncUrl(false);
     }
   });
 });
@@ -228,6 +261,7 @@ if (paginationPrev) {
   paginationPrev.addEventListener("click", () => {
     if (state.page > 1) {
       state.page -= 1;
+      syncUrl(false);
       loadProjects().catch((error) => {
         console.error(error);
       });
@@ -240,6 +274,7 @@ if (paginationNext) {
     const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
     if (state.page < totalPages) {
       state.page += 1;
+      syncUrl(false);
       loadProjects().catch((error) => {
         console.error(error);
       });
@@ -247,6 +282,14 @@ if (paginationNext) {
   });
 }
 
+window.addEventListener("popstate", () => {
+  readStateFromUrl();
+  loadProjects().catch((error) => {
+    console.error(error);
+  });
+});
+
+readStateFromUrl();
 loadProjects().catch((error) => {
   console.error(error);
 });

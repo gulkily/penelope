@@ -9,7 +9,7 @@
 - Notes: Pagination defaults to 100 items per page and uses API-provided totals.
 
 ## Stage 3 – Preserve sorting and actions with pagination
-- Changes: Added server-side sorting when multiple pages exist, while keeping client-side sorting for single-page results and refreshing pagination status after sort interactions.
+- Changes: Added server-side sorting when multiple pages exist, kept client-side sorting for single-page results, refreshed pagination status after sort interactions, and synced page/sort state to the URL with back/forward support.
 - Verification: Not run here (requires exercising sort, add, and archive flows in the UI).
 - Notes: Sorting remains client-side on the current page; add/archive reloads the current page.
 
