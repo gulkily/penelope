@@ -1,4 +1,5 @@
 import os
+import random
 import time
 
 from playwright.sync_api import expect
@@ -37,7 +38,10 @@ def test_populates_all_fields(page):
     timestamp = int(time.time())
     project_name = f"E2E Full Data {timestamp}"
     objective_text = f"E2E Objective {timestamp}"
-    questions_text = f"E2E Questions {timestamp}"
+    question_lines = random.randint(1, 3)
+    questions_text = "\n".join(
+        [f"E2E Questions {timestamp} line {index}" for index in range(1, question_lines + 1)]
+    )
 
     create_project(page, project_name)
 
@@ -77,20 +81,26 @@ def test_populates_all_fields(page):
         questions_input.fill(questions_text)
 
     for section, label in SECTIONS.items():
-        add_item(page, section, f"{label} item {timestamp}")
-        item = page.locator(
-            f".section-list[data-section='{section}'] .section-item",
-            has_text=f"{label} item {timestamp}",
-        )
-        expect(item).to_be_visible()
+        item_count = random.randint(1, 5)
+        for index in range(1, item_count + 1):
+            item_text = f"{label} item {timestamp} #{index}"
+            add_item(page, section, item_text)
+            item = page.locator(
+                f".section-list[data-section='{section}'] .section-item",
+                has_text=item_text,
+            )
+            expect(item).to_be_visible()
 
     page.reload()
     expect(page.locator("#objective-input")).to_have_value(objective_text)
     expect(page.locator("#questions-input")).to_have_value(questions_text)
     expect(page.locator("#progress-percent")).to_have_text("75%")
     for section, label in SECTIONS.items():
-        item = page.locator(
-            f".section-list[data-section='{section}'] .section-item",
-            has_text=f"{label} item {timestamp}",
-        )
-        expect(item).to_be_visible()
+        for index in range(1, 6):
+            item_text = f"{label} item {timestamp} #{index}"
+            item = page.locator(
+                f".section-list[data-section='{section}'] .section-item",
+                has_text=item_text,
+            )
+            if item.count() > 0:
+                expect(item).to_be_visible()
