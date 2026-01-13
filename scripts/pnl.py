@@ -39,15 +39,49 @@ def run_tests(
     loop_count: int | None,
     delay: float,
     keep_going: bool,
+    workers: int | None,
+    dist: str | None,
+    duration: float | None,
 ) -> int:
-    if loop_count is not None:
-        command = ["python3", "scripts/run_e2e_loop.py", str(loop_count)]
+    if loop_count is not None and loop_count <= 0:
+        print("--loop must be a positive integer.", file=sys.stderr)
+        return 2
+    if duration is not None and duration <= 0:
+        print("--duration must be a positive number.", file=sys.stderr)
+        return 2
+    if loop_count is not None and duration is not None:
+        print("Use either --loop or --duration, not both.", file=sys.stderr)
+        return 2
+    if delay < 0:
+        print("--delay cannot be negative.", file=sys.stderr)
+        return 2
+    if workers is not None and workers <= 0:
+        print("--workers must be a positive integer.", file=sys.stderr)
+        return 2
+    if dist is not None and workers is None:
+        print("--dist requires --workers.", file=sys.stderr)
+        return 2
+
+    if loop_count is not None or duration is not None:
+        command = ["python3", "scripts/run_e2e_loop.py"]
+        if loop_count is not None:
+            command.append(str(loop_count))
+        if duration is not None:
+            command.extend(["--duration", str(duration)])
+        if scope is None:
+            command.extend(["--scope", "all"])
+        else:
+            command.extend(["--scope", scope])
         if headed:
             command.append("--headed")
         if delay > 0:
             command.extend(["--delay", str(delay)])
         if keep_going:
             command.append("--keep-going")
+        if workers is not None:
+            command.extend(["--workers", str(workers)])
+        if dist is not None:
+            command.extend(["--dist", dist])
         return run_command(command)
 
     command = ["python3", "-m", "pytest"]
@@ -57,6 +91,10 @@ def run_tests(
         command.append("tests/http")
     if headed:
         command.append("--headed")
+    if workers is not None:
+        command.extend(["-n", str(workers)])
+    if dist is not None:
+        command.extend(["--dist", dist])
     return run_command(command)
 
 
@@ -84,7 +122,7 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         help="Run tests.",
         description=(
             "Run test suites. Default runs all tests. "
-            "Use --loop to repeat E2E tests."
+            "Use --loop or --duration to repeat tests."
         ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=(
@@ -93,7 +131,9 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
             "  ./pnl test e2e\n"
             "  ./pnl test e2e --headed\n"
             "  ./pnl test e2e --loop 100\n"
-            "  ./pnl test e2e --loop 10 --delay 1 --keep-going\n"
+            "  ./pnl test --loop 10 --workers 4\n"
+            "  ./pnl test http --loop 10 --delay 1 --keep-going\n"
+            "  ./pnl test --duration 60 --workers 2\n"
         ),
     )
     test_parser.add_argument(
@@ -110,18 +150,33 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     test_parser.add_argument(
         "--loop",
         type=int,
-        help="Repeat E2E tests N times using scripts/run_e2e_loop.py.",
+        help="Repeat tests N times using scripts/run_e2e_loop.py.",
+    )
+    test_parser.add_argument(
+        "--duration",
+        type=float,
+        help="Run looped tests for N seconds using scripts/run_e2e_loop.py.",
     )
     test_parser.add_argument(
         "--delay",
         type=float,
         default=0.0,
-        help="Delay between looped E2E runs (seconds).",
+        help="Delay between looped runs (seconds).",
     )
     test_parser.add_argument(
         "--keep-going",
         action="store_true",
         help="Continue looping after a test failure.",
+    )
+    test_parser.add_argument(
+        "--workers",
+        type=int,
+        help="Run tests with N parallel workers (pytest-xdist).",
+    )
+    test_parser.add_argument(
+        "--dist",
+        type=str,
+        help="xdist distribution mode (requires --workers).",
     )
 
     seed_parser = subparsers.add_parser(
@@ -152,10 +207,16 @@ def main() -> int:
     if args.command == "start":
         return start_server()
     if args.command == "test":
-        if args.loop is not None and args.scope == "http":
-            print("Loop mode is only supported for E2E tests.", file=sys.stderr)
-            return 2
-        return run_tests(args.scope, args.headed, args.loop, args.delay, args.keep_going)
+        return run_tests(
+            args.scope,
+            args.headed,
+            args.loop,
+            args.delay,
+            args.keep_going,
+            args.workers,
+            args.dist,
+            args.duration,
+        )
     if args.command == "seed-demo":
         return run_seed_demo(args.allow_duplicates)
 
