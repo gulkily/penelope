@@ -2,11 +2,19 @@ const form = document.getElementById("add-project-form");
 const nameInput = document.getElementById("project-name");
 const tableBody = document.getElementById("project-table-body");
 const sortButtons = document.querySelectorAll(".table-sort");
+const paginationPrev = document.getElementById("pagination-prev");
+const paginationNext = document.getElementById("pagination-next");
+const paginationStatus = document.getElementById("pagination-status");
+
+const PAGE_SIZE = 100;
 
 const state = {
   projects: [],
   sortKey: "id",
   sortDirection: "asc",
+  page: 1,
+  pageSize: PAGE_SIZE,
+  total: 0,
 };
 
 async function requestJSON(url, options) {
@@ -45,6 +53,19 @@ function renderProjects(projects) {
     row.append(idCell, nameCell, archiveCell);
     tableBody.append(row);
   });
+}
+
+function updatePaginationControls(totalPages) {
+  const pages = totalPages ?? Math.max(1, Math.ceil(state.total / state.pageSize));
+  if (paginationPrev) {
+    paginationPrev.disabled = state.page <= 1;
+  }
+  if (paginationNext) {
+    paginationNext.disabled = state.page >= pages;
+  }
+  if (paginationStatus) {
+    paginationStatus.textContent = `Page ${state.page} of ${pages} · ${state.total} total`;
+  }
 }
 
 function compareProjects(a, b) {
@@ -98,10 +119,25 @@ function updateSortIndicators() {
 }
 
 async function loadProjects() {
-  const data = await requestJSON("/api/projects?include_archived=1");
+  const params = new URLSearchParams({ include_archived: "1" });
+  params.set("page", String(state.page));
+  const data = await requestJSON(`/api/projects?${params.toString()}`);
+  const total = Number.isFinite(data.total) ? data.total : data.projects.length;
+  const pageSize = data.page_size || PAGE_SIZE;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  if (state.page > totalPages && totalPages > 0) {
+    state.page = totalPages;
+    return loadProjects();
+  }
+
   state.projects = data.projects;
+  state.total = total;
+  state.page = data.page || state.page;
+  state.pageSize = pageSize;
   renderProjects(state.projects);
   updateSortIndicators();
+  updatePaginationControls(totalPages);
 }
 
 async function handleArchiveToggle(event) {
@@ -164,6 +200,29 @@ sortButtons.forEach((button) => {
     updateSortIndicators();
   });
 });
+
+if (paginationPrev) {
+  paginationPrev.addEventListener("click", () => {
+    if (state.page > 1) {
+      state.page -= 1;
+      loadProjects().catch((error) => {
+        console.error(error);
+      });
+    }
+  });
+}
+
+if (paginationNext) {
+  paginationNext.addEventListener("click", () => {
+    const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
+    if (state.page < totalPages) {
+      state.page += 1;
+      loadProjects().catch((error) => {
+        console.error(error);
+      });
+    }
+  });
+}
 
 loadProjects().catch((error) => {
   console.error(error);

@@ -2,3 +2,8 @@
 - Changes: Added page support to `GET /api/projects`, returning `total` plus page metadata and updating `app/db_projects.list_projects` to support limit/offset.
 - Verification: Not run here (requires running the server and requesting paged results).
 - Notes: Default (no page) response remains backward compatible with full lists.
+
+## Stage 2 – Update management page pagination UI
+- Changes: Added pagination controls to `templates/manage_projects.html`, styled them in `static/css/main.css`, and introduced pagination state in `static/js/manage-projects.js`.
+- Verification: Not run here (requires loading the management page in a browser).
+- Notes: Pagination defaults to 100 items per page and uses API-provided totals.
