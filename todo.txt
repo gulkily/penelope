@@ -5,3 +5,5 @@
 - Maybe add checkboxes for the list items?
 - Add tracking of updated times so that we can sort projects by last touched.
 - add load testing suite docs/plans/load_testing_step1_solution_assessment.md
+- Create favicon.ico to stop 404
+	<link rel="icon" href="data:,">
