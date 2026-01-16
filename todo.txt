@@ -1,3 +1,5 @@
+- Hosting and publicly accessible
+
 - Add some simple prompting integration, like add suggestions as a mentor.
 	- Need to have project summaries for this, ideally.
 - Idempotency of database init.
@@ -5,3 +7,16 @@
 - Maybe add checkboxes for the list items?
 - Add tracking of updated times so that we can sort projects by last touched.
 - add load testing suite docs/plans/load_testing_step1_solution_assessment.md
+- Basic auth
+	- Logging of actions
+	- Logging of who did what actions
+
+Feedback from Daniel
+- Resident rather than project
+- Make the slider go from 0 to whatever the end value is (e.g. 100 MRR)
+- List items: log the date it was logged (Residency runs for 12 weeks)
+- Put questions right below project
+- Add resident summary
+- North star graph (log datapoints)
+- Allow arranging things
+- Confetti and other cheerful things
