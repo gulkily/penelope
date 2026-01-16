@@ -23,10 +23,15 @@ def has_xdist() -> bool:
 
 
 def print_venv_help() -> int:
+    active_venv = os.getenv("VIRTUAL_ENV")
+    if active_venv:
+        print(f"Virtualenv already active: {active_venv}")
+        return 0
     venv_path = REPO_ROOT / ".venv"
     print("Activate the virtual environment:")
     print(f"  python3 -m venv {venv_path}")
     print("  source .venv/bin/activate")
+    print("  Tip: source ./pnl venv")
     return 0
 
 
