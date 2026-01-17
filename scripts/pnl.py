@@ -134,6 +134,10 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     subparsers.add_parser("venv", help="Show venv activation help.")
     subparsers.add_parser("install", help="Install Python dependencies.")
     subparsers.add_parser("start", help="Start the development server.")
+    subparsers.add_parser(
+        "runserver",
+        help="Alias for start.",
+    )
 
     test_parser = subparsers.add_parser(
         "test",
@@ -222,7 +226,7 @@ def main() -> int:
         return print_venv_help()
     if args.command == "install":
         return install_requirements()
-    if args.command == "start":
+    if args.command in ("start", "runserver"):
         return start_server()
     if args.command == "test":
         return run_tests(

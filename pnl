@@ -5,37 +5,40 @@ VENV_DIR="$SCRIPT_DIR/.venv"
 VENV_PY="$VENV_DIR/bin/python3"
 VENV_ACTIVATE="$VENV_DIR/bin/activate"
 
-if (return 0 2>/dev/null); then
-  if [ "${1:-}" = "venv" ]; then
-    if [ -n "${VIRTUAL_ENV:-}" ]; then
-      echo "Virtualenv already active: $VIRTUAL_ENV"
+PNL_SOURCED=1
+case "$0" in
+  */pnl|pnl) PNL_SOURCED=0 ;;
+esac
+
+if [ "${1:-}" = "venv" ]; then
+  if [ -n "${VIRTUAL_ENV:-}" ]; then
+    echo "Virtualenv already active: $VIRTUAL_ENV"
+    if [ "$PNL_SOURCED" -eq 1 ]; then
       return 0
     fi
-    if [ -f "$VENV_ACTIVATE" ]; then
+    exit 0
+  fi
+  if [ -f "$VENV_ACTIVATE" ]; then
+    if [ "$PNL_SOURCED" -eq 1 ]; then
       # shellcheck disable=SC1090
       . "$VENV_ACTIVATE"
       echo "Virtualenv activated: $VENV_DIR"
       return 0
     fi
-    echo "Virtualenv not found. Run: python3 -m venv $VENV_DIR"
-    return 1
-  fi
-  echo "Tip: source ./pnl venv to activate the virtualenv in your shell." >&2
-  return 1
-fi
-
-if [ "${1:-}" = "venv" ]; then
-  if [ -n "${VIRTUAL_ENV:-}" ]; then
-    echo "Virtualenv already active: $VIRTUAL_ENV"
-    exit 0
-  fi
-  if [ -f "$VENV_ACTIVATE" ]; then
     echo "Run: source .venv/bin/activate"
     echo "Tip: source ./pnl venv to activate via this helper."
     exit 0
   fi
   echo "Virtualenv not found. Run: python3 -m venv $VENV_DIR"
+  if [ "$PNL_SOURCED" -eq 1 ]; then
+    return 1
+  fi
   exit 1
+fi
+
+if [ "$PNL_SOURCED" -eq 1 ]; then
+  echo "Tip: source ./pnl venv to activate the virtualenv in your shell." >&2
+  return 1
 fi
 
 if [ -x "$VENV_PY" ]; then
