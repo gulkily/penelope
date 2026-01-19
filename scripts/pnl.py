@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
+import signal
 import subprocess
 import sys
 from pathlib import Path
@@ -40,7 +41,20 @@ def install_requirements() -> int:
 
 
 def start_server() -> int:
-    return run_command(["./start.sh"])
+    process = subprocess.Popen(["./start.sh"])
+
+    def handle_signal(signum, _frame) -> None:
+        if process.poll() is None:
+            process.send_signal(signum)
+
+    signal.signal(signal.SIGINT, handle_signal)
+    signal.signal(signal.SIGTERM, handle_signal)
+
+    try:
+        return process.wait()
+    except KeyboardInterrupt:
+        handle_signal(signal.SIGINT, None)
+        return process.wait()
 
 
 def run_tests(
