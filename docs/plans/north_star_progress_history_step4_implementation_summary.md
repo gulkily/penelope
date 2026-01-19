@@ -4,7 +4,7 @@
 - Notes: Uses UTC ISO timestamps for recorded history entries.
 
 ## Stage 2 – Log history on progress updates
-- Changes: Progress updates now record a timestamped history entry alongside the existing progress update.
+- Changes: Progress updates now record a timestamped history entry alongside the existing progress update, coalescing updates within 60 seconds into the latest entry.
 - Verification: Not run (requires updating a resident's progress and checking a history entry is created).
 - Notes: History is written in the same DB transaction as the progress update.
 
