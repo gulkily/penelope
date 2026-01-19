@@ -17,3 +17,8 @@
 - Changes: Added `created_at` to the item data returned in project section payloads so the dashboard can render dates.
 - Verification: Not run here (manual verification needed in a running app).
 - Notes: This fixes missing dates in the UI for project loads.
+
+## Stage 5 – Reposition item actions to avoid date spacing
+- Changes: Moved item action buttons to the bottom-right with absolute positioning to remove reserved space beside the date pill.
+- Verification: Not run here (manual verification needed in a running app).
+- Notes: Hidden actions no longer affect layout.

@@ -290,11 +290,12 @@ body {
 }
 
 .section-item {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 6px 8px;
+  padding: 6px 8px 26px;
   border-radius: 6px;
   background: var(--surface-alt);
 }
@@ -323,14 +324,19 @@ body {
 }
 
 .item-actions {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
   display: inline-flex;
   gap: 6px;
   opacity: 0;
+  pointer-events: none;
 }
 
 .section-item:hover .item-actions,
 .section-item:focus-within .item-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .item-action {
