@@ -53,12 +53,21 @@ QUESTIONS = [
     "Which milestone needs extra coaching this week?",
 ]
 
-SUMMARY_TEMPLATES = [
+ITEM_SUMMARY_TEMPLATES = [
     "{name} completed the intake recap.",
     "{name} confirmed the weekly check-in schedule.",
     "{name} updated their goals with the coordinator.",
     "{name} submitted the latest progress notes.",
 ]
+
+RESIDENT_SUMMARY_TEMPLATES = [
+    "{name} is focused on steady progress with weekly check-ins.",
+    "{name} is stabilizing routines and tracking milestones.",
+    "{name} has momentum on the current support plan.",
+    "{name} is closing gaps from the last review cycle.",
+]
+
+GOALS = [5, 10, 15, 20, 25]
 
 CHALLENGE_TEMPLATES = [
     "Transportation gaps are slowing follow-through.",
@@ -106,8 +115,8 @@ def build_resident_name(index: int) -> str:
 
 def build_items(index: int, name: str) -> dict[str, list[str]]:
     summary = [
-        SUMMARY_TEMPLATES[index % len(SUMMARY_TEMPLATES)].format(name=name),
-        SUMMARY_TEMPLATES[(index + 1) % len(SUMMARY_TEMPLATES)].format(name=name),
+        ITEM_SUMMARY_TEMPLATES[index % len(ITEM_SUMMARY_TEMPLATES)].format(name=name),
+        ITEM_SUMMARY_TEMPLATES[(index + 1) % len(ITEM_SUMMARY_TEMPLATES)].format(name=name),
     ]
     challenges = [
         CHALLENGE_TEMPLATES[index % len(CHALLENGE_TEMPLATES)],
@@ -141,14 +150,18 @@ def seed_residents(count: int, archive_existing: bool) -> None:
                 name = f"{name} {index + 1}"
             existing_names.add(name)
             progress = (index * 7 + 18) % 101
+            goal = GOALS[index % len(GOALS)]
             objective = OBJECTIVES[index % len(OBJECTIVES)]
             questions = QUESTIONS[index % len(QUESTIONS)]
+            summary = RESIDENT_SUMMARY_TEMPLATES[
+                index % len(RESIDENT_SUMMARY_TEMPLATES)
+            ].format(name=name)
             cursor = conn.execute(
                 """
-                INSERT INTO projects (name, progress, questions, objective, archived)
-                VALUES (?, ?, ?, ?, 0)
+                INSERT INTO projects (name, progress, goal, questions, summary, objective, archived)
+                VALUES (?, ?, ?, ?, ?, ?, 0)
                 """,
-                (name, progress, questions, objective),
+                (name, progress, goal, questions, summary, objective),
             )
             project_id = cursor.lastrowid
             items = build_items(index, name)

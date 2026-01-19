@@ -37,3 +37,8 @@
 - Changes: Prevented the summary field container from stretching vertically, removing extra whitespace under the textarea.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Limits the full-width summary field to content height in the header layout.
+
+## Stage 9 – Sample data updates
+- Changes: Added resident summary and North Star goal values to sample data scripts.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Demo seeds now populate the new summary field and goal column.

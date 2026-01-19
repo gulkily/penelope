@@ -18,6 +18,8 @@ DEMO_PROJECTS: list[dict[str, object]] = [
     {
         "name": "Project Atlas",
         "progress": 78,
+        "goal": 25,
+        "resident_summary": "Onboarding improvements are landing; focus is on step-2 activation.",
         "objective": "Reduce onboarding time to under 3 minutes.",
         "questions": "Do we need a walkthrough for enterprise users?",
         "archived": 0,
@@ -40,6 +42,8 @@ DEMO_PROJECTS: list[dict[str, object]] = [
     {
         "name": "Project Meridian",
         "progress": 52,
+        "goal": 40,
+        "resident_summary": "Insights are shipping weekly; latency is the main risk.",
         "objective": "Ship weekly insights for the top 10 accounts.",
         "questions": "Which accounts need custom dashboards?",
         "archived": 0,
@@ -61,6 +65,8 @@ DEMO_PROJECTS: list[dict[str, object]] = [
     {
         "name": "Project Lantern",
         "progress": 34,
+        "goal": 20,
+        "resident_summary": "Retention work is underway; needs clearer churn signals.",
         "objective": "Cut churn by 20% in SMB segment.",
         "questions": "Do we need a win-back campaign?",
         "archived": 0,
@@ -82,6 +88,8 @@ DEMO_PROJECTS: list[dict[str, object]] = [
     {
         "name": "Project Nimbus",
         "progress": 61,
+        "goal": 30,
+        "resident_summary": "Reliability work is on track; autoscaling still unstable.",
         "objective": "Hit 95% uptime for Q4 launch.",
         "questions": "Which services need redundancy first?",
         "archived": 0,
@@ -103,6 +111,8 @@ DEMO_PROJECTS: list[dict[str, object]] = [
     {
         "name": "Project Quartz",
         "progress": 19,
+        "goal": 15,
+        "resident_summary": "Partner recruitment is early; outreach ownership needs clarity.",
         "objective": "Recruit 5 new design partners.",
         "questions": "Who owns partner outreach?",
         "archived": 0,
@@ -152,13 +162,15 @@ def seed_demo_projects(allow_duplicates: bool) -> None:
                 continue
             cursor = conn.execute(
                 """
-                INSERT INTO projects (name, progress, questions, objective, archived)
-                VALUES (?, ?, ?, ?, ?)
+                INSERT INTO projects (name, progress, goal, questions, summary, objective, archived)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     name,
                     int(project["progress"]),
+                    int(project["goal"]),
                     str(project["questions"]),
+                    str(project["resident_summary"]),
                     str(project["objective"]),
                     int(project["archived"]),
                 ),
