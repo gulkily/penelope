@@ -7,10 +7,18 @@ from app.db_constants import SECTIONS
 def list_items_for_project(project_id: int) -> list[dict]:
     with connect() as conn:
         rows = conn.execute(
-            "SELECT id, section, content FROM items WHERE project_id = ? ORDER BY id",
+            "SELECT id, section, content, created_at FROM items WHERE project_id = ? ORDER BY id",
             (project_id,),
         ).fetchall()
-    return [{"id": row["id"], "section": row["section"], "text": row["content"]} for row in rows]
+    return [
+        {
+            "id": row["id"],
+            "section": row["section"],
+            "text": row["content"],
+            "created_at": row["created_at"],
+        }
+        for row in rows
+    ]
 
 
 def add_item(project_id: int, section: str, text: str) -> dict:
@@ -26,7 +34,7 @@ def add_item(project_id: int, section: str, text: str) -> dict:
         conn.commit()
         item_id = cursor.lastrowid
 
-    return {"id": item_id, "section": section, "text": text}
+    return {"id": item_id, "section": section, "text": text, "created_at": now}
 
 
 def update_item(item_id: int, text: str) -> dict | None:

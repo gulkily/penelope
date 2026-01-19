@@ -33,6 +33,7 @@ def init_db() -> None:
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
         _ensure_column(conn, "projects", "objective", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "projects", "archived", "INTEGER NOT NULL DEFAULT 0")
+        _ensure_column(conn, "items", "created_at", "TEXT NOT NULL DEFAULT ''")
         _seed_if_empty(conn)
 
 
