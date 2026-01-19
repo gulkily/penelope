@@ -7,3 +7,8 @@
 - Changes: Updated the manage page title, headers, form labels, table labels, and helper copy to use resident terminology.
 - Verification: Not run (manual). Visit `/projects` and confirm the page reads as resident management throughout.
 - Notes: None.
+
+## Stage 3 – Align frontend copy in JavaScript interactions
+- Changes: Updated the console warning message to reference residents instead of projects.
+- Verification: Not run (manual). Trigger a load failure and confirm the warning references residents.
+- Notes: No user-facing JS copy required changes.

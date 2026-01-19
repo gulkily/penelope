@@ -254,7 +254,7 @@ async function loadProject(projectId) {
     renderProject(data);
     return data;
   } catch (error) {
-    console.warn("Failed to load project", error);
+    console.warn("Failed to load resident", error);
     return null;
   }
 }
