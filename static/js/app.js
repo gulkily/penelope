@@ -1,9 +1,14 @@
+const DEFAULT_GOAL = 100;
+
 const state = {
   projectId: null,
   questionTimer: null,
   progressTimer: null,
   objectiveTimer: null,
+  goalTimer: null,
   projectsLoaded: false,
+  progressPercent: 0,
+  goalValue: DEFAULT_GOAL,
 };
 
 const projectSelect = document.getElementById("project-select");
@@ -11,6 +16,7 @@ const progressSlider = document.getElementById("progress-slider");
 const progressPercent = document.getElementById("progress-percent");
 const emptyState = document.getElementById("empty-state");
 const objectiveInput = document.getElementById("objective-input");
+const goalInput = document.getElementById("goal-input");
 const questionsInput = document.getElementById("questions-input");
 const inlineAddButtons = document.querySelectorAll(".inline-add-button");
 const inlineAddInputs = document.querySelectorAll(".inline-add-input");
@@ -42,6 +48,7 @@ function setInteractivity(enabled) {
   toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
   objectiveInput.disabled = !enabled;
+  goalInput.disabled = !enabled;
   questionsInput.disabled = !enabled;
 }
 
@@ -151,18 +158,51 @@ function resetEmptyState() {
   state.projectId = null;
   emptyState.hidden = false;
   setInteractivity(false);
-  updateProgressDisplay(0);
+  goalInput.value = String(DEFAULT_GOAL);
+  updateProgressDisplay(0, DEFAULT_GOAL);
   renderSections({});
   objectiveInput.value = "";
   questionsInput.value = "";
   hideUndoToast();
 }
 
-function updateProgressDisplay(value) {
-  const normalized = Number(value) || 0;
-  progressSlider.value = normalized;
-  progressPercent.textContent = `${normalized}%`;
-  progressSlider.style.setProperty("--progress", `${normalized}%`);
+function clampPercent(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+  return Math.min(100, Math.max(0, Math.round(parsed)));
+}
+
+function normalizeGoal(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_GOAL;
+  }
+  return Math.max(1, Math.round(parsed));
+}
+
+function percentToUnits(percent, goal) {
+  return Math.round((percent / 100) * goal);
+}
+
+function unitsToPercent(units, goal) {
+  if (goal <= 0) {
+    return 0;
+  }
+  return Math.round((units / goal) * 100);
+}
+
+function updateProgressDisplay(progressValue, goalValue) {
+  const safeGoal = normalizeGoal(goalValue);
+  const safePercent = clampPercent(progressValue);
+  const unitValue = percentToUnits(safePercent, safeGoal);
+  state.progressPercent = safePercent;
+  state.goalValue = safeGoal;
+  progressSlider.max = String(safeGoal);
+  progressSlider.value = String(unitValue);
+  progressPercent.textContent = `${unitValue} / ${safeGoal}`;
+  progressSlider.style.setProperty("--progress", `${safePercent}%`);
 }
 
 function readProjectFromUrl() {
@@ -242,7 +282,9 @@ function positionUndoToast(anchor) {
 }
 
 function renderProject(project) {
-  updateProgressDisplay(project.progress);
+  const goalValue = normalizeGoal(project.goal);
+  goalInput.value = String(goalValue);
+  updateProgressDisplay(project.progress, goalValue);
   objectiveInput.value = project.objective || "";
   questionsInput.value = project.questions || "";
   renderSections(project.sections || {});
@@ -284,7 +326,7 @@ function scheduleProgressSave(value) {
   if (state.progressTimer) {
     window.clearTimeout(state.progressTimer);
   }
-  const normalized = Number(value) || 0;
+  const normalized = clampPercent(value);
   state.progressTimer = window.setTimeout(async () => {
     await requestJSON(`/api/projects/${state.projectId}/progress`, {
       method: "PUT",
@@ -311,6 +353,24 @@ function scheduleObjectiveSave() {
   }, 500);
 }
 
+function scheduleGoalSave(goalValue) {
+  if (!state.projectId) {
+    return;
+  }
+  if (state.goalTimer) {
+    window.clearTimeout(state.goalTimer);
+  }
+  const normalized = normalizeGoal(goalValue);
+  state.goalTimer = window.setTimeout(async () => {
+    await requestJSON(`/api/projects/${state.projectId}/goal`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ goal: normalized }),
+    });
+    goalInput.value = String(normalized);
+  }, 500);
+}
+
 function scheduleQuestionsSave() {
   if (!state.projectId) {
     return;
@@ -325,6 +385,23 @@ function scheduleQuestionsSave() {
       body: JSON.stringify({ questions: questionsInput.value }),
     });
   }, 500);
+}
+
+function handleGoalInput() {
+  if (!state.projectId) {
+    return;
+  }
+  const raw = goalInput.value.trim();
+  if (!raw) {
+    return;
+  }
+  const parsed = Number(raw);
+  if (!Number.isFinite(parsed)) {
+    return;
+  }
+  const normalized = normalizeGoal(parsed);
+  updateProgressDisplay(state.progressPercent, normalized);
+  scheduleGoalSave(normalized);
 }
 
 projectSelect.addEventListener("change", async (event) => {
@@ -506,12 +583,14 @@ undoDelete.addEventListener("click", async () => {
 });
 
 progressSlider.addEventListener("input", (event) => {
-  const value = event.target.value;
-  updateProgressDisplay(value);
-  scheduleProgressSave(value);
+  const units = Number(event.target.value) || 0;
+  const percent = unitsToPercent(units, state.goalValue);
+  updateProgressDisplay(percent, state.goalValue);
+  scheduleProgressSave(percent);
 });
 
 objectiveInput.addEventListener("input", scheduleObjectiveSave);
+goalInput.addEventListener("input", handleGoalInput);
 questionsInput.addEventListener("input", scheduleQuestionsSave);
 
 setInteractivity(false);

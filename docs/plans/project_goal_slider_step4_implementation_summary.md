@@ -7,3 +7,8 @@
 - Changes: Added a goal input field and updated the progress label placeholder in the dashboard template.
 - Verification: Manual review of template changes (no runtime checks).
 - Notes: Interactive behavior is handled in the next stage.
+
+## Stage 3 – Map slider to goal units and persist goal updates
+- Changes: Added goal-aware slider logic, percent-to-units mapping, and goal auto-save handling in the dashboard client.
+- Verification: Manual review of updated client logic (no runtime checks).
+- Notes: Progress remains stored as percent while the UI shows goal units.
