@@ -22,6 +22,10 @@ class QuestionsUpdate(BaseModel):
     questions: str = Field("", description="Free-form questions or risks text.")
 
 
+class SummaryUpdate(BaseModel):
+    summary: str = Field("", description="Resident summary text.")
+
+
 class ObjectiveUpdate(BaseModel):
     objective: str = Field("", description="North Star objective for the resident.")
 

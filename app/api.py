@@ -13,6 +13,7 @@ from app.schemas import (
     ProjectArchiveUpdate,
     ProjectCreate,
     QuestionsUpdate,
+    SummaryUpdate,
 )
 
 router = APIRouter()
@@ -126,6 +127,15 @@ def update_questions(project_id: int, payload: QuestionsUpdate) -> dict:
         raise HTTPException(status_code=404, detail="Resident not found")
     db.update_questions(project_id, payload.questions)
     return {"questions": payload.questions}
+
+
+@router.put("/projects/{project_id}/summary")
+def update_summary(project_id: int, payload: SummaryUpdate) -> dict:
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Resident not found")
+    db.update_summary(project_id, payload.summary)
+    return {"summary": payload.summary}
 
 
 @router.put("/projects/{project_id}/objective")

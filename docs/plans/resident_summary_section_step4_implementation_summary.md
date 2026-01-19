@@ -2,3 +2,8 @@
 - Changes: Added a resident summary column to the projects table, seeded default summaries, and exposed the summary field in project retrieval/creation plus a DB helper to update it.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Requires a new projects column on existing databases via the initialization migration helper.
+
+## Stage 2 – API contracts and schemas
+- Changes: Added a summary update schema and API endpoint for updating resident summaries.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Endpoint follows the existing resident text update pattern.
