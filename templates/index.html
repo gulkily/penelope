@@ -27,24 +27,37 @@
       </section>
 
       <section class="card card-compact">
-        <div class="objective">
-          <div class="field">
-            <label class="field-label" for="objective-input"
-              >North Star Objective</label
-            >
+          <div class="objective">
+            <div class="field">
+              <label class="field-label" for="objective-input"
+                >North Star Objective</label
+              >
             <input
               id="objective-input"
               class="field-input"
               type="text"
               autocomplete="off"
               placeholder="e.g. Reach 10 paying customers"
-            />
-          </div>
-          <div class="progress">
-            <div class="progress-labels">
-              <span>North Star progress</span>
-              <span id="progress-percent">0%</span>
+              />
             </div>
+            <div class="field">
+              <label class="field-label" for="goal-input">North Star Goal</label>
+              <input
+                id="goal-input"
+                class="field-input"
+                type="number"
+                min="1"
+                step="1"
+                inputmode="numeric"
+                autocomplete="off"
+                placeholder="e.g. 20"
+              />
+            </div>
+            <div class="progress">
+              <div class="progress-labels">
+                <span>North Star progress</span>
+                <span id="progress-percent">0 / 100</span>
+              </div>
             <div class="progress-track">
               <input
                 id="progress-slider"

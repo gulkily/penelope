@@ -2,3 +2,8 @@
 - Changes: Added project goal persistence, defaults, and API support for reading/updating goals.
 - Verification: Manual review of updated data/API wiring (no runtime checks).
 - Notes: Added a new goal column with a default value for existing projects.
+
+## Stage 2 – Add goal input and progress display placeholders
+- Changes: Added a goal input field and updated the progress label placeholder in the dashboard template.
+- Verification: Manual review of template changes (no runtime checks).
+- Notes: Interactive behavior is handled in the next stage.
