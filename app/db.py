@@ -11,6 +11,7 @@ from app.db_projects import (
     update_objective,
     update_progress,
     update_questions,
+    update_summary,
 )
 
 __all__ = [
@@ -28,4 +29,5 @@ __all__ = [
     "update_objective",
     "update_progress",
     "update_questions",
+    "update_summary",
 ]
