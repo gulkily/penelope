@@ -143,12 +143,25 @@ function renderSections(sections) {
       deleteButton.textContent = "Delete";
       deleteButton.dataset.action = "delete";
 
+      const body = document.createElement("div");
+      body.className = "item-body";
+
       const text = document.createElement("span");
       text.className = "item-text";
       text.textContent = item.text;
 
+      const dateLabel = formatItemDate(item.created_at);
+      if (dateLabel) {
+        const date = document.createElement("span");
+        date.className = "item-date";
+        date.textContent = dateLabel;
+        body.append(text, date);
+      } else {
+        body.append(text);
+      }
+
       actions.append(editButton, saveButton, cancelButton, deleteButton);
-      li.append(text, actions);
+      li.append(body, actions);
       list.append(li);
     });
   });
@@ -236,6 +249,22 @@ function clearProjectInUrl() {
 function autoGrow(input) {
   input.style.height = "auto";
   input.style.height = `${input.scrollHeight}px`;
+}
+
+function formatItemDate(isoString) {
+  if (!isoString) {
+    return "";
+  }
+  const parsed = new Date(isoString);
+  if (Number.isNaN(parsed.getTime())) {
+    return "";
+  }
+  const now = new Date();
+  const options = { month: "short", day: "numeric" };
+  if (parsed.getFullYear() !== now.getFullYear()) {
+    options.year = "numeric";
+  }
+  return parsed.toLocaleDateString(undefined, options);
 }
 
 function showUndoToast(text, anchor) {

@@ -299,8 +299,27 @@ body {
   background: var(--surface-alt);
 }
 
+.item-body {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
 .item-text {
   flex: 1 1 auto;
+  min-width: 0;
+}
+
+.item-date {
+  font-size: 11px;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  background: var(--surface);
+  padding: 1px 6px;
+  border-radius: 999px;
+  white-space: nowrap;
 }
 
 .item-actions {
