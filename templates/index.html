@@ -27,6 +27,19 @@
       </section>
 
       <section class="card card-compact">
+        <div class="questions">
+          <label class="field-label" for="questions-input">Questions</label>
+          <textarea
+            id="questions-input"
+            class="field-input field-textarea"
+            rows="4"
+            autocomplete="off"
+            placeholder="Capture any open questions, risks, or clarifications needed..."
+          ></textarea>
+        </div>
+      </section>
+
+      <section class="card card-compact">
           <div class="objective">
             <div class="field">
               <label class="field-label" for="objective-input"
@@ -151,19 +164,6 @@
       </section>
 
       <p class="hint" id="empty-state">Select a resident to see their North Star.</p>
-
-      <section class="card card-compact">
-        <div class="questions">
-          <label class="field-label" for="questions-input">Questions</label>
-          <textarea
-            id="questions-input"
-            class="field-input field-textarea"
-            rows="4"
-            autocomplete="off"
-            placeholder="Capture any open questions, risks, or clarifications needed..."
-          ></textarea>
-        </div>
-      </section>
 
       <div class="toast" id="undo-toast" role="status" aria-live="polite" hidden>
         <span id="undo-message">Item deleted.</span>
