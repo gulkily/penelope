@@ -72,7 +72,7 @@ def list_projects(
 def get_project(project_id: int) -> dict:
     project = db.get_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Resident not found")
     return project
 
 
@@ -86,7 +86,7 @@ def create_project(payload: ProjectCreate) -> dict:
 def update_project_archive(project_id: int, payload: ProjectArchiveUpdate) -> dict:
     updated = db.set_project_archived(project_id, payload.archived)
     if not updated:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Resident not found")
     return {"archived": payload.archived}
 
 
@@ -94,7 +94,7 @@ def update_project_archive(project_id: int, payload: ProjectArchiveUpdate) -> di
 def add_item(project_id: int, payload: ItemCreate) -> dict:
     project = db.get_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Resident not found")
     try:
         item = db.add_item(project_id, payload.section, payload.text.strip())
     except ValueError as exc:
@@ -122,7 +122,7 @@ def delete_item(item_id: int) -> dict:
 def update_questions(project_id: int, payload: QuestionsUpdate) -> dict:
     project = db.get_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Resident not found")
     db.update_questions(project_id, payload.questions)
     return {"questions": payload.questions}
 
@@ -131,7 +131,7 @@ def update_questions(project_id: int, payload: QuestionsUpdate) -> dict:
 def update_objective(project_id: int, payload: ObjectiveUpdate) -> dict:
     project = db.get_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Resident not found")
     db.update_objective(project_id, payload.objective)
     return {"objective": payload.objective}
 
@@ -140,6 +140,6 @@ def update_objective(project_id: int, payload: ObjectiveUpdate) -> dict:
 def update_progress(project_id: int, payload: ProgressUpdate) -> dict:
     project = db.get_project(project_id)
     if not project:
-        raise HTTPException(status_code=404, detail="Project not found")
+        raise HTTPException(status_code=404, detail="Resident not found")
     db.update_progress(project_id, payload.progress)
     return {"progress": payload.progress}

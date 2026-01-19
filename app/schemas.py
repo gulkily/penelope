@@ -23,7 +23,7 @@ class QuestionsUpdate(BaseModel):
 
 
 class ObjectiveUpdate(BaseModel):
-    objective: str = Field("", description="North Star objective for the project.")
+    objective: str = Field("", description="North Star objective for the resident.")
 
 
 class ProgressUpdate(BaseModel):

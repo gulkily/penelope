@@ -12,3 +12,8 @@
 - Changes: Updated the console warning message to reference residents instead of projects.
 - Verification: Not run (manual). Trigger a load failure and confirm the warning references residents.
 - Notes: No user-facing JS copy required changes.
+
+## Stage 4 – Validate API and schema naming strategy documentation
+- Changes: Updated API error details and schema descriptions to reference residents while keeping `/projects` routes intact.
+- Verification: Not run (manual). Call a non-existent resident ID and confirm the error detail uses resident terminology.
+- Notes: Route paths and response shapes are unchanged.
