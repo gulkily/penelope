@@ -17,3 +17,8 @@
 - Changes: Wired the summary field to load per resident, reset on empty state, and autosave via a new summary update request.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Autosave timing mirrors the questions field.
+
+## Stage 5 – Tests and documentation touch-ups
+- Changes: No automated tests or documentation updates added in this stage.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Consider adding or updating tests in a follow-up if coverage gaps appear.
