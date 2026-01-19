@@ -51,6 +51,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Project Management lists are paginated at 100 items per page with next/previous controls.
 - Settings includes a database backup download for saving recovery copies.
 - The North Star objective can be updated per resident via the Save button.
+- The North Star goal value sets the progress slider range per resident.
 - Progress updates happen immediately via the integrated slider.
 - Questions auto-save while typing.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.

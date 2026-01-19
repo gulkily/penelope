@@ -12,3 +12,8 @@
 - Changes: Added goal-aware slider logic, percent-to-units mapping, and goal auto-save handling in the dashboard client.
 - Verification: Manual review of updated client logic (no runtime checks).
 - Notes: Progress remains stored as percent while the UI shows goal units.
+
+## Stage 4 – Documentation touchpoints
+- Changes: Documented the goal-driven slider behavior in the project README.
+- Verification: Manual review of documentation update (no runtime checks).
+- Notes: Automated tests were not added or run per Step 4 guidance.
