@@ -12,3 +12,8 @@
 - Changes: Added response schemas and a `GET /api/projects/{project_id}/progress/history` endpoint that returns timestamped progress entries.
 - Verification: Not run (requires calling the new endpoint after multiple progress updates).
 - Notes: Response uses the existing project check and returns history in recorded timestamp order.
+
+## Stage 4 – Coverage for history logging and retrieval
+- Changes: Deferred automated test additions per Step 4 guidance (manual verification only).
+- Verification: Not run (requires updating progress multiple times and calling the history endpoint).
+- Notes: Can add HTTP tests if you want explicit regression coverage.
