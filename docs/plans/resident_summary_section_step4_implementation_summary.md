@@ -42,3 +42,8 @@
 - Changes: Added resident summary and North Star goal values to sample data scripts.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Demo seeds now populate the new summary field and goal column.
+
+## Stage 10 – Sample data narrative tweaks
+- Changes: Updated demo resident summaries to be fuller descriptions and ensured objectives are explicitly quantifiable.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Objectives now include numeric targets and time frames.

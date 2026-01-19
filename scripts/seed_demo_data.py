@@ -19,8 +19,11 @@ DEMO_PROJECTS: list[dict[str, object]] = [
         "name": "Project Atlas",
         "progress": 78,
         "goal": 25,
-        "resident_summary": "Onboarding improvements are landing; focus is on step-2 activation.",
-        "objective": "Reduce onboarding time to under 3 minutes.",
+        "resident_summary": (
+            "Working on onboarding improvements and activation step-2 experiments, "
+            "with focus on shortening the first-run flow and support checklist."
+        ),
+        "objective": "Reduce onboarding time to under 3 minutes by quarter end.",
         "questions": "Do we need a walkthrough for enterprise users?",
         "archived": 0,
         "items": {
@@ -43,8 +46,11 @@ DEMO_PROJECTS: list[dict[str, object]] = [
         "name": "Project Meridian",
         "progress": 52,
         "goal": 40,
-        "resident_summary": "Insights are shipping weekly; latency is the main risk.",
-        "objective": "Ship weekly insights for the top 10 accounts.",
+        "resident_summary": (
+            "Shipping weekly insights to key accounts while stabilizing peak-hour "
+            "performance and refining the reporting pipeline."
+        ),
+        "objective": "Ship weekly insights for 10 accounts for 6 straight weeks.",
         "questions": "Which accounts need custom dashboards?",
         "archived": 0,
         "items": {
@@ -66,8 +72,11 @@ DEMO_PROJECTS: list[dict[str, object]] = [
         "name": "Project Lantern",
         "progress": 34,
         "goal": 20,
-        "resident_summary": "Retention work is underway; needs clearer churn signals.",
-        "objective": "Cut churn by 20% in SMB segment.",
+        "resident_summary": (
+            "Focusing on retention drivers, survey feedback, and a win-back plan to "
+            "improve SMB outcomes."
+        ),
+        "objective": "Cut churn by 20% in the SMB segment over the next 90 days.",
         "questions": "Do we need a win-back campaign?",
         "archived": 0,
         "items": {
@@ -89,8 +98,11 @@ DEMO_PROJECTS: list[dict[str, object]] = [
         "name": "Project Nimbus",
         "progress": 61,
         "goal": 30,
-        "resident_summary": "Reliability work is on track; autoscaling still unstable.",
-        "objective": "Hit 95% uptime for Q4 launch.",
+        "resident_summary": (
+            "Driving reliability improvements, tuning autoscaling, and preparing "
+            "the launch runbook for core services."
+        ),
+        "objective": "Hit 95% uptime for Q4 launch across 3 core services.",
         "questions": "Which services need redundancy first?",
         "archived": 0,
         "items": {
@@ -112,8 +124,11 @@ DEMO_PROJECTS: list[dict[str, object]] = [
         "name": "Project Quartz",
         "progress": 19,
         "goal": 15,
-        "resident_summary": "Partner recruitment is early; outreach ownership needs clarity.",
-        "objective": "Recruit 5 new design partners.",
+        "resident_summary": (
+            "Building the partner pipeline, refining outreach messaging, and "
+            "scheduling the first round of demos."
+        ),
+        "objective": "Recruit 5 new design partners by month end.",
         "questions": "Who owns partner outreach?",
         "archived": 0,
         "items": {

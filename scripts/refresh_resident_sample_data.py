@@ -37,12 +37,12 @@ RESIDENT_NAMES = [
     "Taylor Cooper",
 ]
 
-OBJECTIVES = [
-    "Complete the next residency milestone.",
-    "Stabilize weekly attendance at required sessions.",
-    "Build momentum on the individualized progress plan.",
-    "Finish the quarterly goal review with the support team.",
-    "Strengthen follow-through on the transition checklist.",
+OBJECTIVE_TEMPLATES = [
+    "Complete {goal} required sessions by month end.",
+    "Attend {goal} coaching check-ins this quarter.",
+    "Finish {goal} support plan milestones this cycle.",
+    "Submit {goal} progress updates before the next review.",
+    "Close {goal} action items from the transition checklist.",
 ]
 
 QUESTIONS = [
@@ -61,13 +61,17 @@ ITEM_SUMMARY_TEMPLATES = [
 ]
 
 RESIDENT_SUMMARY_TEMPLATES = [
-    "{name} is focused on steady progress with weekly check-ins.",
-    "{name} is stabilizing routines and tracking milestones.",
-    "{name} has momentum on the current support plan.",
-    "{name} is closing gaps from the last review cycle.",
+    "{name} is working toward {goal} required check-ins and building a steady "
+    "weekly routine.",
+    "{name} is focused on completing {goal} milestones with follow-ups from "
+    "the support team.",
+    "{name} is prioritizing {goal} action steps from the latest review and "
+    "tracking progress weekly.",
+    "{name} is advancing {goal} coaching sessions while addressing barriers "
+    "raised in the last check-in.",
 ]
 
-GOALS = [5, 10, 15, 20, 25]
+GOALS = [6, 8, 10, 12, 15]
 
 CHALLENGE_TEMPLATES = [
     "Transportation gaps are slowing follow-through.",
@@ -151,11 +155,13 @@ def seed_residents(count: int, archive_existing: bool) -> None:
             existing_names.add(name)
             progress = (index * 7 + 18) % 101
             goal = GOALS[index % len(GOALS)]
-            objective = OBJECTIVES[index % len(OBJECTIVES)]
+            objective = OBJECTIVE_TEMPLATES[index % len(OBJECTIVE_TEMPLATES)].format(
+                goal=goal
+            )
             questions = QUESTIONS[index % len(QUESTIONS)]
             summary = RESIDENT_SUMMARY_TEMPLATES[
                 index % len(RESIDENT_SUMMARY_TEMPLATES)
-            ].format(name=name)
+            ].format(name=name, goal=goal)
             cursor = conn.execute(
                 """
                 INSERT INTO projects (name, progress, goal, questions, summary, objective, archived)
