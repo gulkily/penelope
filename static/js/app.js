@@ -3,6 +3,7 @@ const DEFAULT_GOAL = 100;
 const state = {
   projectId: null,
   questionTimer: null,
+  summaryTimer: null,
   progressTimer: null,
   objectiveTimer: null,
   goalTimer: null,
@@ -15,6 +16,7 @@ const projectSelect = document.getElementById("project-select");
 const progressSlider = document.getElementById("progress-slider");
 const progressPercent = document.getElementById("progress-percent");
 const emptyState = document.getElementById("empty-state");
+const summaryInput = document.getElementById("summary-input");
 const objectiveInput = document.getElementById("objective-input");
 const goalInput = document.getElementById("goal-input");
 const questionsInput = document.getElementById("questions-input");
@@ -47,6 +49,7 @@ function toggleInlineAdds(enabled) {
 function setInteractivity(enabled) {
   toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
+  summaryInput.disabled = !enabled;
   objectiveInput.disabled = !enabled;
   goalInput.disabled = !enabled;
   questionsInput.disabled = !enabled;
@@ -174,6 +177,7 @@ function resetEmptyState() {
   goalInput.value = String(DEFAULT_GOAL);
   updateProgressDisplay(0, DEFAULT_GOAL);
   renderSections({});
+  summaryInput.value = "";
   objectiveInput.value = "";
   questionsInput.value = "";
   hideUndoToast();
@@ -315,6 +319,7 @@ function renderProject(project) {
   goalInput.value = String(goalValue);
   updateProgressDisplay(project.progress, goalValue);
   objectiveInput.value = project.objective || "";
+  summaryInput.value = project.summary || "";
   questionsInput.value = project.questions || "";
   renderSections(project.sections || {});
 }
@@ -412,6 +417,22 @@ function scheduleQuestionsSave() {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ questions: questionsInput.value }),
+    });
+  }, 500);
+}
+
+function scheduleSummarySave() {
+  if (!state.projectId) {
+    return;
+  }
+  if (state.summaryTimer) {
+    window.clearTimeout(state.summaryTimer);
+  }
+  state.summaryTimer = window.setTimeout(async () => {
+    await requestJSON(`/api/projects/${state.projectId}/summary`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ summary: summaryInput.value }),
     });
   }, 500);
 }
@@ -621,6 +642,7 @@ progressSlider.addEventListener("input", (event) => {
 objectiveInput.addEventListener("input", scheduleObjectiveSave);
 goalInput.addEventListener("input", handleGoalInput);
 questionsInput.addEventListener("input", scheduleQuestionsSave);
+summaryInput.addEventListener("input", scheduleSummarySave);
 
 setInteractivity(false);
 resetEmptyState();

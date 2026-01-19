@@ -12,3 +12,8 @@
 - Changes: Added the resident summary field to the header section alongside the resident selector.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Layout relies on existing field styles in the header.
+
+## Stage 4 – Client-side data wiring
+- Changes: Wired the summary field to load per resident, reset on empty state, and autosave via a new summary update request.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Autosave timing mirrors the questions field.
