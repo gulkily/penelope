@@ -36,3 +36,12 @@ class GoalUpdate(BaseModel):
 
 class ProgressUpdate(BaseModel):
     progress: int = Field(0, ge=0, le=100, description="Progress percentage 0-100.")
+
+
+class ProgressHistoryEntry(BaseModel):
+    progress: int = Field(..., ge=0, le=100, description="Progress percentage 0-100.")
+    recorded_at: str = Field(..., description="UTC ISO timestamp for the update.")
+
+
+class ProgressHistoryResponse(BaseModel):
+    history: list[ProgressHistoryEntry]

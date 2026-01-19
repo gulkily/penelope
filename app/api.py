@@ -10,6 +10,7 @@ from app.schemas import (
     ItemUpdate,
     ObjectiveUpdate,
     ProgressUpdate,
+    ProgressHistoryResponse,
     ProjectArchiveUpdate,
     ProjectCreate,
     QuestionsUpdate,
@@ -163,3 +164,15 @@ def update_progress(project_id: int, payload: ProgressUpdate) -> dict:
         raise HTTPException(status_code=404, detail="Resident not found")
     db.update_progress(project_id, payload.progress)
     return {"progress": payload.progress}
+
+
+@router.get(
+    "/projects/{project_id}/progress/history",
+    response_model=ProgressHistoryResponse,
+)
+def list_progress_history(project_id: int) -> dict:
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Resident not found")
+    history = db.list_progress_history(project_id)
+    return {"history": history}
