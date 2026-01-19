@@ -1,6 +1,6 @@
 # North Star Dashboard
 
-This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for tracking North Star progress across projects.
+This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for tracking North Star progress across residents.
 
 ## Local development
 1. Create a virtual environment and install dependencies:
@@ -43,14 +43,14 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 ## Data & persistence
 - Default storage is SQLite at `data/north_star.db` (created automatically on first run).
 - Override the database location with `DATABASE_URL` (use `sqlite:///path/to.db`).
-- The seed data includes a few example projects and items to populate the UI.
+- The seed data includes a few example residents and items to populate the UI.
 - To add additional demo data, run `python scripts/seed_demo_data.py`.
 
 ## Notes
 - Item additions use inline add rows; edit and delete are available per item with an undo toast.
 - Project Management lists are paginated at 100 items per page with next/previous controls.
 - Settings includes a database backup download for saving recovery copies.
-- The North Star objective can be updated per project via the Save button.
+- The North Star objective can be updated per resident via the Save button.
 - Progress updates happen immediately via the integrated slider.
 - Questions auto-save while typing.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.

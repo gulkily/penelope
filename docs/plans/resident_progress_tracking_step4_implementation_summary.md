@@ -17,3 +17,8 @@
 - Changes: Updated API error details and schema descriptions to reference residents while keeping `/projects` routes intact.
 - Verification: Not run (manual). Call a non-existent resident ID and confirm the error detail uses resident terminology.
 - Notes: Route paths and response shapes are unchanged.
+
+## Stage 5 – Update docs and helper text where projects are referenced
+- Changes: Updated settings helper copy and README wording to align with resident terminology while keeping technical routes intact.
+- Verification: Not run (manual). Review settings copy and README for resident framing consistency.
+- Notes: None.
