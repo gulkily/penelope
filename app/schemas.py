@@ -26,5 +26,9 @@ class ObjectiveUpdate(BaseModel):
     objective: str = Field("", description="North Star objective for the resident.")
 
 
+class GoalUpdate(BaseModel):
+    goal: int = Field(..., ge=1, description="Goal value for resident progress.")
+
+
 class ProgressUpdate(BaseModel):
     progress: int = Field(0, ge=0, le=100, description="Progress percentage 0-100.")

@@ -11,6 +11,7 @@ def init_db() -> None:
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
                 progress INTEGER NOT NULL,
+                goal INTEGER NOT NULL DEFAULT 100,
                 questions TEXT NOT NULL DEFAULT '',
                 objective TEXT NOT NULL DEFAULT '',
                 archived INTEGER NOT NULL DEFAULT 0
@@ -29,6 +30,7 @@ def init_db() -> None:
             )
             """
         )
+        _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
         _ensure_column(conn, "projects", "objective", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "projects", "archived", "INTEGER NOT NULL DEFAULT 0")
         _seed_if_empty(conn)
@@ -47,14 +49,14 @@ def _seed_if_empty(conn) -> None:
         return
 
     projects = [
-        ("Project North", 40, "", "Reach 10 paying customers.", 0),
-        ("Project Aurora", 62, "", "Process 10GB of data per day.", 0),
-        ("Project Horizon", 25, "", "Launch to three design partners.", 0),
+        ("Project North", 40, 10, "", "Reach 10 paying customers.", 0),
+        ("Project Aurora", 62, 10, "", "Process 10GB of data per day.", 0),
+        ("Project Horizon", 25, 3, "", "Launch to three design partners.", 0),
     ]
     conn.executemany(
         """
-        INSERT INTO projects (name, progress, questions, objective, archived)
-        VALUES (?, ?, ?, ?, ?)
+        INSERT INTO projects (name, progress, goal, questions, objective, archived)
+        VALUES (?, ?, ?, ?, ?, ?)
         """,
         projects,
     )

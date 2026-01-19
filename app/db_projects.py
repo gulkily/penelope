@@ -51,7 +51,7 @@ def get_project(project_id: int) -> dict | None:
     with connect() as conn:
         project_row = conn.execute(
             """
-            SELECT id, name, progress, questions, objective, archived
+            SELECT id, name, progress, goal, questions, objective, archived
             FROM projects
             WHERE id = ?
             """,
@@ -69,6 +69,7 @@ def get_project(project_id: int) -> dict | None:
         "id": project_row["id"],
         "name": project_row["name"],
         "progress": project_row["progress"],
+        "goal": project_row["goal"],
         "objective": project_row["objective"],
         "archived": bool(project_row["archived"]),
         "sections": sections,
@@ -80,8 +81,8 @@ def create_project(name: str) -> dict:
     with connect() as conn:
         cursor = conn.execute(
             """
-            INSERT INTO projects (name, progress, questions, objective, archived)
-            VALUES (?, 0, '', '', 0)
+            INSERT INTO projects (name, progress, goal, questions, objective, archived)
+            VALUES (?, 0, 100, '', '', 0)
             """,
             (name,),
         )
@@ -119,6 +120,15 @@ def update_objective(project_id: int, objective: str) -> None:
         conn.execute(
             "UPDATE projects SET objective = ? WHERE id = ?",
             (objective, project_id),
+        )
+        conn.commit()
+
+
+def update_goal(project_id: int, goal: int) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE projects SET goal = ? WHERE id = ?",
+            (goal, project_id),
         )
         conn.commit()
 

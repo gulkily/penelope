@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 
 from app import db
 from app.schemas import (
+    GoalUpdate,
     ItemCreate,
     ItemUpdate,
     ObjectiveUpdate,
@@ -134,6 +135,15 @@ def update_objective(project_id: int, payload: ObjectiveUpdate) -> dict:
         raise HTTPException(status_code=404, detail="Resident not found")
     db.update_objective(project_id, payload.objective)
     return {"objective": payload.objective}
+
+
+@router.put("/projects/{project_id}/goal")
+def update_goal(project_id: int, payload: GoalUpdate) -> dict:
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Resident not found")
+    db.update_goal(project_id, payload.goal)
+    return {"goal": payload.goal}
 
 
 @router.put("/projects/{project_id}/progress")
