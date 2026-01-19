@@ -7,3 +7,8 @@
 - Changes: Added a summary update schema and API endpoint for updating resident summaries.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Endpoint follows the existing resident text update pattern.
+
+## Stage 3 – Dashboard layout placement
+- Changes: Added the resident summary field to the header section alongside the resident selector.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Layout relies on existing field styles in the header.
