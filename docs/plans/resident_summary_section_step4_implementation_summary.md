@@ -32,3 +32,8 @@
 - Changes: Updated the dashboard header layout so the resident summary spans the full card width.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Keeps the action buttons in the top row while expanding the summary input.
+
+## Stage 8 – Summary spacing cleanup
+- Changes: Prevented the summary field container from stretching vertically, removing extra whitespace under the textarea.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Limits the full-width summary field to content height in the header layout.

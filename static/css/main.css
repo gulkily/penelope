@@ -114,6 +114,7 @@ body {
 .dashboard-header {
   flex-direction: column;
   align-items: stretch;
+  justify-content: flex-start;
 }
 
 .dashboard-header .header-top {
@@ -127,6 +128,7 @@ body {
 .field.field-full {
   max-width: none;
   width: 100%;
+  flex: 0 0 auto;
 }
 
 .page-header h1 {
