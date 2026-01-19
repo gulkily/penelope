@@ -7,3 +7,8 @@
 - Changes: Added a confetti layer container in `templates/index.html`, loaded `static/js/confetti.js`, and introduced confetti styles/animation in `static/css/main.css`.
 - Verification: Not run (needs manual browser load to confirm visuals render and do not block the slider).
 - Notes: Confetti layer uses `pointer-events: none` and sits above the progress slider.
+
+## Stage 3 – Progress increase detection
+- Changes: Updated `static/js/app.js` to compare previous vs. new progress values and trigger the confetti module on positive moves.
+- Verification: Not run (needs manual slider interaction to confirm confetti triggers only on increases).
+- Notes: Confetti triggers only from slider input events, avoiding initial-load and goal-change noise.

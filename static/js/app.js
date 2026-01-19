@@ -635,7 +635,11 @@ undoDelete.addEventListener("click", async () => {
 progressSlider.addEventListener("input", (event) => {
   const units = Number(event.target.value) || 0;
   const percent = unitsToPercent(units, state.goalValue);
+  const previous = state.progressPercent;
   updateProgressDisplay(percent, state.goalValue);
+  if (state.projectId && percent > previous) {
+    window.NorthStarConfetti?.triggerConfetti?.();
+  }
   scheduleProgressSave(percent);
 });
 
