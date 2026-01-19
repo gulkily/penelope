@@ -12,3 +12,8 @@
 - Changes: Updated `static/js/app.js` to compare previous vs. new progress values and trigger the confetti module on positive moves.
 - Verification: Not run (needs manual slider interaction to confirm confetti triggers only on increases).
 - Notes: Confetti triggers only from slider input events, avoiding initial-load and goal-change noise.
+
+## Stage 4 – Final smoke check
+- Changes: No additional code changes.
+- Verification: Not run (needs manual verification of increase/decrease behavior and reduced-motion handling).
+- Notes: Ready for UI smoke testing on a running server.
