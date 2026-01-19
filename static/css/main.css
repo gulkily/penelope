@@ -171,6 +171,7 @@ body {
 .progress {
   flex: 1 1 320px;
   min-width: 280px;
+  position: relative;
 }
 
 .progress-labels {
@@ -186,6 +187,43 @@ body {
   align-items: center;
   padding: 2px 0;
   position: relative;
+}
+
+.confetti-layer {
+  position: absolute;
+  inset: -18px -12px -32px;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.confetti-piece {
+  position: absolute;
+  top: 0;
+  left: var(--confetti-left, 50%);
+  width: var(--confetti-width, 6px);
+  height: var(--confetti-height, 10px);
+  background: var(--confetti-color, var(--accent));
+  border-radius: 2px;
+  opacity: 0.95;
+  transform: translate3d(0, -12px, 0) rotate(var(--confetti-rotate, 0deg));
+  animation: confetti-fall var(--confetti-duration, 1200ms) ease-out
+    var(--confetti-delay, 0ms) forwards;
+}
+
+@keyframes confetti-fall {
+  to {
+    transform: translate3d(0, var(--confetti-drop, 140px), 0)
+      rotate(var(--confetti-rotate, 0deg));
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confetti-piece {
+    animation-duration: 1ms;
+    opacity: 0;
+  }
 }
 
 .progress-slider {
