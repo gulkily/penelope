@@ -22,3 +22,8 @@
 - Changes: No automated tests or documentation updates added in this stage.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Consider adding or updating tests in a follow-up if coverage gaps appear.
+
+## Stage 6 – Header layout tweak
+- Changes: Stacked the resident summary under the resident selector and aligned header actions to the top right.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Uses dashboard-only header layout classes to avoid impacting other pages.

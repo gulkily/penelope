@@ -111,6 +111,22 @@ body {
   justify-content: space-between;
 }
 
+.dashboard-header {
+  align-items: flex-start;
+}
+
+.dashboard-header .header-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1 1 360px;
+  max-width: 520px;
+}
+
+.dashboard-header .header-actions {
+  align-self: flex-start;
+}
+
 .page-header h1 {
   margin: 0 0 6px;
   font-size: 22px;

@@ -12,24 +12,26 @@
   <body>
     <main class="page">
       <section class="card card-compact project-card">
-        <header class="page-header">
-          <div class="field">
-            <label class="field-label" for="project-select">Resident</label>
-            <select id="project-select" class="field-input">
-              <option value="">Select a resident</option>
-            </select>
+        <header class="page-header dashboard-header">
+          <div class="header-fields">
+            <div class="field">
+              <label class="field-label" for="project-select">Resident</label>
+              <select id="project-select" class="field-input">
+                <option value="">Select a resident</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="field-label" for="summary-input">Resident summary</label>
+              <textarea
+                id="summary-input"
+                class="field-input field-textarea"
+                rows="3"
+                autocomplete="off"
+                placeholder="Capture a short resident summary..."
+              ></textarea>
+            </div>
           </div>
-          <div class="field">
-            <label class="field-label" for="summary-input">Resident summary</label>
-            <textarea
-              id="summary-input"
-              class="field-input field-textarea"
-              rows="3"
-              autocomplete="off"
-              placeholder="Capture a short resident summary..."
-            ></textarea>
-          </div>
-          <div class="link-button-group">
+          <div class="link-button-group header-actions">
             <a class="link-button" href="/projects">Manage residents</a>
             <a class="link-button" href="/settings">Settings</a>
           </div>
