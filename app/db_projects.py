@@ -1,6 +1,9 @@
+from datetime import datetime, timezone
+
 from app.db_connection import connect
 from app.db_constants import SECTIONS
 from app.db_items import list_items_for_project
+from app.db_progress_history import log_progress_history
 
 
 def list_projects(
@@ -150,9 +153,11 @@ def update_goal(project_id: int, goal: int) -> None:
 
 
 def update_progress(project_id: int, progress: int) -> None:
+    timestamp = datetime.now(timezone.utc).isoformat()
     with connect() as conn:
         conn.execute(
             "UPDATE projects SET progress = ? WHERE id = ?",
             (progress, project_id),
         )
+        log_progress_history(project_id, progress, timestamp, conn=conn)
         conn.commit()

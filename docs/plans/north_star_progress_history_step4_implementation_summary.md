@@ -2,3 +2,8 @@
 - Changes: Added the `progress_history` table and index during DB init, introduced history read/write helpers, exported new DB functions, and documented the table in the Postgres migration guide.
 - Verification: Not run (requires running the app and confirming the table and helpers work).
 - Notes: Uses UTC ISO timestamps for recorded history entries.
+
+## Stage 2 – Log history on progress updates
+- Changes: Progress updates now record a timestamped history entry alongside the existing progress update.
+- Verification: Not run (requires updating a resident's progress and checking a history entry is created).
+- Notes: History is written in the same DB transaction as the progress update.
