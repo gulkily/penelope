@@ -12,11 +12,11 @@
 	- Logging of who did what actions
 
 Feedback from Daniel
-- Resident rather than project
-- Make the slider go from 0 to whatever the end value is (e.g. 100 MRR)
-- List items: log the date it was logged (Residency runs for 12 weeks)
-- Put questions right below project
-- Add resident summary
+- Resident rather than project x
+- Make the slider go from 0 to whatever the end value is (e.g. 100 MRR) x
+- List items: log the date it was logged (Residency runs for 12 weeks) x
+- Put questions right below project x
+- Add resident summary x
 - North star graph (log datapoints)
 - Allow arranging things
 - Confetti and other cheerful things
