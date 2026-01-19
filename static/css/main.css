@@ -112,19 +112,21 @@ body {
 }
 
 .dashboard-header {
-  align-items: flex-start;
-}
-
-.dashboard-header .header-fields {
-  display: flex;
   flex-direction: column;
-  gap: 16px;
-  flex: 1 1 360px;
-  max-width: 520px;
+  align-items: stretch;
 }
 
-.dashboard-header .header-actions {
-  align-self: flex-start;
+.dashboard-header .header-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  width: 100%;
+}
+
+.field.field-full {
+  max-width: none;
+  width: 100%;
 }
 
 .page-header h1 {

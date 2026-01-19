@@ -27,3 +27,8 @@
 - Changes: Stacked the resident summary under the resident selector and aligned header actions to the top right.
 - Verification: Not run (per instructions, manual verification should be done by running the app).
 - Notes: Uses dashboard-only header layout classes to avoid impacting other pages.
+
+## Stage 7 – Full-width summary field
+- Changes: Updated the dashboard header layout so the resident summary spans the full card width.
+- Verification: Not run (per instructions, manual verification should be done by running the app).
+- Notes: Keeps the action buttons in the top row while expanding the summary input.
