@@ -63,7 +63,13 @@ def get_project(project_id: int) -> dict | None:
     items = list_items_for_project(project_id)
     sections: dict[str, list[dict]] = {section: [] for section in SECTIONS}
     for item in items:
-        sections[item["section"]].append({"id": item["id"], "text": item["text"]})
+        sections[item["section"]].append(
+            {
+                "id": item["id"],
+                "text": item["text"],
+                "created_at": item["created_at"],
+            }
+        )
 
     return {
         "id": project_row["id"],

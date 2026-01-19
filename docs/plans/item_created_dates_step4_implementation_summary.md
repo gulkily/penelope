@@ -12,3 +12,8 @@
 - Changes: Extended item update responses to retain the original `created_at` value.
 - Verification: Not run here (manual verification needed in a running app).
 - Notes: Undo still re-adds items with a new timestamp, since it creates a new item record.
+
+## Stage 4 – Include created_at in project section payloads
+- Changes: Added `created_at` to the item data returned in project section payloads so the dashboard can render dates.
+- Verification: Not run here (manual verification needed in a running app).
+- Notes: This fixes missing dates in the UI for project loads.
