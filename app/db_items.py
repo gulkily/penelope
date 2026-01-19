@@ -40,7 +40,7 @@ def add_item(project_id: int, section: str, text: str) -> dict:
 def update_item(item_id: int, text: str) -> dict | None:
     with connect() as conn:
         row = conn.execute(
-            "SELECT id, section FROM items WHERE id = ?",
+            "SELECT id, section, created_at FROM items WHERE id = ?",
             (item_id,),
         ).fetchone()
         if not row:
@@ -50,7 +50,12 @@ def update_item(item_id: int, text: str) -> dict | None:
             (text, item_id),
         )
         conn.commit()
-    return {"id": row["id"], "section": row["section"], "text": text}
+    return {
+        "id": row["id"],
+        "section": row["section"],
+        "text": text,
+        "created_at": row["created_at"],
+    }
 
 
 def delete_item(item_id: int) -> bool:
