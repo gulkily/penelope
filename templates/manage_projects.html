@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Project Management</title>
+    <title>Resident Management</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
@@ -13,8 +13,8 @@
     <main class="page">
       <header class="page-header">
         <div>
-          <h1>Project Management</h1>
-          <p class="hint">Add new projects and archive completed work.</p>
+          <h1>Resident Management</h1>
+          <p class="hint">Add new residents and archive completed work.</p>
         </div>
         <div class="link-button-group">
           <a class="link-button" href="/">Back to dashboard</a>
@@ -23,26 +23,28 @@
       </header>
 
       <section class="card manage-card">
-        <h2>Add project</h2>
+        <h2>Add resident</h2>
         <form id="add-project-form" class="manage-form">
-          <label class="field-label" for="project-name">Project name</label>
+          <label class="field-label" for="project-name">Resident name</label>
           <div class="manage-form-row">
             <input
               id="project-name"
               class="field-input"
               type="text"
-              placeholder="e.g. Project Atlas"
+              placeholder="e.g. Jordan Lee"
               required
             />
-            <button type="submit" class="action-button">Add project</button>
+            <button type="submit" class="action-button">Add resident</button>
           </div>
         </form>
       </section>
 
       <section class="card manage-card">
         <div class="manage-table-header">
-          <h2>Projects</h2>
-          <span class="hint">Archived projects are hidden from the main selector.</span>
+          <h2>Residents</h2>
+          <span class="hint"
+            >Archived residents are hidden from the main selector.</span
+          >
         </div>
         <div class="table-wrapper">
           <table class="project-table">
@@ -56,7 +58,7 @@
                 </th>
                 <th>
                   <button type="button" class="table-sort" data-sort="name">
-                    <span class="table-sort-label">Project</span>
+                    <span class="table-sort-label">Resident</span>
                     <span class="table-sort-indicator" aria-hidden="true"></span>
                   </button>
                 </th>

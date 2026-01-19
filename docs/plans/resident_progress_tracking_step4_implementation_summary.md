@@ -2,3 +2,8 @@
 - Changes: Updated dashboard selector label, placeholder, manage link text, and empty state copy to use resident terminology.
 - Verification: Not run (manual). Load the dashboard and confirm the selector, manage link, and empty state refer to residents.
 - Notes: None.
+
+## Stage 2 – Relabel management view to residents
+- Changes: Updated the manage page title, headers, form labels, table labels, and helper copy to use resident terminology.
+- Verification: Not run (manual). Visit `/projects` and confirm the page reads as resident management throughout.
+- Notes: None.
