@@ -16,7 +16,7 @@ Update `app/db.py` to:
 ## 3) Schema creation and migrations
 SQLite currently creates tables on startup and seeds data. For Postgres:
 - Introduce a migration tool (recommended: Alembic) to manage schema changes.
-- Create migrations for `projects` and `items` tables with the same columns.
+- Create migrations for `projects`, `items`, and `progress_history` tables with the same columns.
 - Move seed data logic into a separate initialization script (e.g., `python -m app.db.seed`) that can be run intentionally.
 
 ## 4) SQL portability checklist
@@ -44,6 +44,7 @@ If you want a scripted path, write a small Python migration tool that reads from
 - Start the server with a Postgres `DATABASE_URL`.
 - Confirm schema exists and seed data runs only when intended.
 - Run API calls for list/get/add/edit/delete items and progress/objective updates.
+- Verify progress history entries are recorded and can be retrieved per resident.
 - Verify UI behavior for project selection and item edits.
 
 ## 8) Rollback strategy

@@ -31,6 +31,23 @@ def init_db() -> None:
             )
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS progress_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                project_id INTEGER NOT NULL,
+                progress INTEGER NOT NULL,
+                recorded_at TEXT NOT NULL,
+                FOREIGN KEY(project_id) REFERENCES projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_progress_history_project
+            ON progress_history (project_id, recorded_at, id)
+            """
+        )
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
         _ensure_column(conn, "projects", "objective", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "projects", "archived", "INTEGER NOT NULL DEFAULT 0")
