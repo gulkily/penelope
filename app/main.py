@@ -40,3 +40,8 @@ def manage_projects(request: Request) -> HTMLResponse:
 @app.get("/settings", response_class=HTMLResponse)
 def settings(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("settings.html", {"request": request})
+
+
+@app.get("/debug/confetti", response_class=HTMLResponse)
+def confetti_debug(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("confetti_debug.html", {"request": request})

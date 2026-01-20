@@ -22,3 +22,8 @@
 - Changes: Hardened `static/js/confetti.js` to lazily resolve the confetti layer and refresh reduced-motion state on each trigger.
 - Verification: Not run (needs manual trigger to confirm confetti pieces appear).
 - Notes: Addresses cases where the module initializes before the layer is available.
+
+## Stage 6 – Confetti debug page
+- Changes: Added `/debug/confetti` with `templates/confetti_debug.html`, diagnostics script `static/js/confetti-debug.js`, and supporting styles in `static/css/main.css`.
+- Verification: Not run (manual load needed to confirm diagnostics populate and trigger works).
+- Notes: Debug page includes a sandbox area and quick checks for reduced-motion, module load, and DOM piece count.

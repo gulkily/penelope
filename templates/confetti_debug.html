@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Confetti Debug</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <script src="/static/js/theme.js" defer></script>
+    <script src="/static/js/confetti.js" defer></script>
+    <script src="/static/js/confetti-debug.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <section class="card card-compact">
+        <header class="page-header">
+          <div>
+            <h1 class="page-title">Confetti Debug</h1>
+            <p class="hint">
+              Diagnostics for the North Star progress confetti. Use this page to
+              confirm script load, reduced-motion state, and trigger behavior.
+            </p>
+          </div>
+          <div class="link-button-group">
+            <a class="link-button" href="/">Back to dashboard</a>
+          </div>
+        </header>
+      </section>
+
+      <section class="card">
+        <h2>Diagnostics</h2>
+        <dl class="debug-list">
+          <div class="debug-row">
+            <dt>Document ready state</dt>
+            <dd id="debug-ready">-</dd>
+          </div>
+          <div class="debug-row">
+            <dt>Reduced motion</dt>
+            <dd id="debug-motion">-</dd>
+          </div>
+          <div class="debug-row">
+            <dt>Confetti layer</dt>
+            <dd id="debug-layer">-</dd>
+          </div>
+          <div class="debug-row">
+            <dt>Layer size</dt>
+            <dd id="debug-layer-size">-</dd>
+          </div>
+          <div class="debug-row">
+            <dt>Confetti module</dt>
+            <dd id="debug-module">-</dd>
+          </div>
+          <div class="debug-row">
+            <dt>Trigger available</dt>
+            <dd id="debug-trigger">-</dd>
+          </div>
+          <div class="debug-row">
+            <dt>Pieces in DOM</dt>
+            <dd id="debug-piece-count">-</dd>
+          </div>
+        </dl>
+      </section>
+
+      <section class="card">
+        <h2>Controls</h2>
+        <div class="debug-actions">
+          <button type="button" class="action-button" id="trigger-confetti">
+            Trigger confetti
+          </button>
+          <button type="button" class="action-button" id="refresh-debug">
+            Refresh diagnostics
+          </button>
+        </div>
+        <div class="confetti-sandbox" aria-hidden="true">
+          <div id="confetti-layer" class="confetti-layer"></div>
+          <div class="confetti-sandbox-label">Confetti sandbox</div>
+        </div>
+      </section>
+    </main>
+    <button type="button" class="theme-toggle" id="theme-toggle">
+      System
+    </button>
+  </body>
+</html>
