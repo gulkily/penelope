@@ -27,3 +27,8 @@
 - Changes: Added `/debug/confetti` with `templates/confetti_debug.html`, diagnostics script `static/js/confetti-debug.js`, and supporting styles in `static/css/main.css`.
 - Verification: Not run (manual load needed to confirm diagnostics populate and trigger works).
 - Notes: Debug page includes a sandbox area and quick checks for reduced-motion, module load, and DOM piece count.
+
+## Stage 7 – Show evaluated expressions
+- Changes: Displayed the actual JS statements for each debug row in `templates/confetti_debug.html` and styled inline code in `static/css/main.css` for readability.
+- Verification: Not run (manual page load needed to confirm expressions render and diagnostics still update).
+- Notes: Expressions now match the console checks used during debugging.

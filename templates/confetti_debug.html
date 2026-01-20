@@ -29,33 +29,38 @@
 
       <section class="card">
         <h2>Diagnostics</h2>
+        <p class="hint">Expressions are shown as JS statements; values update on refresh.</p>
         <dl class="debug-list">
           <div class="debug-row">
-            <dt>Document ready state</dt>
+            <dt><code>document.readyState</code></dt>
             <dd id="debug-ready">-</dd>
           </div>
           <div class="debug-row">
-            <dt>Reduced motion</dt>
+            <dt>
+              <code>window.matchMedia(\"(prefers-reduced-motion: reduce)\").matches</code>
+            </dt>
             <dd id="debug-motion">-</dd>
           </div>
           <div class="debug-row">
-            <dt>Confetti layer</dt>
+            <dt><code>document.getElementById(\"confetti-layer\")</code></dt>
             <dd id="debug-layer">-</dd>
           </div>
           <div class="debug-row">
-            <dt>Layer size</dt>
+            <dt>
+              <code>document.getElementById(\"confetti-layer\")?.getBoundingClientRect()</code>
+            </dt>
             <dd id="debug-layer-size">-</dd>
           </div>
           <div class="debug-row">
-            <dt>Confetti module</dt>
+            <dt><code>window.NorthStarConfetti</code></dt>
             <dd id="debug-module">-</dd>
           </div>
           <div class="debug-row">
-            <dt>Trigger available</dt>
+            <dt><code>typeof window.NorthStarConfetti?.triggerConfetti</code></dt>
             <dd id="debug-trigger">-</dd>
           </div>
           <div class="debug-row">
-            <dt>Pieces in DOM</dt>
+            <dt><code>document.querySelectorAll(\".confetti-piece\").length</code></dt>
             <dd id="debug-piece-count">-</dd>
           </div>
         </dl>
