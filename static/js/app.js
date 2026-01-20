@@ -35,6 +35,8 @@ const progressGraphToggle = document.getElementById("progress-graph-toggle");
 const progressGraphIndicator = document.getElementById("progress-graph-indicator");
 const progressGraphPanel = document.getElementById("progress-graph-panel");
 const progressGraphRange = document.getElementById("progress-graph-range");
+const progressGraphAxis = document.getElementById("progress-graph-axis");
+const progressGraphLabels = document.getElementById("progress-graph-labels");
 const progressGraphSvg = document.getElementById("progress-graph-svg");
 const progressGraphPath = document.getElementById("progress-graph-path");
 const progressGraphPoints = document.getElementById("progress-graph-points");
@@ -335,6 +337,15 @@ function formatGraphDate(date) {
   });
 }
 
+function formatGraphTickDate(date, includeYear) {
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: includeYear ? "numeric" : undefined,
+    timeZone: "UTC",
+  });
+}
+
 function updateGraphRangeLabel() {
   const start = parseDateOnly(state.residencyStartDate) ||
     parseDateOnly(DEFAULT_RESIDENCY_START);
@@ -354,6 +365,7 @@ function setGraphExpanded(expanded) {
   progressGraphIndicator.textContent = expanded ? "Hide" : "Show";
   if (!expanded) {
     clearProgressGraph();
+    clearGraphAxis();
   }
 }
 
@@ -361,13 +373,67 @@ function updateGraphBounds(project) {
   state.residencyStartDate = project.residency_start_date || DEFAULT_RESIDENCY_START;
   state.residencyEndDate = project.residency_end_date || DEFAULT_RESIDENCY_END;
   updateGraphRangeLabel();
+  if (state.graphExpanded) {
+    refreshProgressGraph();
+  }
 }
 
 function clearProgressGraph() {
   progressGraphPath.setAttribute("d", "");
   progressGraphPoints.replaceChildren();
-  progressGraphSvg.hidden = true;
+  progressGraphSvg.hidden = false;
   progressGraphEmpty.hidden = false;
+}
+
+function clearGraphAxis() {
+  progressGraphAxis.replaceChildren();
+  progressGraphLabels.replaceChildren();
+}
+
+function getGraphDimensions() {
+  const width = Math.max(1, progressGraphSvg.clientWidth);
+  const height = Math.max(1, progressGraphSvg.clientHeight);
+  const paddingX = Math.max(6, Math.round(width * 0.04));
+  const paddingY = Math.max(6, Math.round(height * 0.08));
+  const labelSpace = 18;
+  const innerWidth = Math.max(1, width - paddingX * 2);
+  const innerHeight = Math.max(1, height - paddingY * 2 - labelSpace);
+  return {
+    width,
+    height,
+    paddingX,
+    paddingY,
+    labelSpace,
+    innerWidth,
+    innerHeight,
+  };
+}
+
+function renderGraphAxis(start, end, dimensions) {
+  const ticks = 5;
+  const rangeMs = end.getTime() - start.getTime() || 1;
+  const includeYear = start.getUTCFullYear() !== end.getUTCFullYear();
+  const lines = document.createDocumentFragment();
+  const labels = document.createDocumentFragment();
+  for (let index = 0; index < ticks; index += 1) {
+    const ratio = ticks === 1 ? 0 : index / (ticks - 1);
+    const x = dimensions.paddingX + ratio * dimensions.innerWidth;
+    const tickDate = new Date(start.getTime() + rangeMs * ratio);
+    const line = document.createElement("div");
+    line.className = "graph-axis-line";
+    line.style.left = `${Math.round(x)}px`;
+    line.style.top = `${dimensions.paddingY}px`;
+    line.style.height = `${Math.max(1, dimensions.innerHeight)}px`;
+    lines.append(line);
+
+    const label = document.createElement("span");
+    label.className = "graph-axis-label";
+    label.style.left = `${Math.round(x)}px`;
+    label.textContent = formatGraphTickDate(tickDate, includeYear);
+    labels.append(label);
+  }
+  progressGraphAxis.replaceChildren(lines);
+  progressGraphLabels.replaceChildren(labels);
 }
 
 function renderProgressGraph(history) {
@@ -376,9 +442,17 @@ function renderProgressGraph(history) {
   const end = parseDateOnly(state.residencyEndDate, true) ||
     parseDateOnly(DEFAULT_RESIDENCY_END, true);
   if (!start || !end || end < start) {
+    clearGraphAxis();
     clearProgressGraph();
     return;
   }
+
+  const dimensions = getGraphDimensions();
+  progressGraphSvg.setAttribute(
+    "viewBox",
+    `0 0 ${dimensions.width} ${dimensions.height}`,
+  );
+  renderGraphAxis(start, end, dimensions);
 
   const filtered = history
     .map((entry) => ({ ...entry, time: parseHistoryTimestamp(entry.recorded_at) }))
@@ -393,9 +467,12 @@ function renderProgressGraph(history) {
 
   const rangeMs = end.getTime() - start.getTime() || 1;
   const points = filtered.map((entry) => {
-    const x = ((entry.time.getTime() - start.getTime()) / rangeMs) * 100;
-    const y = 100 - clampPercent(entry.progress);
-    return { x: Math.min(100, Math.max(0, x)), y };
+    const ratio = (entry.time.getTime() - start.getTime()) / rangeMs;
+    const x = dimensions.paddingX + ratio * dimensions.innerWidth;
+    const y =
+      dimensions.paddingY +
+      (1 - clampPercent(entry.progress) / 100) * dimensions.innerHeight;
+    return { x: Math.min(dimensions.width, Math.max(0, x)), y };
   });
 
   const path = points
@@ -404,11 +481,12 @@ function renderProgressGraph(history) {
   progressGraphPath.setAttribute("d", path);
 
   const markers = document.createDocumentFragment();
+  const radius = Math.max(3, Math.round(dimensions.height * 0.025));
   points.forEach((point) => {
     const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
     circle.setAttribute("cx", point.x.toString());
     circle.setAttribute("cy", point.y.toString());
-    circle.setAttribute("r", "2.5");
+    circle.setAttribute("r", radius.toString());
     markers.append(circle);
   });
   progressGraphPoints.replaceChildren(markers);

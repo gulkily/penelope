@@ -122,6 +122,11 @@
                   >
                 </div>
                 <div class="graph-frame">
+                  <div
+                    class="graph-axis"
+                    id="progress-graph-axis"
+                    aria-hidden="true"
+                  ></div>
                   <svg
                     id="progress-graph-svg"
                     viewBox="0 0 100 100"
@@ -131,6 +136,11 @@
                     <path id="progress-graph-path" class="graph-line" d=""></path>
                     <g id="progress-graph-points" class="graph-points"></g>
                   </svg>
+                  <div
+                    class="graph-axis-labels"
+                    id="progress-graph-labels"
+                    aria-hidden="true"
+                  ></div>
                   <div class="graph-empty" id="progress-graph-empty" hidden>
                     No progress history in this period yet.
                   </div>

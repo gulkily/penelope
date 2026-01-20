@@ -457,18 +457,54 @@ body {
   width: 100%;
   height: 100%;
   display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 2;
 }
 
 .graph-line {
   fill: none;
   stroke: var(--accent);
   stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .graph-points circle {
   fill: var(--accent);
   stroke: var(--surface);
   stroke-width: 1;
+}
+
+.graph-axis {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.graph-axis-line {
+  position: absolute;
+  width: 1px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.graph-axis-labels {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 4px;
+  height: 16px;
+  z-index: 3;
+  pointer-events: none;
+}
+
+.graph-axis-label {
+  position: absolute;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--text-subtle);
+  white-space: nowrap;
 }
 
 .graph-empty {
@@ -481,6 +517,7 @@ body {
   padding: 0 16px;
   font-size: 12px;
   color: var(--text-muted);
+  z-index: 4;
 }
 
 .action-button {

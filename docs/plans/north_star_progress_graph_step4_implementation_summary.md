@@ -9,7 +9,7 @@
 - Notes: Data wiring comes in the next stage.
 
 ## Stage 3 – Render history into the graph
-- Changes: Added graph toggle behavior, pulled progress history for the active resident, filtered it to residency bounds, rendered an SVG line with markers plus range labeling, normalized history timestamps for safer parsing, and formatted the range label in UTC to avoid off-by-one displays.
+- Changes: Added graph toggle behavior, pulled progress history for the active resident, filtered it to residency bounds, rendered an SVG line with markers plus range labeling, normalized history timestamps for safer parsing, formatted the range label in UTC to avoid off-by-one displays, and added axis markers with date labels plus pixel-based rendering to avoid shape distortion.
 - Verification: Not run (requires expanding the graph for a resident with progress history).
 - Notes: The graph auto-refreshes after progress updates when expanded.
 
