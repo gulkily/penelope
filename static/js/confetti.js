@@ -4,6 +4,7 @@
     pieceCount: 360,
     durationMs: 7000,
     cooldownMs: 900,
+    delaySpreadMs: 1800,
     colors: [
       "var(--accent)",
       "var(--accent-strong)",
@@ -71,7 +72,9 @@
     const height = width + 4 + Math.random() * 6;
     const drop =
       dropRange.min + Math.random() * (dropRange.max - dropRange.min);
-    const delay = Math.random() * 180;
+    const delaySpread = Number(config.delaySpreadMs);
+    const delayRange = Number.isFinite(delaySpread) ? Math.max(0, delaySpread) : 0;
+    const delay = Math.random() * delayRange;
     const rotate = Math.floor(Math.random() * 360);
     const color = config.colors[index % config.colors.length];
 
