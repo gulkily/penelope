@@ -67,3 +67,8 @@
 - Changes: Added a configurable delay spread and increased per-piece delay randomness in `static/js/confetti.js` so the confetti starts over a wider window.
 - Verification: Not run (manual trigger needed to confirm staggered start).
 - Notes: The default delay spread is 1800ms.
+
+## Stage 15 – Full-width confetti spread
+- Changes: Expanded confetti horizontal spread to 0–100% of the viewport in `static/js/confetti.js`.
+- Verification: Not run (manual trigger needed to confirm edge coverage).
+- Notes: Pieces may slightly overflow edges based on width.

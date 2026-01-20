@@ -67,7 +67,7 @@
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
 
-    const left = 10 + Math.random() * 80;
+    const left = Math.random() * 100;
     const width = 4 + Math.random() * 4;
     const height = width + 4 + Math.random() * 6;
     const drop =
