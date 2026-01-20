@@ -53,11 +53,11 @@ def _log_progress_history_with_conn(
         """
         SELECT id, recorded_at
         FROM progress_history
-        WHERE project_id = ?
+        WHERE project_id = ? AND recorded_at <= ?
         ORDER BY recorded_at DESC, id DESC
         LIMIT 1
         """,
-        (project_id,),
+        (project_id, recorded_at),
     ).fetchone()
     if latest:
         current_time = _parse_iso_timestamp(recorded_at)
