@@ -17,3 +17,8 @@
 - Changes: No additional code changes.
 - Verification: Not run (needs manual verification of increase/decrease behavior and reduced-motion handling).
 - Notes: Ready for UI smoke testing on a running server.
+
+## Stage 5 – Confetti init fallback
+- Changes: Hardened `static/js/confetti.js` to lazily resolve the confetti layer and refresh reduced-motion state on each trigger.
+- Verification: Not run (needs manual trigger to confirm confetti pieces appear).
+- Notes: Addresses cases where the module initializes before the layer is available.

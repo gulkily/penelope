@@ -47,6 +47,21 @@
     }
   }
 
+  function resolveLayer() {
+    if (!layer) {
+      layer = document.getElementById(config.layerId);
+    }
+    return layer;
+  }
+
+  function updateMotionPreference() {
+    if (!motionMedia) {
+      motionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
+    }
+    prefersReducedMotion = motionMedia.matches;
+    return prefersReducedMotion;
+  }
+
   function buildPiece(index) {
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
@@ -72,7 +87,8 @@
   }
 
   function triggerConfetti() {
-    if (!layer || prefersReducedMotion) {
+    const targetLayer = resolveLayer();
+    if (!targetLayer || updateMotionPreference()) {
       return;
     }
 
@@ -87,16 +103,16 @@
       cleanupTimer = null;
     }
 
-    layer.innerHTML = "";
+    targetLayer.innerHTML = "";
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < config.pieceCount; i += 1) {
       fragment.appendChild(buildPiece(i));
     }
-    layer.appendChild(fragment);
+    targetLayer.appendChild(fragment);
 
     cleanupTimer = window.setTimeout(() => {
-      if (layer) {
-        layer.innerHTML = "";
+      if (targetLayer) {
+        targetLayer.innerHTML = "";
       }
     }, config.durationMs + 240);
   }
