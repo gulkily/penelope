@@ -32,3 +32,8 @@
 - Changes: Displayed the actual JS statements for each debug row in `templates/confetti_debug.html` and styled inline code in `static/css/main.css` for readability.
 - Verification: Not run (manual page load needed to confirm expressions render and diagnostics still update).
 - Notes: Expressions now match the console checks used during debugging.
+
+## Stage 8 – Force confetti in debug
+- Changes: Added a debug-only button that triggers confetti even when reduced-motion is true, plus an optional `force` flag on `triggerConfetti` in `static/js/confetti.js`.
+- Verification: Not run (manual click needed on `/debug/confetti`).
+- Notes: Force flag is used only in the debug page.

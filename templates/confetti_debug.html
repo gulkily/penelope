@@ -37,17 +37,17 @@
           </div>
           <div class="debug-row">
             <dt>
-              <code>window.matchMedia(\"(prefers-reduced-motion: reduce)\").matches</code>
+              <code>window.matchMedia("(prefers-reduced-motion: reduce)").matches</code>
             </dt>
             <dd id="debug-motion">-</dd>
           </div>
           <div class="debug-row">
-            <dt><code>document.getElementById(\"confetti-layer\")</code></dt>
+            <dt><code>document.getElementById("confetti-layer")</code></dt>
             <dd id="debug-layer">-</dd>
           </div>
           <div class="debug-row">
             <dt>
-              <code>document.getElementById(\"confetti-layer\")?.getBoundingClientRect()</code>
+              <code>document.getElementById("confetti-layer")?.getBoundingClientRect()</code>
             </dt>
             <dd id="debug-layer-size">-</dd>
           </div>
@@ -60,7 +60,7 @@
             <dd id="debug-trigger">-</dd>
           </div>
           <div class="debug-row">
-            <dt><code>document.querySelectorAll(\".confetti-piece\").length</code></dt>
+            <dt><code>document.querySelectorAll(".confetti-piece").length</code></dt>
             <dd id="debug-piece-count">-</dd>
           </div>
         </dl>
@@ -71,6 +71,9 @@
         <div class="debug-actions">
           <button type="button" class="action-button" id="trigger-confetti">
             Trigger confetti
+          </button>
+          <button type="button" class="action-button" id="trigger-confetti-force">
+            Trigger confetti (ignore reduced motion)
           </button>
           <button type="button" class="action-button" id="refresh-debug">
             Refresh diagnostics

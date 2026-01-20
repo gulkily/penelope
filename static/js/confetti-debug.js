@@ -51,11 +51,19 @@ function readDiagnostics() {
 
 function wireDebugControls() {
   const triggerButton = document.getElementById("trigger-confetti");
+  const forceButton = document.getElementById("trigger-confetti-force");
   const refreshButton = document.getElementById("refresh-debug");
 
   if (triggerButton) {
     triggerButton.addEventListener("click", () => {
       window.NorthStarConfetti?.triggerConfetti?.();
+      window.setTimeout(readDiagnostics, 60);
+    });
+  }
+
+  if (forceButton) {
+    forceButton.addEventListener("click", () => {
+      window.NorthStarConfetti?.triggerConfetti?.({ force: true });
       window.setTimeout(readDiagnostics, 60);
     });
   }

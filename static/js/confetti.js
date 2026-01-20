@@ -86,9 +86,10 @@
     return piece;
   }
 
-  function triggerConfetti() {
+  function triggerConfetti(options = {}) {
     const targetLayer = resolveLayer();
-    if (!targetLayer || updateMotionPreference()) {
+    const reduceMotion = updateMotionPreference();
+    if (!targetLayer || (reduceMotion && !options.force)) {
       return;
     }
 
