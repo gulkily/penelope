@@ -304,6 +304,28 @@ function parseDateOnly(value, endOfDay = false) {
   return parsed;
 }
 
+function parseHistoryTimestamp(value) {
+  if (!value) {
+    return null;
+  }
+  const direct = new Date(value);
+  if (!Number.isNaN(direct.getTime())) {
+    return direct;
+  }
+  let normalized = value.trim().replace(" ", "T");
+  normalized = normalized.replace(/\.(\d{3})\d+/, ".$1");
+  if (!/[zZ]|[+-]\d{2}:?\d{2}$/.test(normalized)) {
+    normalized = `${normalized}Z`;
+  }
+  normalized = normalized.replace(/\+00:00$/, "Z");
+  normalized = normalized.replace(/([+-]\d{2}):(\d{2})$/, "$1$2");
+  const retry = new Date(normalized);
+  if (Number.isNaN(retry.getTime())) {
+    return null;
+  }
+  return retry;
+}
+
 function formatGraphDate(date) {
   return date.toLocaleDateString(undefined, {
     month: "short",
@@ -355,8 +377,8 @@ function renderProgressGraph(history) {
   }
 
   const filtered = history
-    .map((entry) => ({ ...entry, time: new Date(entry.recorded_at) }))
-    .filter((entry) => !Number.isNaN(entry.time.getTime()))
+    .map((entry) => ({ ...entry, time: parseHistoryTimestamp(entry.recorded_at) }))
+    .filter((entry) => entry.time && !Number.isNaN(entry.time.getTime()))
     .filter((entry) => entry.time >= start && entry.time <= end)
     .sort((a, b) => a.time - b.time);
 
