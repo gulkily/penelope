@@ -52,3 +52,8 @@
 - Changes: Sized confetti drop distance based on the active layer height in `static/js/confetti.js` so particles fall through the full viewport.
 - Verification: Not run (manual trigger needed to confirm full-page coverage).
 - Notes: Drop distance now scales with viewport height.
+
+## Stage 12 – Longer confetti duration
+- Changes: Extended the default confetti duration to 7000ms in `static/js/confetti.js`.
+- Verification: Not run (manual trigger needed to confirm timing).
+- Notes: Animation now runs longer to create a slower, lingering effect.
