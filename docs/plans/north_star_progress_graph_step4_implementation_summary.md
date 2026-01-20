@@ -12,3 +12,8 @@
 - Changes: Added graph toggle behavior, pulled progress history for the active resident, filtered it to residency bounds, and rendered an SVG line with markers plus range labeling.
 - Verification: Not run (requires expanding the graph for a resident with progress history).
 - Notes: The graph auto-refreshes after progress updates when expanded.
+
+## Stage 4 – Graph empty state copy
+- Changes: Added an empty-state message for residents with no history in the selected date range.
+- Verification: Not run (requires expanding the graph for a resident with no history entries).
+- Notes: Empty state is shown when no history is available or range is invalid.
