@@ -2,6 +2,10 @@ from datetime import datetime, timezone
 
 from app.db_connection import connect
 
+DEFAULT_RESIDENCY_YEAR = datetime.now(timezone.utc).year
+DEFAULT_RESIDENCY_START = f"{DEFAULT_RESIDENCY_YEAR}-01-01"
+DEFAULT_RESIDENCY_END = f"{DEFAULT_RESIDENCY_YEAR}-01-31"
+
 
 def init_db() -> None:
     with connect() as conn:
@@ -12,6 +16,8 @@ def init_db() -> None:
                 name TEXT NOT NULL,
                 progress INTEGER NOT NULL,
                 goal INTEGER NOT NULL DEFAULT 100,
+                residency_start_date TEXT NOT NULL DEFAULT '{DEFAULT_RESIDENCY_START}',
+                residency_end_date TEXT NOT NULL DEFAULT '{DEFAULT_RESIDENCY_END}',
                 questions TEXT NOT NULL DEFAULT '',
                 summary TEXT NOT NULL DEFAULT '',
                 objective TEXT NOT NULL DEFAULT '',
@@ -49,6 +55,18 @@ def init_db() -> None:
             """
         )
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
+        _ensure_column(
+            conn,
+            "projects",
+            "residency_start_date",
+            f"TEXT NOT NULL DEFAULT '{DEFAULT_RESIDENCY_START}'",
+        )
+        _ensure_column(
+            conn,
+            "projects",
+            "residency_end_date",
+            f"TEXT NOT NULL DEFAULT '{DEFAULT_RESIDENCY_END}'",
+        )
         _ensure_column(conn, "projects", "objective", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "projects", "archived", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "projects", "summary", "TEXT NOT NULL DEFAULT ''")

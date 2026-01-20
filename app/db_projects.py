@@ -54,7 +54,8 @@ def get_project(project_id: int) -> dict | None:
     with connect() as conn:
         project_row = conn.execute(
             """
-            SELECT id, name, progress, goal, questions, summary, objective, archived
+            SELECT id, name, progress, goal, residency_start_date, residency_end_date,
+                   questions, summary, objective, archived
             FROM projects
             WHERE id = ?
             """,
@@ -79,6 +80,8 @@ def get_project(project_id: int) -> dict | None:
         "name": project_row["name"],
         "progress": project_row["progress"],
         "goal": project_row["goal"],
+        "residency_start_date": project_row["residency_start_date"],
+        "residency_end_date": project_row["residency_end_date"],
         "objective": project_row["objective"],
         "archived": bool(project_row["archived"]),
         "sections": sections,
