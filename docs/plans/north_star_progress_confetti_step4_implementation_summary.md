@@ -72,3 +72,8 @@
 - Changes: Expanded confetti horizontal spread to 0–100% of the viewport in `static/js/confetti.js`.
 - Verification: Not run (manual trigger needed to confirm edge coverage).
 - Notes: Pieces may slightly overflow edges based on width.
+
+## Stage 16 – Full-height confetti distribution
+- Changes: Randomized confetti starting vertical positions and widened the fall distance range in `static/js/confetti.js`, plus added a top variable in `static/css/main.css`.
+- Verification: Not run (manual trigger needed to confirm full-height coverage).
+- Notes: Pieces now originate across the viewport to avoid a single band.

@@ -63,15 +63,17 @@
     return prefersReducedMotion;
   }
 
-  function buildPiece(index, dropRange) {
+  function buildPiece(index, layout) {
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
 
     const left = Math.random() * 100;
+    const startTop = Math.random() * layout.layerHeight;
     const width = 4 + Math.random() * 4;
     const height = width + 4 + Math.random() * 6;
     const drop =
-      dropRange.min + Math.random() * (dropRange.max - dropRange.min);
+      layout.dropRange.min +
+      Math.random() * (layout.dropRange.max - layout.dropRange.min);
     const delaySpread = Number(config.delaySpreadMs);
     const delayRange = Number.isFinite(delaySpread) ? Math.max(0, delaySpread) : 0;
     const delay = Math.random() * delayRange;
@@ -79,6 +81,7 @@
     const color = config.colors[index % config.colors.length];
 
     piece.style.setProperty("--confetti-left", `${left.toFixed(1)}%`);
+    piece.style.setProperty("--confetti-top", `${startTop.toFixed(1)}px`);
     piece.style.setProperty("--confetti-width", `${width.toFixed(1)}px`);
     piece.style.setProperty("--confetti-height", `${height.toFixed(1)}px`);
     piece.style.setProperty("--confetti-drop", `${drop.toFixed(1)}px`);
@@ -111,13 +114,16 @@
     targetLayer.innerHTML = "";
     const rect = targetLayer.getBoundingClientRect();
     const layerHeight = rect.height || window.innerHeight || 0;
-    const minDrop = Math.max(180, layerHeight * 0.85);
-    const maxDrop = Math.max(minDrop + 80, layerHeight * 1.1);
-    const dropRange = { min: minDrop, max: maxDrop };
+    const minDrop = Math.max(240, layerHeight * 1.1);
+    const maxDrop = Math.max(minDrop + 120, layerHeight * 1.4);
+    const layout = {
+      layerHeight,
+      dropRange: { min: minDrop, max: maxDrop },
+    };
 
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < config.pieceCount; i += 1) {
-      fragment.appendChild(buildPiece(i, dropRange));
+      fragment.appendChild(buildPiece(i, layout));
     }
     targetLayer.appendChild(fragment);
 
