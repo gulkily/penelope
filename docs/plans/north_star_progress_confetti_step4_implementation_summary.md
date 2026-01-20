@@ -42,3 +42,8 @@
 - Changes: Removed optional chaining from `static/js/app.js` and `static/js/confetti-debug.js`, and updated debug page expressions in `templates/confetti_debug.html`.
 - Verification: Not run (manual check in Waterfox Classic recommended).
 - Notes: Avoids parse errors in older JS engines.
+
+## Stage 10 – Full-page confetti overlay
+- Changes: Moved the confetti layer to a page-level overlay on the main dashboard and scoped sandbox usage to the debug page via new layer classes in `static/css/main.css`.
+- Verification: Not run (manual page reload needed to confirm confetti appears across the full viewport).
+- Notes: Keeps the debug sandbox confined while allowing full-page coverage on `/`.

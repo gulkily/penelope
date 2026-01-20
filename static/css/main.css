@@ -195,11 +195,19 @@ body {
 }
 
 .confetti-layer {
-  position: absolute;
-  inset: -18px -12px -32px;
   pointer-events: none;
   overflow: hidden;
-  z-index: 2;
+  z-index: 4;
+}
+
+.confetti-layer-page {
+  position: fixed;
+  inset: 0;
+}
+
+.confetti-layer-sandbox {
+  position: absolute;
+  inset: 0;
 }
 
 .confetti-piece {
