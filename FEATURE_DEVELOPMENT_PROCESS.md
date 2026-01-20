@@ -13,7 +13,6 @@ Before drafting Step 1 (or jumping straight to Step 2 on simple work), skim th
 1. Start with the highest-numbered approved step (usually Step 1 unless explicitly skipped).
 2. Read only the dedicated step file in `docs/feature_process/`, complete that deliverable, and request approval in the format “Approved Step N.”
 3. Do not open the next file until the user replies with the exact approval phrase.
-4. Reprint the instructions from the relevant file before you begin working on that step’s deliverable.
 
 ## Step Guide
 - **Step 1 – Solution Assessment (Optional)**: resolve uncertainty across multiple approaches. `docs/feature_process/step1_solution_assessment.md`
