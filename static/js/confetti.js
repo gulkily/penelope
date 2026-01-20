@@ -4,7 +4,7 @@
     pieceCount: 360,
     durationMs: 7000,
     cooldownMs: 900,
-    delaySpreadMs: 1800,
+    delaySpreadMs: 3500,
     colors: [
       "var(--accent)",
       "var(--accent-strong)",
@@ -68,7 +68,6 @@
     piece.className = "confetti-piece";
 
     const left = Math.random() * 100;
-    const startTop = Math.random() * layout.layerHeight;
     const width = 4 + Math.random() * 4;
     const height = width + 4 + Math.random() * 6;
     const drop =
@@ -81,7 +80,6 @@
     const color = config.colors[index % config.colors.length];
 
     piece.style.setProperty("--confetti-left", `${left.toFixed(1)}%`);
-    piece.style.setProperty("--confetti-top", `${startTop.toFixed(1)}px`);
     piece.style.setProperty("--confetti-width", `${width.toFixed(1)}px`);
     piece.style.setProperty("--confetti-height", `${height.toFixed(1)}px`);
     piece.style.setProperty("--confetti-drop", `${drop.toFixed(1)}px`);
@@ -127,11 +125,13 @@
     }
     targetLayer.appendChild(fragment);
 
+    const delaySpread = Number(config.delaySpreadMs);
+    const delayBuffer = Number.isFinite(delaySpread) ? Math.max(0, delaySpread) : 0;
     cleanupTimer = window.setTimeout(() => {
       if (targetLayer) {
         targetLayer.innerHTML = "";
       }
-    }, config.durationMs + 240);
+    }, config.durationMs + delayBuffer + 240);
   }
 
   window.NorthStarConfetti = {

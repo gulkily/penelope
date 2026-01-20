@@ -77,3 +77,8 @@
 - Changes: Randomized confetti starting vertical positions and widened the fall distance range in `static/js/confetti.js`, plus added a top variable in `static/css/main.css`.
 - Verification: Not run (manual trigger needed to confirm full-height coverage).
 - Notes: Pieces now originate across the viewport to avoid a single band.
+
+## Stage 17 – Top-origin, longer release
+- Changes: Restored top-only origin for confetti pieces, increased release delay spread to 3500ms, and extended cleanup timing to account for staggered release in `static/js/confetti.js`; reset confetti top positioning in `static/css/main.css`.
+- Verification: Not run (manual trigger needed to confirm longer top release and full-height fall).
+- Notes: Keeps launch at the top while ensuring the stream lasts long enough to reach the bottom.

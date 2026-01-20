@@ -212,7 +212,7 @@ body {
 
 .confetti-piece {
   position: absolute;
-  top: var(--confetti-top, 0px);
+  top: 0;
   left: var(--confetti-left, 50%);
   width: var(--confetti-width, 6px);
   height: var(--confetti-height, 10px);
