@@ -62,14 +62,15 @@
     return prefersReducedMotion;
   }
 
-  function buildPiece(index) {
+  function buildPiece(index, dropRange) {
     const piece = document.createElement("span");
     piece.className = "confetti-piece";
 
     const left = 10 + Math.random() * 80;
     const width = 4 + Math.random() * 4;
     const height = width + 4 + Math.random() * 6;
-    const drop = 110 + Math.random() * 90;
+    const drop =
+      dropRange.min + Math.random() * (dropRange.max - dropRange.min);
     const delay = Math.random() * 180;
     const rotate = Math.floor(Math.random() * 360);
     const color = config.colors[index % config.colors.length];
@@ -105,9 +106,15 @@
     }
 
     targetLayer.innerHTML = "";
+    const rect = targetLayer.getBoundingClientRect();
+    const layerHeight = rect.height || window.innerHeight || 0;
+    const minDrop = Math.max(180, layerHeight * 0.85);
+    const maxDrop = Math.max(minDrop + 80, layerHeight * 1.1);
+    const dropRange = { min: minDrop, max: maxDrop };
+
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < config.pieceCount; i += 1) {
-      fragment.appendChild(buildPiece(i));
+      fragment.appendChild(buildPiece(i, dropRange));
     }
     targetLayer.appendChild(fragment);
 

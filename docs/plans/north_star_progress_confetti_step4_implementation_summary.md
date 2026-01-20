@@ -47,3 +47,8 @@
 - Changes: Moved the confetti layer to a page-level overlay on the main dashboard and scoped sandbox usage to the debug page via new layer classes in `static/css/main.css`.
 - Verification: Not run (manual page reload needed to confirm confetti appears across the full viewport).
 - Notes: Keeps the debug sandbox confined while allowing full-page coverage on `/`.
+
+## Stage 11 – Full-height confetti fall
+- Changes: Sized confetti drop distance based on the active layer height in `static/js/confetti.js` so particles fall through the full viewport.
+- Verification: Not run (manual trigger needed to confirm full-page coverage).
+- Notes: Drop distance now scales with viewport height.
