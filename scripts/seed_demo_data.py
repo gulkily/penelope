@@ -164,6 +164,7 @@ def parse_args() -> argparse.Namespace:
 def seed_demo_projects(allow_duplicates: bool) -> None:
     init_db()
     now = datetime.now(timezone.utc).isoformat()
+    year = datetime.now(timezone.utc).year
     with connect() as conn:
         existing = set()
         if not allow_duplicates:
@@ -201,7 +202,33 @@ def seed_demo_projects(allow_duplicates: bool) -> None:
                         """,
                         (project_id, section, str(content), now),
                     )
+            for recorded_at, progress_value in build_progress_history(
+                int(project["progress"]),
+                year,
+            ):
+                conn.execute(
+                    """
+                    INSERT INTO progress_history (project_id, progress, recorded_at)
+                    VALUES (?, ?, ?)
+                    """,
+                    (project_id, progress_value, recorded_at),
+                )
         conn.commit()
+
+
+def build_progress_history(progress: int, year: int) -> list[tuple[str, int]]:
+    anchors = [1, 8, 15, 22, 31]
+    steps = [0.2, 0.4, 0.6, 0.8, 1.0]
+    values = [max(0, int(round(progress * step))) for step in steps]
+    values[-1] = int(progress)
+    for index in range(1, len(values)):
+        if values[index] < values[index - 1]:
+            values[index] = values[index - 1]
+    entries: list[tuple[str, int]] = []
+    for day, value in zip(anchors, values):
+        timestamp = datetime(year, 1, day, 12, 0, tzinfo=timezone.utc).isoformat()
+        entries.append((timestamp, value))
+    return entries
 
 
 def main() -> int:
