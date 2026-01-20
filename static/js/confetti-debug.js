@@ -56,14 +56,20 @@ function wireDebugControls() {
 
   if (triggerButton) {
     triggerButton.addEventListener("click", () => {
-      window.NorthStarConfetti?.triggerConfetti?.();
+      const confetti = window.NorthStarConfetti;
+      if (confetti && typeof confetti.triggerConfetti === "function") {
+        confetti.triggerConfetti();
+      }
       window.setTimeout(readDiagnostics, 60);
     });
   }
 
   if (forceButton) {
     forceButton.addEventListener("click", () => {
-      window.NorthStarConfetti?.triggerConfetti?.({ force: true });
+      const confetti = window.NorthStarConfetti;
+      if (confetti && typeof confetti.triggerConfetti === "function") {
+        confetti.triggerConfetti({ force: true });
+      }
       window.setTimeout(readDiagnostics, 60);
     });
   }

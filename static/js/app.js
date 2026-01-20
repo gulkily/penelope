@@ -475,7 +475,7 @@ projectSelect.addEventListener("change", async (event) => {
 inlineAddButtons.forEach((button) => {
   button.addEventListener("click", () => {
     const wrapper = button.closest(".inline-add");
-    const input = wrapper?.querySelector(".inline-add-input");
+    const input = wrapper ? wrapper.querySelector(".inline-add-input") : null;
     const section = button.dataset.section;
     if (input && section) {
       handleInlineAdd(section, input);
@@ -488,7 +488,7 @@ inlineAddInputs.forEach((input) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
       const wrapper = input.closest(".inline-add");
-      const section = wrapper?.dataset.section;
+      const section = wrapper ? wrapper.dataset.section : null;
       if (section) {
         handleInlineAdd(section, input);
       }
@@ -515,8 +515,9 @@ document.addEventListener("click", async (event) => {
   if (button.dataset.action === "delete") {
     const textNode = listItem.querySelector(".item-text");
     const inputNode = listItem.querySelector(".item-input");
-    const textValue = (inputNode ? inputNode.value : textNode?.textContent || "")
-      .trim();
+    const textValue = (
+      inputNode ? inputNode.value : (textNode ? textNode.textContent : "") || ""
+    ).trim();
     undoState.projectId = state.projectId;
     undoState.section = listItem.dataset.section || "";
     undoState.text = textValue;
@@ -638,7 +639,10 @@ progressSlider.addEventListener("input", (event) => {
   const previous = state.progressPercent;
   updateProgressDisplay(percent, state.goalValue);
   if (state.projectId && percent > previous) {
-    window.NorthStarConfetti?.triggerConfetti?.();
+    const confetti = window.NorthStarConfetti;
+    if (confetti && typeof confetti.triggerConfetti === "function") {
+      confetti.triggerConfetti();
+    }
   }
   scheduleProgressSave(percent);
 });

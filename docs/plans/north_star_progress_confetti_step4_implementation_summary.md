@@ -37,3 +37,8 @@
 - Changes: Added a debug-only button that triggers confetti even when reduced-motion is true, plus an optional `force` flag on `triggerConfetti` in `static/js/confetti.js`.
 - Verification: Not run (manual click needed on `/debug/confetti`).
 - Notes: Force flag is used only in the debug page.
+
+## Stage 9 – Legacy browser compatibility
+- Changes: Removed optional chaining from `static/js/app.js` and `static/js/confetti-debug.js`, and updated debug page expressions in `templates/confetti_debug.html`.
+- Verification: Not run (manual check in Waterfox Classic recommended).
+- Notes: Avoids parse errors in older JS engines.

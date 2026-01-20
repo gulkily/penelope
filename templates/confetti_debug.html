@@ -47,7 +47,10 @@
           </div>
           <div class="debug-row">
             <dt>
-              <code>document.getElementById("confetti-layer")?.getBoundingClientRect()</code>
+              <code>
+                document.getElementById("confetti-layer") &&
+                document.getElementById("confetti-layer").getBoundingClientRect()
+              </code>
             </dt>
             <dd id="debug-layer-size">-</dd>
           </div>
@@ -56,7 +59,12 @@
             <dd id="debug-module">-</dd>
           </div>
           <div class="debug-row">
-            <dt><code>typeof window.NorthStarConfetti?.triggerConfetti</code></dt>
+            <dt>
+              <code>
+                window.NorthStarConfetti &&
+                typeof window.NorthStarConfetti.triggerConfetti === "function"
+              </code>
+            </dt>
             <dd id="debug-trigger">-</dd>
           </div>
           <div class="debug-row">
