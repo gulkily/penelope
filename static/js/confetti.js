@@ -1,7 +1,7 @@
 (() => {
   const DEFAULT_CONFIG = {
     layerId: "confetti-layer",
-    pieceCount: 24,
+    pieceCount: 360,
     durationMs: 7000,
     cooldownMs: 900,
     colors: [

@@ -57,3 +57,8 @@
 - Changes: Extended the default confetti duration to 7000ms in `static/js/confetti.js`.
 - Verification: Not run (manual trigger needed to confirm timing).
 - Notes: Animation now runs longer to create a slower, lingering effect.
+
+## Stage 13 – Increased confetti density
+- Changes: Increased default confetti piece count to 360 (15x) in `static/js/confetti.js`.
+- Verification: Not run (manual trigger needed to confirm density and performance).
+- Notes: Higher density may impact older devices; monitor performance.
