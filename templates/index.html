@@ -102,6 +102,41 @@
               </div>
               </div>
           </div>
+            <div class="objective-graph">
+              <button
+                type="button"
+                class="graph-toggle"
+                id="progress-graph-toggle"
+                aria-expanded="false"
+                aria-controls="progress-graph-panel"
+              >
+                <span>Progress graph</span>
+                <span class="graph-toggle-indicator" id="progress-graph-indicator"
+                  >Show</span
+                >
+              </button>
+              <div class="graph-panel" id="progress-graph-panel" hidden>
+                <div class="graph-meta">
+                  <span class="graph-range" id="progress-graph-range"
+                    >Jan 1 – Jan 31</span
+                  >
+                </div>
+                <div class="graph-frame">
+                  <svg
+                    id="progress-graph-svg"
+                    viewBox="0 0 100 100"
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    <path id="progress-graph-path" class="graph-line" d=""></path>
+                    <g id="progress-graph-points" class="graph-points"></g>
+                  </svg>
+                  <div class="graph-empty" id="progress-graph-empty" hidden>
+                    No progress history in this period yet.
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
       </section>
 
