@@ -352,6 +352,9 @@ function setGraphExpanded(expanded) {
   progressGraphPanel.hidden = !expanded;
   progressGraphToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
   progressGraphIndicator.textContent = expanded ? "Hide" : "Show";
+  if (!expanded) {
+    clearProgressGraph();
+  }
 }
 
 function updateGraphBounds(project) {

@@ -377,6 +377,8 @@ body {
   gap: 10px;
   align-items: flex-end;
   align-self: stretch;
+  position: relative;
+  padding-bottom: 34px;
 }
 
 .graph-toggle {
@@ -393,6 +395,9 @@ body {
   font-size: 12px;
   font-weight: 600;
   cursor: pointer;
+  position: absolute;
+  right: 0;
+  bottom: 0;
 }
 
 .graph-toggle:disabled {
