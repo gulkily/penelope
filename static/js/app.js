@@ -1,4 +1,7 @@
 const DEFAULT_GOAL = 100;
+const DEFAULT_RESIDENCY_YEAR = new Date().getUTCFullYear();
+const DEFAULT_RESIDENCY_START = `${DEFAULT_RESIDENCY_YEAR}-01-01`;
+const DEFAULT_RESIDENCY_END = `${DEFAULT_RESIDENCY_YEAR}-01-31`;
 
 const state = {
   projectId: null,
@@ -10,6 +13,9 @@ const state = {
   projectsLoaded: false,
   progressPercent: 0,
   goalValue: DEFAULT_GOAL,
+  residencyStartDate: DEFAULT_RESIDENCY_START,
+  residencyEndDate: DEFAULT_RESIDENCY_END,
+  graphExpanded: false,
 };
 
 const projectSelect = document.getElementById("project-select");
@@ -25,6 +31,14 @@ const inlineAddInputs = document.querySelectorAll(".inline-add-input");
 const undoToast = document.getElementById("undo-toast");
 const undoDelete = document.getElementById("undo-delete");
 const undoMessage = document.getElementById("undo-message");
+const progressGraphToggle = document.getElementById("progress-graph-toggle");
+const progressGraphIndicator = document.getElementById("progress-graph-indicator");
+const progressGraphPanel = document.getElementById("progress-graph-panel");
+const progressGraphRange = document.getElementById("progress-graph-range");
+const progressGraphSvg = document.getElementById("progress-graph-svg");
+const progressGraphPath = document.getElementById("progress-graph-path");
+const progressGraphPoints = document.getElementById("progress-graph-points");
+const progressGraphEmpty = document.getElementById("progress-graph-empty");
 
 const undoState = {
   projectId: null,
@@ -53,6 +67,7 @@ function setInteractivity(enabled) {
   objectiveInput.disabled = !enabled;
   goalInput.disabled = !enabled;
   questionsInput.disabled = !enabled;
+  progressGraphToggle.disabled = !enabled;
 }
 
 async function requestJSON(url, options) {
@@ -176,6 +191,12 @@ function resetEmptyState() {
   setInteractivity(false);
   goalInput.value = String(DEFAULT_GOAL);
   updateProgressDisplay(0, DEFAULT_GOAL);
+  updateGraphBounds({
+    residency_start_date: DEFAULT_RESIDENCY_START,
+    residency_end_date: DEFAULT_RESIDENCY_END,
+  });
+  clearProgressGraph();
+  setGraphExpanded(false);
   renderSections({});
   summaryInput.value = "";
   objectiveInput.value = "";
@@ -271,6 +292,104 @@ function formatItemDate(isoString) {
   return parsed.toLocaleDateString(undefined, options);
 }
 
+function parseDateOnly(value, endOfDay = false) {
+  if (!value) {
+    return null;
+  }
+  const suffix = endOfDay ? "T23:59:59Z" : "T00:00:00Z";
+  const parsed = new Date(`${value}${suffix}`);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return parsed;
+}
+
+function formatGraphDate(date) {
+  return date.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
+
+function updateGraphRangeLabel() {
+  const start = parseDateOnly(state.residencyStartDate) ||
+    parseDateOnly(DEFAULT_RESIDENCY_START);
+  const end = parseDateOnly(state.residencyEndDate, true) ||
+    parseDateOnly(DEFAULT_RESIDENCY_END, true);
+  if (!start || !end) {
+    progressGraphRange.textContent = "Date range unavailable";
+    return;
+  }
+  progressGraphRange.textContent = `${formatGraphDate(start)} – ${formatGraphDate(end)}`;
+}
+
+function setGraphExpanded(expanded) {
+  state.graphExpanded = expanded;
+  progressGraphPanel.hidden = !expanded;
+  progressGraphToggle.setAttribute("aria-expanded", expanded ? "true" : "false");
+  progressGraphIndicator.textContent = expanded ? "Hide" : "Show";
+}
+
+function updateGraphBounds(project) {
+  state.residencyStartDate = project.residency_start_date || DEFAULT_RESIDENCY_START;
+  state.residencyEndDate = project.residency_end_date || DEFAULT_RESIDENCY_END;
+  updateGraphRangeLabel();
+}
+
+function clearProgressGraph() {
+  progressGraphPath.setAttribute("d", "");
+  progressGraphPoints.replaceChildren();
+  progressGraphSvg.hidden = true;
+  progressGraphEmpty.hidden = false;
+}
+
+function renderProgressGraph(history) {
+  const start = parseDateOnly(state.residencyStartDate) ||
+    parseDateOnly(DEFAULT_RESIDENCY_START);
+  const end = parseDateOnly(state.residencyEndDate, true) ||
+    parseDateOnly(DEFAULT_RESIDENCY_END, true);
+  if (!start || !end || end < start) {
+    clearProgressGraph();
+    return;
+  }
+
+  const filtered = history
+    .map((entry) => ({ ...entry, time: new Date(entry.recorded_at) }))
+    .filter((entry) => !Number.isNaN(entry.time.getTime()))
+    .filter((entry) => entry.time >= start && entry.time <= end)
+    .sort((a, b) => a.time - b.time);
+
+  if (!filtered.length) {
+    clearProgressGraph();
+    return;
+  }
+
+  const rangeMs = end.getTime() - start.getTime() || 1;
+  const points = filtered.map((entry) => {
+    const x = ((entry.time.getTime() - start.getTime()) / rangeMs) * 100;
+    const y = 100 - clampPercent(entry.progress);
+    return { x: Math.min(100, Math.max(0, x)), y };
+  });
+
+  const path = points
+    .map((point, index) => `${index === 0 ? "M" : "L"} ${point.x} ${point.y}`)
+    .join(" ");
+  progressGraphPath.setAttribute("d", path);
+
+  const markers = document.createDocumentFragment();
+  points.forEach((point) => {
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("cx", point.x.toString());
+    circle.setAttribute("cy", point.y.toString());
+    circle.setAttribute("r", "2.5");
+    markers.append(circle);
+  });
+  progressGraphPoints.replaceChildren(markers);
+  progressGraphSvg.hidden = false;
+  progressGraphEmpty.hidden = true;
+}
+
 function showUndoToast(text, anchor) {
   if (undoState.timer) {
     window.clearTimeout(undoState.timer);
@@ -321,6 +440,7 @@ function renderProject(project) {
   objectiveInput.value = project.objective || "";
   summaryInput.value = project.summary || "";
   questionsInput.value = project.questions || "";
+  updateGraphBounds(project);
   renderSections(project.sections || {});
 }
 
@@ -328,10 +448,28 @@ async function loadProject(projectId) {
   try {
     const data = await requestJSON(`/api/projects/${projectId}`);
     renderProject(data);
+    if (state.graphExpanded) {
+      await refreshProgressGraph();
+    }
     return data;
   } catch (error) {
     console.warn("Failed to load resident", error);
     return null;
+  }
+}
+
+async function refreshProgressGraph() {
+  if (!state.projectId || !state.graphExpanded) {
+    return;
+  }
+  try {
+    const data = await requestJSON(
+      `/api/projects/${state.projectId}/progress/history`,
+    );
+    renderProgressGraph(data.history || []);
+  } catch (error) {
+    console.warn("Failed to load progress history", error);
+    clearProgressGraph();
   }
 }
 
@@ -367,6 +505,7 @@ function scheduleProgressSave(value) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ progress: normalized }),
     });
+    await refreshProgressGraph();
   }, 250);
 }
 
@@ -469,6 +608,14 @@ projectSelect.addEventListener("change", async (event) => {
   const projectData = await loadProject(state.projectId);
   if (projectData) {
     setInteractivity(true);
+  }
+});
+
+progressGraphToggle.addEventListener("click", async () => {
+  const expanded = progressGraphPanel.hidden;
+  setGraphExpanded(expanded);
+  if (expanded) {
+    await refreshProgressGraph();
   }
 });
 
