@@ -378,7 +378,7 @@ body {
   align-items: flex-end;
   align-self: stretch;
   position: relative;
-  padding-bottom: 34px;
+  padding-top: 34px;
 }
 
 .graph-toggle {
@@ -397,7 +397,7 @@ body {
   cursor: pointer;
   position: absolute;
   right: 0;
-  bottom: 0;
+  top: 0;
 }
 
 .graph-toggle:disabled {
