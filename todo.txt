@@ -17,6 +17,6 @@ Feedback from Daniel
 - List items: log the date it was logged (Residency runs for 12 weeks) x
 - Put questions right below project x
 - Add resident summary x
-- North star graph (log datapoints)
+- North star graph (log datapoints) x
 - Allow arranging things
-- Confetti and other cheerful things
+- Confetti and other cheerful things x
