@@ -568,6 +568,10 @@ body {
   color: var(--text-muted);
 }
 
+.section-list.is-reordering {
+  user-select: none;
+}
+
 .section-item {
   position: relative;
   display: flex;
@@ -577,6 +581,39 @@ body {
   padding: 6px 8px 26px;
   border-radius: 6px;
   background: var(--surface-alt);
+}
+
+.section-item.is-dragging {
+  opacity: 0.6;
+  outline: 1px dashed var(--border);
+  outline-offset: -1px;
+}
+
+.item-drag-handle {
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-muted);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  cursor: grab;
+  touch-action: none;
+}
+
+.item-drag-handle:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.item-drag-handle:active {
+  cursor: grabbing;
+}
+
+.item-drag-handle:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .item-body {
@@ -635,6 +672,12 @@ body {
 .section-item.is-editing .item-action-edit,
 .section-item.is-editing .item-delete {
   display: none;
+}
+
+.section-item.is-editing .item-drag-handle,
+.section-item.is-editing .item-action-move {
+  opacity: 0.5;
+  pointer-events: none;
 }
 
 .section-item.is-editing .item-action-save,
