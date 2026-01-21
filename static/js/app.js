@@ -41,12 +41,21 @@ const progressGraphSvg = document.getElementById("progress-graph-svg");
 const progressGraphPath = document.getElementById("progress-graph-path");
 const progressGraphPoints = document.getElementById("progress-graph-points");
 const progressGraphEmpty = document.getElementById("progress-graph-empty");
+const reorderLive = document.getElementById("reorder-live");
 
 const undoState = {
   projectId: null,
   section: null,
   text: "",
   timer: null,
+};
+
+const reorderState = {
+  active: false,
+  item: null,
+  list: null,
+  pointerId: null,
+  originalOrder: [],
 };
 
 function toggleInlineAdds(enabled) {
@@ -62,6 +71,14 @@ function toggleInlineAdds(enabled) {
   });
 }
 
+function toggleReorderControls(enabled) {
+  document.querySelectorAll(".item-drag-handle, .item-action-move").forEach(
+    (button) => {
+      button.disabled = !enabled;
+    },
+  );
+}
+
 function setInteractivity(enabled) {
   toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
@@ -70,6 +87,7 @@ function setInteractivity(enabled) {
   goalInput.disabled = !enabled;
   questionsInput.disabled = !enabled;
   progressGraphToggle.disabled = !enabled;
+  toggleReorderControls(enabled);
 }
 
 async function requestJSON(url, options) {
@@ -78,6 +96,162 @@ async function requestJSON(url, options) {
     throw new Error(`Request failed: ${response.status}`);
   }
   return response.json();
+}
+
+function getOrderedIds(list) {
+  return Array.from(list.querySelectorAll(".section-item")).map(
+    (item) => Number(item.dataset.itemId),
+  );
+}
+
+function arraysEqual(left, right) {
+  if (left.length !== right.length) {
+    return false;
+  }
+  return left.every((value, index) => value === right[index]);
+}
+
+function formatSectionLabel(section) {
+  if (!section) {
+    return "section";
+  }
+  return section.charAt(0).toUpperCase() + section.slice(1);
+}
+
+function announceReorder(list, item) {
+  if (!reorderLive) {
+    return;
+  }
+  const items = Array.from(list.querySelectorAll(".section-item"));
+  const position = items.indexOf(item) + 1;
+  const total = items.length;
+  const section = formatSectionLabel(list.dataset.section);
+  reorderLive.textContent = "";
+  reorderLive.textContent = `Moved item to position ${position} of ${total} in ${section}.`;
+}
+
+async function persistSectionOrder(list) {
+  if (!state.projectId) {
+    return;
+  }
+  const section = list.dataset.section;
+  if (!section) {
+    return;
+  }
+  const orderedIds = getOrderedIds(list);
+  try {
+    await requestJSON(`/api/projects/${state.projectId}/items/order`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, ordered_ids: orderedIds }),
+    });
+  } catch (error) {
+    console.warn("Failed to reorder items", error);
+    if (state.projectId) {
+      await loadProject(state.projectId);
+    }
+  }
+}
+
+function listHasEditing(list) {
+  return Boolean(list.querySelector(".section-item.is-editing"));
+}
+
+function canReorder(listItem) {
+  if (!state.projectId) {
+    return false;
+  }
+  if (!listItem || listItem.classList.contains("is-editing")) {
+    return false;
+  }
+  const list = listItem.closest(".section-list");
+  if (!list || listHasEditing(list)) {
+    return false;
+  }
+  return true;
+}
+
+async function moveItem(listItem, direction) {
+  const list = listItem.closest(".section-list");
+  if (!list || listHasEditing(list)) {
+    return;
+  }
+  const items = Array.from(list.querySelectorAll(".section-item"));
+  const index = items.indexOf(listItem);
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= items.length) {
+    return;
+  }
+  const target = items[targetIndex];
+  if (direction < 0) {
+    list.insertBefore(listItem, target);
+  } else {
+    list.insertBefore(listItem, target.nextSibling);
+  }
+  await persistSectionOrder(list);
+  announceReorder(list, listItem);
+}
+
+function startDrag(pointerId, listItem, list) {
+  reorderState.active = true;
+  reorderState.item = listItem;
+  reorderState.list = list;
+  reorderState.pointerId = pointerId;
+  reorderState.originalOrder = getOrderedIds(list);
+  listItem.classList.add("is-dragging");
+  list.classList.add("is-reordering");
+}
+
+async function finishDrag() {
+  const { item, list, originalOrder } = reorderState;
+  if (item) {
+    item.classList.remove("is-dragging");
+  }
+  if (list) {
+    list.classList.remove("is-reordering");
+  }
+  reorderState.active = false;
+  reorderState.item = null;
+  reorderState.list = null;
+  reorderState.pointerId = null;
+  reorderState.originalOrder = [];
+
+  if (!list || !item) {
+    return;
+  }
+  const newOrder = getOrderedIds(list);
+  if (!arraysEqual(originalOrder, newOrder)) {
+    await persistSectionOrder(list);
+    announceReorder(list, item);
+  }
+}
+
+function handleDragMove(event) {
+  if (!reorderState.active || event.pointerId !== reorderState.pointerId) {
+    return;
+  }
+  const list = reorderState.list;
+  const item = reorderState.item;
+  if (!list || !item) {
+    return;
+  }
+  const target = document
+    .elementFromPoint(event.clientX, event.clientY)
+    ?.closest(".section-item");
+  if (!target || target === item) {
+    return;
+  }
+  if (target.closest(".section-list") !== list) {
+    return;
+  }
+  const rect = target.getBoundingClientRect();
+  const before = event.clientY < rect.top + rect.height / 2;
+  if (before) {
+    list.insertBefore(item, target);
+  } else {
+    list.insertBefore(item, target.nextSibling);
+  }
+  event.preventDefault();
 }
 
 async function loadProjects() {
@@ -136,8 +310,29 @@ function renderSections(sections) {
       li.dataset.itemId = item.id;
       li.dataset.section = section;
 
+      const dragHandle = document.createElement("button");
+      dragHandle.type = "button";
+      dragHandle.className = "item-drag-handle";
+      dragHandle.textContent = "Drag";
+      dragHandle.setAttribute("aria-label", "Reorder item");
+      dragHandle.setAttribute("title", "Drag to reorder");
+
       const actions = document.createElement("span");
       actions.className = "item-actions";
+
+      const moveUpButton = document.createElement("button");
+      moveUpButton.type = "button";
+      moveUpButton.className = "item-action item-action-move";
+      moveUpButton.textContent = "Up";
+      moveUpButton.dataset.action = "move-up";
+      moveUpButton.setAttribute("aria-label", "Move item up");
+
+      const moveDownButton = document.createElement("button");
+      moveDownButton.type = "button";
+      moveDownButton.className = "item-action item-action-move";
+      moveDownButton.textContent = "Down";
+      moveDownButton.dataset.action = "move-down";
+      moveDownButton.setAttribute("aria-label", "Move item down");
 
       const editButton = document.createElement("button");
       editButton.type = "button";
@@ -180,8 +375,15 @@ function renderSections(sections) {
         body.append(text);
       }
 
-      actions.append(editButton, saveButton, cancelButton, deleteButton);
-      li.append(body, actions);
+      actions.append(
+        moveUpButton,
+        moveDownButton,
+        editButton,
+        saveButton,
+        cancelButton,
+        deleteButton,
+      );
+      li.append(dragHandle, body, actions);
       list.append(li);
     });
   });
@@ -749,6 +951,46 @@ inlineAddInputs.forEach((input) => {
   autoGrow(input);
 });
 
+document.addEventListener("pointerdown", (event) => {
+  const handle = event.target.closest(".item-drag-handle");
+  if (!handle || handle.disabled || reorderState.active) {
+    return;
+  }
+  const listItem = handle.closest(".section-item");
+  if (!canReorder(listItem)) {
+    return;
+  }
+  const list = listItem.closest(".section-list");
+  if (!list) {
+    return;
+  }
+  handle.setPointerCapture(event.pointerId);
+  startDrag(event.pointerId, listItem, list);
+  event.preventDefault();
+});
+
+document.addEventListener("pointermove", handleDragMove);
+
+document.addEventListener("pointerup", (event) => {
+  if (!reorderState.active || event.pointerId !== reorderState.pointerId) {
+    return;
+  }
+  if (event.target.releasePointerCapture) {
+    event.target.releasePointerCapture(event.pointerId);
+  }
+  finishDrag();
+});
+
+document.addEventListener("pointercancel", (event) => {
+  if (!reorderState.active || event.pointerId !== reorderState.pointerId) {
+    return;
+  }
+  if (event.target.releasePointerCapture) {
+    event.target.releasePointerCapture(event.pointerId);
+  }
+  finishDrag();
+});
+
 document.addEventListener("click", async (event) => {
   const button = event.target.closest(".item-action");
   if (!button) {
@@ -760,6 +1002,20 @@ document.addEventListener("click", async (event) => {
   }
   const itemId = listItem.dataset.itemId;
   if (!itemId) {
+    return;
+  }
+
+  if (button.dataset.action === "move-up") {
+    if (canReorder(listItem)) {
+      await moveItem(listItem, -1);
+    }
+    return;
+  }
+
+  if (button.dataset.action === "move-down") {
+    if (canReorder(listItem)) {
+      await moveItem(listItem, 1);
+    }
     return;
   }
 
@@ -866,6 +1122,22 @@ document.addEventListener("keydown", async (event) => {
       cancelButton.click();
     }
   }
+});
+
+document.addEventListener("keydown", async (event) => {
+  const handle = event.target.closest(".item-drag-handle");
+  if (!handle) {
+    return;
+  }
+  if (event.key !== "ArrowUp" && event.key !== "ArrowDown") {
+    return;
+  }
+  const listItem = handle.closest(".section-item");
+  if (!canReorder(listItem)) {
+    return;
+  }
+  event.preventDefault();
+  await moveItem(listItem, event.key === "ArrowUp" ? -1 : 1);
 });
 
 undoDelete.addEventListener("click", async () => {
