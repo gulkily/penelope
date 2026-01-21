@@ -313,7 +313,6 @@ function renderSections(sections) {
       const dragHandle = document.createElement("button");
       dragHandle.type = "button";
       dragHandle.className = "item-drag-handle";
-      dragHandle.textContent = "Drag";
       dragHandle.setAttribute("aria-label", "Reorder item");
       dragHandle.setAttribute("title", "Drag to reorder");
 
