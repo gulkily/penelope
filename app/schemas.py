@@ -10,6 +10,15 @@ class ItemUpdate(BaseModel):
     text: str = Field(..., min_length=1)
 
 
+class ItemOrderUpdate(BaseModel):
+    section: str = Field(..., description="Section key, e.g. summary or challenges.")
+    ordered_ids: list[int] = Field(
+        ...,
+        min_items=1,
+        description="Ordered item ids for the section.",
+    )
+
+
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1)
 

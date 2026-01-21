@@ -79,3 +79,38 @@ def delete_item(item_id: int) -> bool:
         cursor = conn.execute("DELETE FROM items WHERE id = ?", (item_id,))
         conn.commit()
     return cursor.rowcount > 0
+
+
+def reorder_items(project_id: int, section: str, ordered_ids: list[int]) -> None:
+    if section not in SECTIONS:
+        raise ValueError(f"Unknown section: {section}")
+    if not ordered_ids:
+        raise ValueError("ordered_ids must include at least one item")
+    if len(ordered_ids) != len(set(ordered_ids)):
+        raise ValueError("ordered_ids must be unique")
+
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id
+            FROM items
+            WHERE project_id = ? AND section = ?
+            ORDER BY sort_order, id
+            """,
+            (project_id, section),
+        ).fetchall()
+        existing_ids = [row["id"] for row in rows]
+
+        if not existing_ids:
+            raise ValueError("No items to reorder in this section")
+        if set(existing_ids) != set(ordered_ids):
+            raise ValueError("ordered_ids must match existing section items")
+
+        updates = [
+            (index + 1, item_id) for index, item_id in enumerate(ordered_ids)
+        ]
+        conn.executemany(
+            "UPDATE items SET sort_order = ? WHERE id = ?",
+            updates,
+        )
+        conn.commit()

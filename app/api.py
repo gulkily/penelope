@@ -7,6 +7,7 @@ from app import db
 from app.schemas import (
     GoalUpdate,
     ItemCreate,
+    ItemOrderUpdate,
     ItemUpdate,
     ObjectiveUpdate,
     ProgressUpdate,
@@ -103,6 +104,18 @@ def add_item(project_id: int, payload: ItemCreate) -> dict:
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"item": item}
+
+
+@router.put("/projects/{project_id}/items/order")
+def reorder_items(project_id: int, payload: ItemOrderUpdate) -> dict:
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Resident not found")
+    try:
+        db.reorder_items(project_id, payload.section, payload.ordered_ids)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return {"ordered_ids": payload.ordered_ids}
 
 
 @router.put("/items/{item_id}")
