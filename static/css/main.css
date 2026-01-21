@@ -597,32 +597,22 @@ body {
   width: 24px;
   border: none;
   background-color: transparent;
-  background-image: radial-gradient(
-      circle,
-      var(--text-muted) 1px,
-      transparent 1.5px
-    ),
-    radial-gradient(
-      circle,
-      var(--text-muted) 1px,
-      transparent 1.5px
-    ),
-    radial-gradient(
-    circle,
-    var(--text-muted) 1px,
-    transparent 1.5px
-  );
-  background-size: 6px 6px;
-  background-repeat: no-repeat;
-  background-position: center 44%, center, center 56%;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
   border-radius: 6px 0 0 6px;
+  opacity: 0;
   cursor: grab;
   touch-action: none;
+}
+
+.section-item:hover .item-drag-handle,
+.section-item:focus-within .item-drag-handle,
+.section-item.is-dragging .item-drag-handle {
+  background-color: var(--border-light);
+  opacity: 1;
 }
 
 .item-drag-handle:focus {

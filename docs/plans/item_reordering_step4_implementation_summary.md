@@ -14,7 +14,7 @@
 - Notes: Reordering is blocked while any item in a section is in edit mode.
 
 ## Stage 4 – Styling and accessibility polish
-- Changes: replace the drag handle label with a grip graphic, stretch the handle along the left edge, style drag state, add touch-friendly handling, and include an `aria-live` announcer for reorder updates.
+- Changes: replace the drag handle label with a hover-only full-height grip area, stretch the handle along the left edge, style drag state, add touch-friendly handling, and include an `aria-live` announcer for reorder updates.
 - Verification: Not run (please confirm handles are visible, focus rings appear, and reorder announcements are spoken by a screen reader).
 - Notes: Move controls remain in the existing action strip to minimize visual clutter.
 
