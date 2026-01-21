@@ -17,3 +17,8 @@
 - Changes: style drag handles and drag state, add touch-friendly handling, and include an `aria-live` announcer for reorder updates.
 - Verification: Not run (please confirm handles are visible, focus rings appear, and reorder announcements are spoken by a screen reader).
 - Notes: Move controls remain in the existing action strip to minimize visual clutter.
+
+## Stage 5 – Regression checks
+- Changes: No automated tests added (per Step 4 guardrails).
+- Verification: Not run (please run a quick manual pass for add/edit/delete + reorder within each section, then refresh to confirm order persists).
+- Notes: Consider adding HTTP or E2E coverage later if reordering becomes a high-risk workflow.
