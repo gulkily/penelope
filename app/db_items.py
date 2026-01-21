@@ -7,7 +7,12 @@ from app.db_constants import SECTIONS
 def list_items_for_project(project_id: int) -> list[dict]:
     with connect() as conn:
         rows = conn.execute(
-            "SELECT id, section, content, created_at FROM items WHERE project_id = ? ORDER BY id",
+            """
+            SELECT id, section, content, created_at
+            FROM items
+            WHERE project_id = ?
+            ORDER BY sort_order, id
+            """,
             (project_id,),
         ).fetchall()
     return [
@@ -26,10 +31,21 @@ def add_item(project_id: int, section: str, text: str) -> dict:
         raise ValueError(f"Unknown section: {section}")
 
     with connect() as conn:
+        next_order = conn.execute(
+            """
+            SELECT COALESCE(MAX(sort_order), 0)
+            FROM items
+            WHERE project_id = ? AND section = ?
+            """,
+            (project_id, section),
+        ).fetchone()[0]
         now = datetime.now(timezone.utc).isoformat()
         cursor = conn.execute(
-            "INSERT INTO items (project_id, section, content, created_at) VALUES (?, ?, ?, ?)",
-            (project_id, section, text, now),
+            """
+            INSERT INTO items (project_id, section, content, sort_order, created_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (project_id, section, text, next_order + 1, now),
         )
         conn.commit()
         item_id = cursor.lastrowid

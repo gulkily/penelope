@@ -32,6 +32,7 @@ def init_db() -> None:
                 project_id INTEGER NOT NULL,
                 section TEXT NOT NULL,
                 content TEXT NOT NULL,
+                sort_order INTEGER NOT NULL DEFAULT 0,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(project_id) REFERENCES projects(id)
             )
@@ -70,8 +71,10 @@ def init_db() -> None:
         _ensure_column(conn, "projects", "objective", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "projects", "archived", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "projects", "summary", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "items", "sort_order", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "items", "created_at", "TEXT NOT NULL DEFAULT ''")
         _seed_if_empty(conn)
+        _backfill_item_order(conn)
 
 
 def _ensure_column(conn, table: str, name: str, definition: str) -> None:
@@ -98,7 +101,7 @@ def _seed_if_empty(conn) -> None:
         """,
         projects,
     )
-    items = [
+    raw_items = [
         (1, "summary", "Shared vision defined across teams."),
         (1, "challenges", "Metrics are not consistently tracked."),
         (1, "opportunities", "Expand onboarding experiments."),
@@ -107,9 +110,57 @@ def _seed_if_empty(conn) -> None:
         (2, "milestones", "Launch pilot with design partners."),
         (3, "challenges", "Resource constraints in engineering."),
     ]
+    counters: dict[tuple[int, str], int] = {}
+    items: list[tuple[int, str, str, int]] = []
+    for project_id, section, content in raw_items:
+        key = (project_id, section)
+        counters[key] = counters.get(key, 0) + 1
+        items.append((project_id, section, content, counters[key]))
     now = datetime.now(timezone.utc).isoformat()
     conn.executemany(
-        "INSERT INTO items (project_id, section, content, created_at) VALUES (?, ?, ?, ?)",
-        [(project_id, section, content, now) for project_id, section, content in items],
+        """
+        INSERT INTO items (project_id, section, content, sort_order, created_at)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        [
+            (project_id, section, content, sort_order, now)
+            for project_id, section, content, sort_order in items
+        ],
     )
     conn.commit()
+
+
+def _backfill_item_order(conn) -> None:
+    rows = conn.execute(
+        """
+        SELECT id, project_id, section, sort_order
+        FROM items
+        ORDER BY project_id, section, id
+        """
+    ).fetchall()
+    if not rows:
+        return
+
+    grouped: dict[tuple[int, str], list[dict]] = {}
+    for row in rows:
+        key = (row["project_id"], row["section"])
+        grouped.setdefault(key, []).append(row)
+
+    updates: list[tuple[int, int]] = []
+    for key, items in grouped.items():
+        has_assigned = any((item["sort_order"] or 0) > 0 for item in items)
+        if not has_assigned:
+            for index, item in enumerate(items, start=1):
+                updates.append((index, item["id"]))
+            continue
+        max_order = max((item["sort_order"] or 0) for item in items)
+        next_order = max_order
+        for item in items:
+            if (item["sort_order"] or 0) > 0:
+                continue
+            next_order += 1
+            updates.append((next_order, item["id"]))
+
+    if updates:
+        conn.executemany("UPDATE items SET sort_order = ? WHERE id = ?", updates)
+        conn.commit()
