@@ -5,3 +5,4 @@ playwright
 pytest
 pytest-playwright
 pytest-xdist
+dedalus-labs
