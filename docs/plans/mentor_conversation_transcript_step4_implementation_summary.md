@@ -32,3 +32,8 @@
 - Changes: Added `python-dotenv` dependency, loaded `.env` in `app/main.py`, and ignored `.env` in `.gitignore`.
 - Verification: Not run (manual run with `.env` recommended).
 - Notes: `.env` can now include `DEDALUS_API_KEY` and `LLM_MODEL`.
+
+## Stage 8 – Recording/transcription recommendations
+- Changes: Added `docs/recommendations_transcription_tools.md` with tool suggestions for in-person recording + transcription.
+- Verification: Not applicable.
+- Notes: Intended as a lightweight guide for mentors before using the transcript dialog.
