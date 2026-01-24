@@ -17,3 +17,8 @@
 - Changes: Added `/api/projects/{project_id}/transcript` endpoint in `app/api_transcript.py` and wired router in `app/main.py`.
 - Verification: Not run (requires Dedalus key and server running).
 - Notes: Endpoint returns a proposal without persisting changes.
+
+## Stage 5 – Transcript dialog + review UI
+- Changes: Added a transcript modal dialog to `templates/index.html`, dialog styling in `static/css/main.css`, and review/apply workflow in `static/js/app.js`.
+- Verification: Not run (manual UI check recommended).
+- Notes: Dialog is disabled until a resident is selected; suggestions can be edited and selectively applied.

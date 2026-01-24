@@ -22,6 +22,9 @@
               </select>
             </div>
             <div class="link-button-group header-actions">
+              <button type="button" class="link-button" id="transcript-open">
+                Paste transcript
+              </button>
               <a class="link-button" href="/projects">Manage residents</a>
               <a class="link-button" href="/settings">Settings</a>
             </div>
@@ -222,6 +225,57 @@
       </section>
 
       <p class="hint" id="empty-state">Select a resident to see their North Star.</p>
+
+      <dialog class="transcript-dialog" id="transcript-dialog" aria-labelledby="transcript-title">
+        <div class="transcript-dialog-content">
+          <header class="transcript-dialog-header">
+            <div>
+              <h2 id="transcript-title">Paste transcript</h2>
+              <p class="hint">
+                Paste the conversation transcript and review suggested updates.
+              </p>
+            </div>
+            <button type="button" class="dialog-close" id="transcript-close">
+              Close
+            </button>
+          </header>
+          <div class="field field-full">
+            <label class="field-label" for="transcript-input">Transcript</label>
+            <textarea
+              id="transcript-input"
+              class="field-input field-textarea"
+              rows="8"
+              autocomplete="off"
+              placeholder="Paste the mentor + mentee transcript here..."
+            ></textarea>
+          </div>
+          <p class="hint transcript-status" id="transcript-status" role="status"></p>
+          <div class="dialog-actions">
+            <button type="button" class="action-button" id="transcript-analyze">
+              Analyze transcript
+            </button>
+            <button type="button" class="link-button" id="transcript-clear">
+              Clear
+            </button>
+          </div>
+
+          <section class="transcript-suggestions" id="transcript-suggestions" hidden>
+            <h3>Suggested updates</h3>
+            <p class="hint" id="transcript-suggestions-empty" hidden>
+              No updates suggested yet.
+            </p>
+            <div class="transcript-suggestion-list" id="transcript-suggestion-list"></div>
+            <div class="dialog-actions">
+              <button type="button" class="action-button" id="transcript-apply">
+                Apply selected updates
+              </button>
+              <button type="button" class="link-button" id="transcript-cancel">
+                Cancel
+              </button>
+            </div>
+          </section>
+        </div>
+      </dialog>
 
       <div class="toast" id="undo-toast" role="status" aria-live="polite" hidden>
         <span id="undo-message">Item deleted.</span>

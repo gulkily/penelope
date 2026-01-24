@@ -16,6 +16,7 @@ const state = {
   residencyStartDate: DEFAULT_RESIDENCY_START,
   residencyEndDate: DEFAULT_RESIDENCY_END,
   graphExpanded: false,
+  projectData: null,
 };
 
 const projectSelect = document.getElementById("project-select");
@@ -42,6 +43,22 @@ const progressGraphPath = document.getElementById("progress-graph-path");
 const progressGraphPoints = document.getElementById("progress-graph-points");
 const progressGraphEmpty = document.getElementById("progress-graph-empty");
 const reorderLive = document.getElementById("reorder-live");
+const transcriptOpen = document.getElementById("transcript-open");
+const transcriptDialog = document.getElementById("transcript-dialog");
+const transcriptClose = document.getElementById("transcript-close");
+const transcriptInput = document.getElementById("transcript-input");
+const transcriptAnalyze = document.getElementById("transcript-analyze");
+const transcriptClear = document.getElementById("transcript-clear");
+const transcriptStatus = document.getElementById("transcript-status");
+const transcriptSuggestions = document.getElementById("transcript-suggestions");
+const transcriptSuggestionsEmpty = document.getElementById(
+  "transcript-suggestions-empty",
+);
+const transcriptSuggestionList = document.getElementById(
+  "transcript-suggestion-list",
+);
+const transcriptApply = document.getElementById("transcript-apply");
+const transcriptCancel = document.getElementById("transcript-cancel");
 
 const undoState = {
   projectId: null,
@@ -56,6 +73,11 @@ const reorderState = {
   list: null,
   pointerId: null,
   originalOrder: [],
+};
+
+const transcriptState = {
+  proposal: null,
+  busy: false,
 };
 
 function toggleInlineAdds(enabled) {
@@ -88,6 +110,9 @@ function setInteractivity(enabled) {
   questionsInput.disabled = !enabled;
   progressGraphToggle.disabled = !enabled;
   toggleReorderControls(enabled);
+  if (transcriptOpen) {
+    transcriptOpen.disabled = !enabled;
+  }
 }
 
 async function requestJSON(url, options) {
@@ -116,6 +141,422 @@ function formatSectionLabel(section) {
     return "section";
   }
   return section.charAt(0).toUpperCase() + section.slice(1);
+}
+
+function setTranscriptStatus(message, isError = false) {
+  if (!transcriptStatus) {
+    return;
+  }
+  transcriptStatus.textContent = message || "";
+  if (message && isError) {
+    transcriptStatus.dataset.status = "error";
+  } else {
+    delete transcriptStatus.dataset.status;
+  }
+}
+
+function resetTranscriptSuggestions() {
+  transcriptState.proposal = null;
+  if (transcriptSuggestionList) {
+    transcriptSuggestionList.replaceChildren();
+  }
+  if (transcriptSuggestionsEmpty) {
+    transcriptSuggestionsEmpty.hidden = true;
+  }
+  if (transcriptSuggestions) {
+    transcriptSuggestions.hidden = true;
+  }
+  if (transcriptApply) {
+    transcriptApply.disabled = true;
+  }
+}
+
+function resetTranscriptDialog() {
+  if (transcriptInput) {
+    transcriptInput.value = "";
+  }
+  setTranscriptStatus("");
+  resetTranscriptSuggestions();
+}
+
+function setTranscriptBusy(isBusy) {
+  transcriptState.busy = isBusy;
+  if (transcriptAnalyze) {
+    transcriptAnalyze.disabled = isBusy;
+  }
+  if (transcriptApply) {
+    transcriptApply.disabled = isBusy || !transcriptState.proposal;
+  }
+  if (transcriptClear) {
+    transcriptClear.disabled = isBusy;
+  }
+}
+
+function openTranscriptDialog() {
+  if (!transcriptDialog || !state.projectId) {
+    return;
+  }
+  resetTranscriptSuggestions();
+  setTranscriptStatus("");
+  if (typeof transcriptDialog.showModal === "function") {
+    transcriptDialog.showModal();
+  }
+  if (transcriptInput) {
+    transcriptInput.focus();
+  }
+}
+
+function closeTranscriptDialog() {
+  if (!transcriptDialog || !transcriptDialog.open) {
+    return;
+  }
+  transcriptDialog.close();
+  resetTranscriptDialog();
+}
+
+function formatCurrentValue(value) {
+  const text = String(value ?? "").trim();
+  return text || "(empty)";
+}
+
+function buildSuggestionField({ field, label, value, currentValue, inputType }) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "transcript-suggestion";
+  wrapper.dataset.field = field;
+
+  const toggle = document.createElement("label");
+  toggle.className = "transcript-suggestion-toggle";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = true;
+  const title = document.createElement("span");
+  title.textContent = label;
+  toggle.append(checkbox, title);
+
+  const body = document.createElement("div");
+  body.className = "transcript-suggestion-body";
+
+  const current = document.createElement("p");
+  current.className = "transcript-suggestion-current";
+  current.textContent = `Current: ${formatCurrentValue(currentValue)}`;
+
+  let input = null;
+  if (inputType === "textarea") {
+    input = document.createElement("textarea");
+    input.rows = 3;
+    input.className = "field-input field-textarea transcript-suggestion-input";
+  } else {
+    input = document.createElement("input");
+    input.type = inputType;
+    input.className = "field-input transcript-suggestion-input";
+  }
+  input.value = value ?? "";
+
+  body.append(current, input);
+  wrapper.append(toggle, body);
+
+  return wrapper;
+}
+
+function buildItemSuggestion(section, text) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "transcript-suggestion";
+  wrapper.dataset.field = "item";
+  wrapper.dataset.section = section;
+
+  const toggle = document.createElement("label");
+  toggle.className = "transcript-suggestion-toggle";
+  const checkbox = document.createElement("input");
+  checkbox.type = "checkbox";
+  checkbox.checked = true;
+  const title = document.createElement("span");
+  title.textContent = `Add to ${formatSectionLabel(section)}`;
+  toggle.append(checkbox, title);
+
+  const body = document.createElement("div");
+  body.className = "transcript-suggestion-body";
+
+  const input = document.createElement("textarea");
+  input.rows = 2;
+  input.className = "field-input field-textarea transcript-suggestion-input";
+  input.value = text ?? "";
+
+  body.append(input);
+  wrapper.append(toggle, body);
+
+  return wrapper;
+}
+
+function renderTranscriptSuggestions(proposal) {
+  if (!transcriptSuggestionList || !transcriptSuggestions) {
+    return;
+  }
+
+  const project = state.projectData || {};
+  const suggestions = [];
+
+  if (proposal.summary !== null && proposal.summary !== undefined) {
+    suggestions.push(
+      buildSuggestionField({
+        field: "summary",
+        label: "Summary",
+        value: proposal.summary,
+        currentValue: project.summary,
+        inputType: "textarea",
+      }),
+    );
+  }
+
+  if (proposal.questions !== null && proposal.questions !== undefined) {
+    suggestions.push(
+      buildSuggestionField({
+        field: "questions",
+        label: "Questions",
+        value: proposal.questions,
+        currentValue: project.questions,
+        inputType: "textarea",
+      }),
+    );
+  }
+
+  if (proposal.objective !== null && proposal.objective !== undefined) {
+    suggestions.push(
+      buildSuggestionField({
+        field: "objective",
+        label: "Objective",
+        value: proposal.objective,
+        currentValue: project.objective,
+        inputType: "text",
+      }),
+    );
+  }
+
+  if (proposal.goal !== null && proposal.goal !== undefined) {
+    suggestions.push(
+      buildSuggestionField({
+        field: "goal",
+        label: "Goal",
+        value: String(proposal.goal),
+        currentValue: project.goal,
+        inputType: "number",
+      }),
+    );
+  }
+
+  if (proposal.progress !== null && proposal.progress !== undefined) {
+    suggestions.push(
+      buildSuggestionField({
+        field: "progress",
+        label: "Progress percent",
+        value: String(proposal.progress),
+        currentValue: project.progress,
+        inputType: "number",
+      }),
+    );
+  }
+
+  const items = proposal.items_to_add || [];
+  items.forEach((item) => {
+    if (!item || !item.section) {
+      return;
+    }
+    suggestions.push(buildItemSuggestion(item.section, item.text));
+  });
+
+  transcriptSuggestionList.replaceChildren(...suggestions);
+  transcriptSuggestions.hidden = false;
+  transcriptState.proposal = proposal;
+
+  const hasSuggestions = suggestions.length > 0;
+  if (transcriptSuggestionsEmpty) {
+    transcriptSuggestionsEmpty.hidden = hasSuggestions;
+  }
+  if (transcriptApply) {
+    transcriptApply.disabled = !hasSuggestions;
+  }
+}
+
+function collectTranscriptUpdates() {
+  if (!transcriptSuggestionList) {
+    return null;
+  }
+
+  const updates = {
+    summary: null,
+    questions: null,
+    objective: null,
+    goal: null,
+    progress: null,
+    items_to_add: [],
+  };
+  let hasUpdates = false;
+
+  transcriptSuggestionList
+    .querySelectorAll(".transcript-suggestion")
+    .forEach((card) => {
+      const checkbox = card.querySelector("input[type='checkbox']");
+      if (!checkbox || !checkbox.checked) {
+        return;
+      }
+
+      const field = card.dataset.field;
+      const input = card.querySelector(".transcript-suggestion-input");
+      const rawValue = input ? input.value.trim() : "";
+
+      if (field === "item") {
+        const section = card.dataset.section;
+        if (!section || !rawValue) {
+          throw new Error("Every selected item needs text.");
+        }
+        updates.items_to_add.push({ section, text: rawValue });
+        hasUpdates = true;
+        return;
+      }
+
+      if (field === "goal") {
+        const parsed = Number(rawValue);
+        if (!Number.isFinite(parsed)) {
+          throw new Error("Goal must be a number.");
+        }
+        updates.goal = normalizeGoal(parsed);
+        hasUpdates = true;
+        return;
+      }
+
+      if (field === "progress") {
+        const parsed = Number(rawValue);
+        if (!Number.isFinite(parsed)) {
+          throw new Error("Progress must be a number.");
+        }
+        updates.progress = clampPercent(parsed);
+        hasUpdates = true;
+        return;
+      }
+
+      updates[field] = rawValue;
+      hasUpdates = true;
+    });
+
+  if (!hasUpdates) {
+    return null;
+  }
+  return updates;
+}
+
+async function analyzeTranscript() {
+  if (!state.projectId || !transcriptInput) {
+    return;
+  }
+  const transcript = transcriptInput.value.trim();
+  if (!transcript) {
+    setTranscriptStatus("Paste a transcript to analyze.", true);
+    return;
+  }
+
+  setTranscriptStatus("Analyzing transcript...");
+  setTranscriptBusy(true);
+  resetTranscriptSuggestions();
+
+  try {
+    const data = await requestJSON(`/api/projects/${state.projectId}/transcript`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ transcript }),
+    });
+    renderTranscriptSuggestions(data.proposal || {});
+    if (data.proposal) {
+      setTranscriptStatus("Review the suggested updates below.");
+    } else {
+      setTranscriptStatus("No suggestions returned.", true);
+    }
+  } catch (error) {
+    console.warn("Transcript analysis failed", error);
+    setTranscriptStatus("Transcript analysis failed. Try again.", true);
+  } finally {
+    setTranscriptBusy(false);
+  }
+}
+
+async function applyTranscriptUpdates() {
+  if (!state.projectId) {
+    return;
+  }
+
+  let updates = null;
+  try {
+    updates = collectTranscriptUpdates();
+  } catch (error) {
+    setTranscriptStatus(error.message || "Fix the highlighted updates.", true);
+    return;
+  }
+
+  if (!updates) {
+    setTranscriptStatus("Select at least one update to apply.", true);
+    return;
+  }
+
+  setTranscriptStatus("Applying updates...");
+  setTranscriptBusy(true);
+
+  try {
+    if (updates.summary !== null) {
+      await requestJSON(`/api/projects/${state.projectId}/summary`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ summary: updates.summary }),
+      });
+    }
+
+    if (updates.questions !== null) {
+      await requestJSON(`/api/projects/${state.projectId}/questions`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ questions: updates.questions }),
+      });
+    }
+
+    if (updates.objective !== null) {
+      await requestJSON(`/api/projects/${state.projectId}/objective`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ objective: updates.objective }),
+      });
+    }
+
+    if (updates.goal !== null) {
+      await requestJSON(`/api/projects/${state.projectId}/goal`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ goal: updates.goal }),
+      });
+    }
+
+    if (updates.progress !== null) {
+      await requestJSON(`/api/projects/${state.projectId}/progress`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ progress: updates.progress }),
+      });
+      await refreshProgressGraph();
+    }
+
+    for (const item of updates.items_to_add) {
+      await requestJSON(`/api/projects/${state.projectId}/items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ section: item.section, text: item.text }),
+      });
+    }
+
+    await loadProject(state.projectId);
+    setTranscriptStatus("Updates applied.");
+    closeTranscriptDialog();
+  } catch (error) {
+    console.warn("Failed to apply transcript updates", error);
+    setTranscriptStatus("Failed to apply updates. Try again.", true);
+  } finally {
+    setTranscriptBusy(false);
+  }
 }
 
 function announceReorder(list, item) {
@@ -390,6 +831,7 @@ function renderSections(sections) {
 
 function resetEmptyState() {
   state.projectId = null;
+  state.projectData = null;
   emptyState.hidden = false;
   setInteractivity(false);
   goalInput.value = String(DEFAULT_GOAL);
@@ -405,6 +847,7 @@ function resetEmptyState() {
   objectiveInput.value = "";
   questionsInput.value = "";
   hideUndoToast();
+  closeTranscriptDialog();
 }
 
 function clampPercent(value) {
@@ -753,12 +1196,14 @@ async function loadProject(projectId) {
   try {
     const data = await requestJSON(`/api/projects/${projectId}`);
     renderProject(data);
+    state.projectData = data;
     if (state.graphExpanded) {
       await refreshProgressGraph();
     }
     return data;
   } catch (error) {
     console.warn("Failed to load resident", error);
+    state.projectData = null;
     return null;
   }
 }
@@ -910,11 +1355,50 @@ projectSelect.addEventListener("change", async (event) => {
   emptyState.hidden = true;
   setInteractivity(false);
   setProjectInUrl(state.projectId);
+  resetTranscriptDialog();
   const projectData = await loadProject(state.projectId);
   if (projectData) {
     setInteractivity(true);
   }
 });
+
+if (transcriptOpen) {
+  transcriptOpen.addEventListener("click", openTranscriptDialog);
+}
+
+if (transcriptClose) {
+  transcriptClose.addEventListener("click", closeTranscriptDialog);
+}
+
+if (transcriptCancel) {
+  transcriptCancel.addEventListener("click", closeTranscriptDialog);
+}
+
+if (transcriptDialog) {
+  transcriptDialog.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    closeTranscriptDialog();
+  });
+}
+
+if (transcriptAnalyze) {
+  transcriptAnalyze.addEventListener("click", analyzeTranscript);
+}
+
+if (transcriptApply) {
+  transcriptApply.addEventListener("click", applyTranscriptUpdates);
+}
+
+if (transcriptClear) {
+  transcriptClear.addEventListener("click", () => {
+    if (transcriptInput) {
+      transcriptInput.value = "";
+      transcriptInput.focus();
+    }
+    resetTranscriptSuggestions();
+    setTranscriptStatus("");
+  });
+}
 
 progressGraphToggle.addEventListener("click", async () => {
   const expanded = progressGraphPanel.hidden;
