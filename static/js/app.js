@@ -414,6 +414,9 @@ function collectTranscriptUpdates() {
       }
 
       if (field === "goal") {
+        if (!rawValue) {
+          throw new Error("Goal cannot be empty.");
+        }
         const parsed = Number(rawValue);
         if (!Number.isFinite(parsed)) {
           throw new Error("Goal must be a number.");
@@ -424,6 +427,9 @@ function collectTranscriptUpdates() {
       }
 
       if (field === "progress") {
+        if (!rawValue) {
+          throw new Error("Progress cannot be empty.");
+        }
         const parsed = Number(rawValue);
         if (!Number.isFinite(parsed)) {
           throw new Error("Progress must be a number.");
