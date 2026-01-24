@@ -22,3 +22,8 @@
 - Changes: Added a transcript modal dialog to `templates/index.html`, dialog styling in `static/css/main.css`, and review/apply workflow in `static/js/app.js`.
 - Verification: Not run (manual UI check recommended).
 - Notes: Dialog is disabled until a resident is selected; suggestions can be edited and selectively applied.
+
+## Stage 6 – Apply updates via existing APIs
+- Changes: Apply workflow in the dialog now posts approved updates to existing summary/questions/objective/goal/progress/item endpoints and reloads the resident data.
+- Verification: Not run (manual flow needed with a live Dedalus key).
+- Notes: Automated tests not added in Step 4 per process; recommend manual verification.
