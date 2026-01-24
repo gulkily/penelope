@@ -12,3 +12,8 @@
 - Changes: Added `app/llm_provider.py` to call Dedalus structured outputs with OpenAI-prefixed models and added `dedalus-labs` dependency.
 - Verification: Not run (requires configured `DEDALUS_API_KEY`).
 - Notes: Provider defaults to `openai/gpt-4o-mini` via `LLM_MODEL` override.
+
+## Stage 4 – Transcript analysis endpoint
+- Changes: Added `/api/projects/{project_id}/transcript` endpoint in `app/api_transcript.py` and wired router in `app/main.py`.
+- Verification: Not run (requires Dedalus key and server running).
+- Notes: Endpoint returns a proposal without persisting changes.
