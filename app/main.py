@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from dotenv import load_dotenv
+
 from fastapi import FastAPI, Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -8,6 +10,8 @@ from fastapi.templating import Jinja2Templates
 from app.api import router as api_router
 from app.api_transcript import router as transcript_router
 from app.db import init_db
+
+load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 

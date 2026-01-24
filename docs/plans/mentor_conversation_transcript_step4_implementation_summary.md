@@ -27,3 +27,8 @@
 - Changes: Apply workflow in the dialog now posts approved updates to existing summary/questions/objective/goal/progress/item endpoints and reloads the resident data.
 - Verification: Not run (manual flow needed with a live Dedalus key).
 - Notes: Automated tests not added in Step 4 per process; recommend manual verification. Goal/progress inputs require explicit values.
+
+## Stage 7 – .env support for Dedalus key
+- Changes: Added `python-dotenv` dependency, loaded `.env` in `app/main.py`, and ignored `.env` in `.gitignore`.
+- Verification: Not run (manual run with `.env` recommended).
+- Notes: `.env` can now include `DEDALUS_API_KEY` and `LLM_MODEL`.
