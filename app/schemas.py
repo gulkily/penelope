@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -54,3 +56,44 @@ class ProgressHistoryEntry(BaseModel):
 
 class ProgressHistoryResponse(BaseModel):
     history: list[ProgressHistoryEntry]
+
+
+TranscriptSectionKey = Literal[
+    "summary",
+    "challenges",
+    "opportunities",
+    "milestones",
+]
+
+
+class TranscriptUpdateRequest(BaseModel):
+    transcript: str = Field(..., min_length=1, description="Conversation transcript.")
+
+
+class TranscriptItemSuggestion(BaseModel):
+    section: TranscriptSectionKey = Field(
+        ...,
+        description="Target section for a new item.",
+    )
+    text: str = Field(..., min_length=1, description="Item text to add.")
+
+
+class TranscriptUpdateProposal(BaseModel):
+    summary: str | None = Field(None, description="Proposed summary update.")
+    questions: str | None = Field(None, description="Proposed questions update.")
+    objective: str | None = Field(None, description="Proposed objective update.")
+    goal: int | None = Field(None, ge=1, description="Proposed goal value.")
+    progress: int | None = Field(
+        None,
+        ge=0,
+        le=100,
+        description="Proposed progress percentage 0-100.",
+    )
+    items_to_add: list[TranscriptItemSuggestion] = Field(
+        default_factory=list,
+        description="New list items to add by section.",
+    )
+
+
+class TranscriptUpdateResponse(BaseModel):
+    proposal: TranscriptUpdateProposal
