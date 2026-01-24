@@ -1,0 +1,14 @@
+Return a JSON object that matches the TranscriptUpdateProposal schema:
+- summary: string or null
+- questions: string or null
+- objective: string or null
+- goal: integer (>=1) or null
+- progress: integer percent (0-100) or null
+- items_to_add: array of objects with { section, text }
+
+Rules:
+- Use null when no change is suggested for a field.
+- items_to_add must be empty when there are no new list items.
+- section must be one of: summary, challenges, opportunities, milestones.
+- progress is always a percent (0-100), not units.
+- goal is the absolute target value for progress.

@@ -1,0 +1,9 @@
+Resident: {resident_name}
+
+Current resident data:
+{project_context}
+
+Transcript:
+{transcript}
+
+Produce proposed updates using the rules provided.
