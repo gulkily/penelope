@@ -245,7 +245,21 @@ function hasMeaningfulText(value) {
   return normalizeComparableText(value) !== "";
 }
 
-function buildSuggestionField({ field, label, value, currentValue, inputType }) {
+function formatProgressContext(progressValue, goalValue) {
+  const safeGoal = normalizeGoal(goalValue);
+  const safePercent = clampPercent(progressValue);
+  const units = percentToUnits(safePercent, safeGoal);
+  return `${safePercent}% (${units} / ${safeGoal})`;
+}
+
+function buildSuggestionField({
+  field,
+  label,
+  value,
+  currentValue,
+  inputType,
+  context,
+}) {
   const wrapper = document.createElement("div");
   wrapper.className = "transcript-suggestion";
   wrapper.dataset.field = field;
@@ -278,7 +292,14 @@ function buildSuggestionField({ field, label, value, currentValue, inputType }) 
   }
   input.value = value ?? "";
 
-  body.append(current, input);
+  if (context) {
+    const contextLine = document.createElement("p");
+    contextLine.className = "transcript-suggestion-current";
+    contextLine.textContent = context;
+    body.append(current, contextLine, input);
+  } else {
+    body.append(current, input);
+  }
   wrapper.append(toggle, body);
 
   return wrapper;
@@ -405,12 +426,21 @@ function renderTranscriptSuggestions(proposal) {
     const proposedProgress = clampPercent(proposal.progress);
     const currentProgress = clampPercent(project.progress);
     if (proposedProgress !== currentProgress) {
+      const currentGoal = project.goal;
+      const goalForProgress =
+        proposal.goal !== null && proposal.goal !== undefined
+          ? proposal.goal
+          : project.goal;
       suggestions.push(
         buildSuggestionField({
           field: "progress",
-          label: "Progress percent",
+          label: "Progress",
           value: String(proposedProgress),
-          currentValue: project.progress,
+          currentValue: formatProgressContext(currentProgress, currentGoal),
+          context: `Proposed: ${formatProgressContext(
+            proposedProgress,
+            goalForProgress,
+          )}`,
           inputType: "number",
         }),
       );

@@ -12,3 +12,8 @@
 - Changes: Added resident name line in the transcript dialog and populate it on open.
 - Verification: Not run (manual dialog check recommended).
 - Notes: Uses loaded project data or selector text as fallback.
+
+## Stage 4 – Clarify progress context
+- Changes: Progress suggestions now show current percent + units/goal and a proposed percent + units line.
+- Verification: Not run (manual dialog check recommended).
+- Notes: Proposed units use the suggested goal when available.
