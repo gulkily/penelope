@@ -219,6 +219,17 @@ function formatCurrentValue(value) {
   return text || "(empty)";
 }
 
+function normalizeComparableText(value) {
+  return String(value ?? "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toLowerCase();
+}
+
+function hasMeaningfulText(value) {
+  return normalizeComparableText(value) !== "";
+}
+
 function buildSuggestionField({ field, label, value, currentValue, inputType }) {
   const wrapper = document.createElement("div");
   wrapper.className = "transcript-suggestion";
@@ -294,8 +305,24 @@ function renderTranscriptSuggestions(proposal) {
 
   const project = state.projectData || {};
   const suggestions = [];
+  const existingItems = project.sections || {};
+  const existingItemText = {};
 
-  if (proposal.summary !== null && proposal.summary !== undefined) {
+  Object.entries(existingItems).forEach(([section, items]) => {
+    existingItemText[section] = new Set(
+      (items || [])
+        .map((item) => normalizeComparableText(item.text))
+        .filter((text) => text),
+    );
+  });
+
+  if (
+    proposal.summary !== null &&
+    proposal.summary !== undefined &&
+    hasMeaningfulText(proposal.summary) &&
+    normalizeComparableText(proposal.summary) !==
+      normalizeComparableText(project.summary)
+  ) {
     suggestions.push(
       buildSuggestionField({
         field: "summary",
@@ -307,7 +334,13 @@ function renderTranscriptSuggestions(proposal) {
     );
   }
 
-  if (proposal.questions !== null && proposal.questions !== undefined) {
+  if (
+    proposal.questions !== null &&
+    proposal.questions !== undefined &&
+    hasMeaningfulText(proposal.questions) &&
+    normalizeComparableText(proposal.questions) !==
+      normalizeComparableText(project.questions)
+  ) {
     suggestions.push(
       buildSuggestionField({
         field: "questions",
@@ -319,7 +352,13 @@ function renderTranscriptSuggestions(proposal) {
     );
   }
 
-  if (proposal.objective !== null && proposal.objective !== undefined) {
+  if (
+    proposal.objective !== null &&
+    proposal.objective !== undefined &&
+    hasMeaningfulText(proposal.objective) &&
+    normalizeComparableText(proposal.objective) !==
+      normalizeComparableText(project.objective)
+  ) {
     suggestions.push(
       buildSuggestionField({
         field: "objective",
@@ -332,32 +371,48 @@ function renderTranscriptSuggestions(proposal) {
   }
 
   if (proposal.goal !== null && proposal.goal !== undefined) {
-    suggestions.push(
-      buildSuggestionField({
-        field: "goal",
-        label: "Goal",
-        value: String(proposal.goal),
-        currentValue: project.goal,
-        inputType: "number",
-      }),
-    );
+    const proposedGoal = normalizeGoal(proposal.goal);
+    const currentGoal = normalizeGoal(project.goal);
+    if (proposedGoal !== currentGoal) {
+      suggestions.push(
+        buildSuggestionField({
+          field: "goal",
+          label: "Goal",
+          value: String(proposedGoal),
+          currentValue: project.goal,
+          inputType: "number",
+        }),
+      );
+    }
   }
 
   if (proposal.progress !== null && proposal.progress !== undefined) {
-    suggestions.push(
-      buildSuggestionField({
-        field: "progress",
-        label: "Progress percent",
-        value: String(proposal.progress),
-        currentValue: project.progress,
-        inputType: "number",
-      }),
-    );
+    const proposedProgress = clampPercent(proposal.progress);
+    const currentProgress = clampPercent(project.progress);
+    if (proposedProgress !== currentProgress) {
+      suggestions.push(
+        buildSuggestionField({
+          field: "progress",
+          label: "Progress percent",
+          value: String(proposedProgress),
+          currentValue: project.progress,
+          inputType: "number",
+        }),
+      );
+    }
   }
 
   const items = proposal.items_to_add || [];
   items.forEach((item) => {
     if (!item || !item.section) {
+      return;
+    }
+    const normalizedText = normalizeComparableText(item.text);
+    if (!normalizedText) {
+      return;
+    }
+    const existing = existingItemText[item.section];
+    if (existing && existing.has(normalizedText)) {
       return;
     }
     suggestions.push(buildItemSuggestion(item.section, item.text));
