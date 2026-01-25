@@ -17,3 +17,8 @@
 - Changes: Progress suggestions now show current percent + units/goal and a proposed percent + units line.
 - Verification: Not run (manual dialog check recommended).
 - Notes: Proposed units use the suggested goal when available.
+
+## Stage 5 – Draft Option C Step 1
+- Changes: Added `docs/plans/mentor_conversation_transcript_option_c_step1_solution_assessment.md` for the evidence-backed validation track.
+- Verification: Not applicable.
+- Notes: Option B recommended for server-side validation with evidence fields.
