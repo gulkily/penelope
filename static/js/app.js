@@ -50,6 +50,7 @@ const transcriptInput = document.getElementById("transcript-input");
 const transcriptAnalyze = document.getElementById("transcript-analyze");
 const transcriptClear = document.getElementById("transcript-clear");
 const transcriptStatus = document.getElementById("transcript-status");
+const transcriptResident = document.getElementById("transcript-resident");
 const transcriptSuggestions = document.getElementById("transcript-suggestions");
 const transcriptSuggestionsEmpty = document.getElementById(
   "transcript-suggestions-empty",
@@ -196,6 +197,7 @@ function openTranscriptDialog() {
   if (!transcriptDialog || !state.projectId) {
     return;
   }
+  updateTranscriptResidentName();
   resetTranscriptSuggestions();
   setTranscriptStatus("");
   if (typeof transcriptDialog.showModal === "function") {
@@ -212,6 +214,19 @@ function closeTranscriptDialog() {
   }
   transcriptDialog.close();
   resetTranscriptDialog();
+}
+
+function updateTranscriptResidentName() {
+  if (!transcriptResident) {
+    return;
+  }
+  let name = "";
+  if (state.projectData && state.projectData.name) {
+    name = String(state.projectData.name).trim();
+  } else if (projectSelect && projectSelect.selectedOptions.length > 0) {
+    name = projectSelect.selectedOptions[0].textContent.trim();
+  }
+  transcriptResident.textContent = name ? `Resident: ${name}` : "";
 }
 
 function formatCurrentValue(value) {
