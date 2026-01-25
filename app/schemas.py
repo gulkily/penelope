@@ -89,6 +89,15 @@ class TranscriptUpdateProposal(BaseModel):
         le=100,
         description="Proposed progress percentage 0-100.",
     )
+    progress_units: int | None = Field(
+        None,
+        ge=0,
+        description="Proposed progress units (absolute count toward the goal).",
+    )
+    progress_units_delta: int | None = Field(
+        None,
+        description="Proposed progress change in units (delta).",
+    )
     items_to_add: list[TranscriptItemSuggestion] = Field(
         default_factory=list,
         description="New list items to add by section.",

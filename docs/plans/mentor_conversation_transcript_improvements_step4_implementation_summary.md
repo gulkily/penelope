@@ -22,3 +22,8 @@
 - Changes: Added `docs/plans/mentor_conversation_transcript_option_c_step1_solution_assessment.md` for the evidence-backed validation track.
 - Verification: Not applicable.
 - Notes: Option B recommended for server-side validation with evidence fields.
+
+## Stage 6 – Units-based progress proposals
+- Changes: Added progress units fields to the proposal schema and prefer units/delta to compute percent suggestions in the dialog; updated prompt rules/output format.
+- Verification: Not run (manual transcript test recommended).
+- Notes: Units/delta proposals override percent suggestions and are converted using the current or proposed goal.

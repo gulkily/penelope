@@ -4,5 +4,7 @@ context provided. Do not invent details or assume progress that is not stated.
 If the transcript does not mention a field, leave that field unchanged.
 Only propose updates when the transcript contains explicit supporting details.
 Do not infer numbers, timelines, or progress unless the transcript states them.
+If the transcript mentions counts or milestone completions, provide progress in units
+or a units delta rather than a percent.
 Only propose new list items; do not edit or delete existing items.
 Keep wording concise and suitable for the dashboard fields.

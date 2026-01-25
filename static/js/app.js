@@ -252,6 +252,15 @@ function formatProgressContext(progressValue, goalValue) {
   return `${safePercent}% (${units} / ${safeGoal})`;
 }
 
+function clampUnits(value, goalValue) {
+  const safeGoal = normalizeGoal(goalValue);
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 0;
+  }
+  return Math.min(Math.max(0, Math.round(parsed)), safeGoal);
+}
+
 function buildSuggestionField({
   field,
   label,
@@ -422,7 +431,17 @@ function renderTranscriptSuggestions(proposal) {
     }
   }
 
-  if (proposal.progress !== null && proposal.progress !== undefined) {
+  const hasUnitProposal =
+    (proposal.progress_units !== null &&
+      proposal.progress_units !== undefined) ||
+    (proposal.progress_units_delta !== null &&
+      proposal.progress_units_delta !== undefined);
+
+  if (
+    !hasUnitProposal &&
+    proposal.progress !== null &&
+    proposal.progress !== undefined
+  ) {
     const proposedProgress = clampPercent(proposal.progress);
     const currentProgress = clampPercent(project.progress);
     if (proposedProgress !== currentProgress) {
@@ -444,6 +463,55 @@ function renderTranscriptSuggestions(proposal) {
           inputType: "number",
         }),
       );
+    }
+  }
+
+  if (hasUnitProposal) {
+    const currentGoal = normalizeGoal(project.goal);
+    const currentProgress = clampPercent(project.progress);
+    const currentUnits = percentToUnits(currentProgress, currentGoal);
+    const goalForProgress = normalizeGoal(
+      proposal.goal !== null && proposal.goal !== undefined
+        ? proposal.goal
+        : project.goal,
+    );
+    let proposedUnits = null;
+    let proposalLabel = "";
+
+    if (proposal.progress_units !== null && proposal.progress_units !== undefined) {
+      proposedUnits = clampUnits(proposal.progress_units, goalForProgress);
+      proposalLabel = `Proposed: ${proposedUnits} / ${goalForProgress}`;
+    } else if (
+      proposal.progress_units_delta !== null &&
+      proposal.progress_units_delta !== undefined
+    ) {
+      proposedUnits = clampUnits(
+        currentUnits + proposal.progress_units_delta,
+        goalForProgress,
+      );
+      const deltaLabel =
+        proposal.progress_units_delta >= 0
+          ? `+${proposal.progress_units_delta}`
+          : String(proposal.progress_units_delta);
+      proposalLabel = `Proposed: ${proposedUnits} / ${goalForProgress} (${deltaLabel})`;
+    }
+
+    if (proposedUnits !== null) {
+      const proposedPercent = clampPercent(
+        unitsToPercent(proposedUnits, goalForProgress),
+      );
+      if (proposedPercent !== currentProgress) {
+        suggestions.push(
+          buildSuggestionField({
+            field: "progress",
+            label: "Progress",
+            value: String(proposedPercent),
+            currentValue: formatProgressContext(currentProgress, currentGoal),
+            context: `${proposalLabel} → ${proposedPercent}%`,
+            inputType: "number",
+          }),
+        );
+      }
     }
   }
 
