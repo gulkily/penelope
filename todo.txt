@@ -20,3 +20,9 @@ Feedback from Daniel
 - North star graph (log datapoints) x
 - Allow arranging things
 - Confetti and other cheerful things x
+
+transcripts
+	- store transcript in database for later review
+	- allow recording of session in-browser
+		- transcribe session
+	- glue it all together into a nice ui/process
