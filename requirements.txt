@@ -7,3 +7,5 @@ pytest-playwright
 pytest-xdist
 dedalus-labs
 python-dotenv
+httpx
+python-multipart

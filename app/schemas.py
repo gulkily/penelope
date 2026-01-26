@@ -106,3 +106,14 @@ class TranscriptUpdateProposal(BaseModel):
 
 class TranscriptUpdateResponse(BaseModel):
     proposal: TranscriptUpdateProposal
+
+
+class TranscriptionResponse(BaseModel):
+    text: str = Field("", description="Transcribed text.")
+    status: str = Field("complete", description="Status: queued|processing|complete|error.")
+    progress: int | None = Field(
+        None,
+        ge=0,
+        le=100,
+        description="Optional progress percentage for upload/transcription.",
+    )
