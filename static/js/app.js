@@ -66,6 +66,7 @@ const recordingTimer = document.getElementById("recording-timer");
 const recordingStatus = document.getElementById("recording-status");
 const recordingPreview = document.getElementById("recording-preview");
 const recordingAudio = document.getElementById("recording-audio");
+const recordingMeter = document.getElementById("recording-meter");
 const recordingUpload = document.getElementById("recording-upload");
 const recordingReset = document.getElementById("recording-reset");
 const uploadStatus = document.getElementById("upload-status");
@@ -100,6 +101,10 @@ const transcriptState = {
   timerId: null,
   startTime: null,
   recordingBlob: null,
+  audioContext: null,
+  analyser: null,
+  meterAnimationId: null,
+  meterData: null,
   uploadBusy: false,
   uploadProgress: 0,
 };
@@ -246,6 +251,7 @@ function updateTimerDisplay(seconds) {
 function resetRecordingState() {
   transcriptState.chunks = [];
   transcriptState.recordingBlob = null;
+  stopMeter();
   if (recordingPreview) {
     recordingPreview.hidden = true;
   }
@@ -263,6 +269,61 @@ function stopTimer() {
     window.clearInterval(transcriptState.timerId);
     transcriptState.timerId = null;
   }
+}
+
+function updateMeterLevel(level) {
+  if (!recordingMeter) {
+    return;
+  }
+  const safe = Math.min(100, Math.max(0, Math.round(level * 100)));
+  recordingMeter.style.width = `${safe}%`;
+}
+
+function stopMeter() {
+  if (transcriptState.meterAnimationId) {
+    cancelAnimationFrame(transcriptState.meterAnimationId);
+    transcriptState.meterAnimationId = null;
+  }
+  if (transcriptState.audioContext) {
+    transcriptState.audioContext.close().catch(() => {});
+    transcriptState.audioContext = null;
+  }
+  transcriptState.analyser = null;
+  transcriptState.meterData = null;
+  updateMeterLevel(0);
+}
+
+function startMeter(stream) {
+  if (!recordingMeter || !window.AudioContext) {
+    return;
+  }
+  const audioContext = new AudioContext();
+  const analyser = audioContext.createAnalyser();
+  analyser.fftSize = 512;
+  const source = audioContext.createMediaStreamSource(stream);
+  source.connect(analyser);
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+  transcriptState.audioContext = audioContext;
+  transcriptState.analyser = analyser;
+  transcriptState.meterData = dataArray;
+
+  const tick = () => {
+    if (!transcriptState.analyser || !transcriptState.meterData) {
+      return;
+    }
+    transcriptState.analyser.getByteTimeDomainData(transcriptState.meterData);
+    let sumSquares = 0;
+    for (const value of transcriptState.meterData) {
+      const normalized = (value - 128) / 128;
+      sumSquares += normalized * normalized;
+    }
+    const rms = Math.sqrt(sumSquares / transcriptState.meterData.length);
+    updateMeterLevel(Math.min(1, rms * 3));
+    transcriptState.meterAnimationId = requestAnimationFrame(tick);
+  };
+
+  tick();
 }
 
 function startTimer() {
@@ -307,6 +368,7 @@ async function startRecording() {
     };
     recorder.start();
     startTimer();
+    startMeter(stream);
     recordingStatus.textContent = "Recording...";
     if (recordStart) {
       recordStart.disabled = true;
@@ -333,6 +395,7 @@ function stopRecording() {
   transcriptState.mediaRecorder = null;
   transcriptState.mediaStream = null;
   stopTimer();
+  stopMeter();
   if (recordStart) {
     recordStart.disabled = false;
   }

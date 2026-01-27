@@ -1217,3 +1217,29 @@ body {
 .transcript-upload label.link-button {
   cursor: pointer;
 }
+
+.audio-meter {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 12px;
+}
+
+.audio-meter-label {
+  font-size: 12px;
+  color: var(--text-subtle);
+}
+
+.audio-meter-track {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--border-light);
+  overflow: hidden;
+}
+
+.audio-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #4aa3ff, #2f6bff);
+  transition: width 0.1s linear;
+}
