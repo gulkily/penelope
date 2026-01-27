@@ -18,11 +18,21 @@ Feedback from Daniel
 - Put questions right below project x
 - Add resident summary x
 - North star graph (log datapoints) x
-- Allow arranging things
+- Allow arranging things x
 - Confetti and other cheerful things x
 
 transcripts
 	- store transcript in database for later review
 	- allow recording of session in-browser
+		- show audio indicator
 		- transcribe session
 	- glue it all together into a nice ui/process
+
+getting live recording from a web app could be challenging
+- do a longer recording test
+- will the processing take longer too?
+- does it take longer than 45 seconds? too long
+- live recording: 2 versions
+	- play a video from a speaker
+	- use a vpn to access the website from somewhere far from us-east
+	- network throttling test
