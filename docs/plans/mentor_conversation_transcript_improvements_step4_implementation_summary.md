@@ -27,3 +27,8 @@
 - Changes: Added progress units fields to the proposal schema and prefer units/delta to compute percent suggestions in the dialog; updated prompt rules/output format.
 - Verification: Not run (manual transcript test recommended).
 - Notes: Units/delta proposals override percent suggestions and are converted using the current or proposed goal.
+
+## Stage 7 – Infer goal from objective text
+- Changes: Added backend heuristic to set `goal` when the objective includes an explicit numeric target and the model omits the goal.
+- Verification: Not run (manual transcript test recommended).
+- Notes: Extracts the first reasonable number (1–1000), including simple word numbers like “five.”
