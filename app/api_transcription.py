@@ -63,7 +63,7 @@ async def transcribe_audio(
     try:
         async with httpx.AsyncClient(timeout=60) as client:
             response = await client.post(
-                DEDAULS_TRANSCRIBE_URL,
+                DEDALUS_TRANSCRIBE_URL,
                 headers=headers,
                 data=data,
                 files=files,
