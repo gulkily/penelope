@@ -250,6 +250,64 @@
               placeholder="Paste the mentor + mentee transcript here..."
             ></textarea>
           </div>
+          <section class="transcript-recorder" id="transcript-recorder">
+            <div class="transcript-recorder-header">
+              <div>
+                <h3>Record audio</h3>
+                <p class="hint" id="recording-status">Ready to record.</p>
+              </div>
+              <div class="transcript-recorder-actions">
+                <button type="button" class="action-button" id="record-start">
+                  Start recording
+                </button>
+                <button type="button" class="link-button" id="record-stop" disabled>
+                  Stop
+                </button>
+                <span class="recording-timer" id="recording-timer">00:00</span>
+              </div>
+            </div>
+            <div class="transcript-recorder-preview" id="recording-preview" hidden>
+              <audio id="recording-audio" controls></audio>
+              <div class="dialog-actions">
+                <button type="button" class="action-button" id="recording-upload">
+                  Upload recording
+                </button>
+                <button type="button" class="link-button" id="recording-reset">
+                  Reset
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section class="transcript-upload">
+            <div class="transcript-upload-header">
+              <div>
+                <h3>Upload audio file</h3>
+                <p class="hint" id="upload-status">Choose a file to upload.</p>
+              </div>
+              <label class="link-button">
+                Choose file
+                <input
+                  type="file"
+                  id="transcript-file-input"
+                  accept="audio/*"
+                  hidden
+                />
+              </label>
+            </div>
+            <div class="transcript-upload-preview" id="upload-preview" hidden>
+              <p class="hint" id="upload-filename"></p>
+              <audio id="upload-audio" controls></audio>
+              <div class="dialog-actions">
+                <button type="button" class="action-button" id="upload-submit">
+                  Upload file
+                </button>
+                <button type="button" class="link-button" id="upload-clear">
+                  Clear
+                </button>
+              </div>
+            </div>
+          </section>
           <p class="hint transcript-status" id="transcript-status" role="status"></p>
           <div class="dialog-actions">
             <button type="button" class="action-button" id="transcript-analyze">

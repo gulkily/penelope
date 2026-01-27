@@ -60,6 +60,21 @@ const transcriptSuggestionList = document.getElementById(
 );
 const transcriptApply = document.getElementById("transcript-apply");
 const transcriptCancel = document.getElementById("transcript-cancel");
+const recordStart = document.getElementById("record-start");
+const recordStop = document.getElementById("record-stop");
+const recordingTimer = document.getElementById("recording-timer");
+const recordingStatus = document.getElementById("recording-status");
+const recordingPreview = document.getElementById("recording-preview");
+const recordingAudio = document.getElementById("recording-audio");
+const recordingUpload = document.getElementById("recording-upload");
+const recordingReset = document.getElementById("recording-reset");
+const uploadStatus = document.getElementById("upload-status");
+const transcriptFileInput = document.getElementById("transcript-file-input");
+const uploadPreview = document.getElementById("upload-preview");
+const uploadFilename = document.getElementById("upload-filename");
+const uploadAudio = document.getElementById("upload-audio");
+const uploadSubmit = document.getElementById("upload-submit");
+const uploadClear = document.getElementById("upload-clear");
 
 const undoState = {
   projectId: null,
@@ -79,6 +94,14 @@ const reorderState = {
 const transcriptState = {
   proposal: null,
   busy: false,
+  mediaRecorder: null,
+  mediaStream: null,
+  chunks: [],
+  timerId: null,
+  startTime: null,
+  recordingBlob: null,
+  uploadBusy: false,
+  uploadProgress: 0,
 };
 
 function toggleInlineAdds(enabled) {
@@ -178,6 +201,8 @@ function resetTranscriptDialog() {
   }
   setTranscriptStatus("");
   resetTranscriptSuggestions();
+  resetRecordingState();
+  clearUploadPreview();
 }
 
 function setTranscriptBusy(isBusy) {
@@ -190,6 +215,226 @@ function setTranscriptBusy(isBusy) {
   }
   if (transcriptClear) {
     transcriptClear.disabled = isBusy;
+  }
+}
+
+function setUploadBusy(isBusy) {
+  transcriptState.uploadBusy = isBusy;
+  if (recordingUpload) {
+    recordingUpload.disabled = isBusy || !transcriptState.recordingBlob;
+  }
+  if (uploadSubmit) {
+    uploadSubmit.disabled = isBusy || !transcriptFileInput?.files?.length;
+  }
+  if (recordStart) {
+    recordStart.disabled = isBusy;
+  }
+  if (recordStop) {
+    recordStop.disabled = isBusy || !transcriptState.mediaRecorder;
+  }
+}
+
+function updateTimerDisplay(seconds) {
+  if (!recordingTimer) {
+    return;
+  }
+  const mins = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const secs = String(seconds % 60).padStart(2, "0");
+  recordingTimer.textContent = `${mins}:${secs}`;
+}
+
+function resetRecordingState() {
+  transcriptState.chunks = [];
+  transcriptState.recordingBlob = null;
+  if (recordingPreview) {
+    recordingPreview.hidden = true;
+  }
+  if (recordingAudio) {
+    recordingAudio.src = "";
+  }
+  if (recordingStatus) {
+    recordingStatus.textContent = "Ready to record.";
+  }
+  updateTimerDisplay(0);
+}
+
+function stopTimer() {
+  if (transcriptState.timerId) {
+    window.clearInterval(transcriptState.timerId);
+    transcriptState.timerId = null;
+  }
+}
+
+function startTimer() {
+  transcriptState.startTime = Date.now();
+  stopTimer();
+  transcriptState.timerId = window.setInterval(() => {
+    const elapsed = Math.floor((Date.now() - transcriptState.startTime) / 1000);
+    updateTimerDisplay(elapsed);
+  }, 1000);
+}
+
+async function startRecording() {
+  if (!recordingStatus || transcriptState.mediaRecorder) {
+    return;
+  }
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    transcriptState.mediaStream = stream;
+    const recorder = new MediaRecorder(stream);
+    transcriptState.mediaRecorder = recorder;
+    transcriptState.chunks = [];
+    recorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        transcriptState.chunks.push(event.data);
+      }
+    };
+    recorder.onstop = () => {
+      const blob = new Blob(transcriptState.chunks, {
+        type: recorder.mimeType || "audio/webm",
+      });
+      transcriptState.recordingBlob = blob;
+      if (recordingAudio) {
+        recordingAudio.src = URL.createObjectURL(blob);
+      }
+      if (recordingPreview) {
+        recordingPreview.hidden = false;
+      }
+      if (recordingStatus) {
+        recordingStatus.textContent = "Recording complete. Preview below.";
+      }
+      setUploadBusy(false);
+    };
+    recorder.start();
+    startTimer();
+    recordingStatus.textContent = "Recording...";
+    if (recordStart) {
+      recordStart.disabled = true;
+    }
+    if (recordStop) {
+      recordStop.disabled = false;
+    }
+  } catch (error) {
+    console.warn("Failed to start recording", error);
+    recordingStatus.textContent = "Microphone access denied.";
+    resetRecordingState();
+    setUploadBusy(false);
+  }
+}
+
+function stopRecording() {
+  if (!transcriptState.mediaRecorder) {
+    return;
+  }
+  transcriptState.mediaRecorder.stop();
+  if (transcriptState.mediaStream) {
+    transcriptState.mediaStream.getTracks().forEach((track) => track.stop());
+  }
+  transcriptState.mediaRecorder = null;
+  transcriptState.mediaStream = null;
+  stopTimer();
+  if (recordStart) {
+    recordStart.disabled = false;
+  }
+  if (recordStop) {
+    recordStop.disabled = true;
+  }
+}
+
+function clearUploadPreview() {
+  if (uploadPreview) {
+    uploadPreview.hidden = true;
+  }
+  if (uploadAudio) {
+    uploadAudio.src = "";
+  }
+  if (uploadFilename) {
+    uploadFilename.textContent = "";
+  }
+  if (uploadStatus) {
+    uploadStatus.textContent = "Choose a file to upload.";
+  }
+  if (transcriptFileInput) {
+    transcriptFileInput.value = "";
+  }
+}
+
+function handleFileSelected(file) {
+  if (!file) {
+    clearUploadPreview();
+    return;
+  }
+  if (uploadFilename) {
+    uploadFilename.textContent = file.name;
+  }
+  if (uploadAudio) {
+    uploadAudio.src = URL.createObjectURL(file);
+  }
+  if (uploadPreview) {
+    uploadPreview.hidden = false;
+  }
+  if (uploadStatus) {
+    uploadStatus.textContent = "Ready to upload.";
+  }
+  setUploadBusy(false);
+}
+
+function setUploadStatus(message, isError = false) {
+  if (!uploadStatus) {
+    return;
+  }
+  uploadStatus.textContent = message || "";
+  if (isError) {
+    uploadStatus.dataset.status = "error";
+  } else {
+    delete uploadStatus.dataset.status;
+  }
+}
+
+function setRecordingStatus(message, isError = false) {
+  if (!recordingStatus) {
+    return;
+  }
+  recordingStatus.textContent = message || "";
+  if (isError) {
+    recordingStatus.dataset.status = "error";
+  } else {
+    delete recordingStatus.dataset.status;
+  }
+}
+
+async function uploadAudioBlob(blob, filename) {
+  if (!blob) {
+    return;
+  }
+  setUploadBusy(true);
+  setUploadStatus("Uploading...");
+  setRecordingStatus("Uploading...");
+
+  const formData = new FormData();
+  formData.append("file", blob, filename);
+
+  try {
+    const response = await fetch("/api/transcriptions", {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) {
+      throw new Error(`Upload failed: ${response.status}`);
+    }
+    const data = await response.json();
+    if (data.text && transcriptInput) {
+      transcriptInput.value = data.text;
+      autoGrow(transcriptInput);
+    }
+    setUploadStatus("Transcript ready.");
+    setRecordingStatus("Transcript ready.");
+  } catch (error) {
+    console.warn("Upload failed", error);
+    setUploadStatus("Upload failed. Try again.", true);
+    setRecordingStatus("Upload failed.", true);
+  } finally {
+    setUploadBusy(false);
   }
 }
 
@@ -1571,6 +1816,58 @@ if (transcriptClear) {
     }
     resetTranscriptSuggestions();
     setTranscriptStatus("");
+  });
+}
+
+if (recordStart) {
+  recordStart.addEventListener("click", () => {
+    setUploadBusy(true);
+    startRecording();
+  });
+}
+
+if (recordStop) {
+  recordStop.addEventListener("click", stopRecording);
+}
+
+if (recordingReset) {
+  recordingReset.addEventListener("click", () => {
+    resetRecordingState();
+    setUploadBusy(false);
+  });
+}
+
+if (recordingUpload) {
+  recordingUpload.addEventListener("click", () => {
+    if (!transcriptState.recordingBlob) {
+      setRecordingStatus("Record audio before uploading.", true);
+      return;
+    }
+    uploadAudioBlob(transcriptState.recordingBlob, "recording.webm");
+  });
+}
+
+if (transcriptFileInput) {
+  transcriptFileInput.addEventListener("change", (event) => {
+    const file = event.target.files && event.target.files[0];
+    handleFileSelected(file);
+  });
+}
+
+if (uploadSubmit) {
+  uploadSubmit.addEventListener("click", () => {
+    const file = transcriptFileInput?.files?.[0];
+    if (!file) {
+      setUploadStatus("Select a file first.", true);
+      return;
+    }
+    uploadAudioBlob(file, file.name);
+  });
+}
+
+if (uploadClear) {
+  uploadClear.addEventListener("click", () => {
+    clearUploadPreview();
   });
 }
 
