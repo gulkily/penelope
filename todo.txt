@@ -20,3 +20,5 @@ Feedback from Daniel
 - North star graph (log datapoints) x
 - Allow arranging things
 - Confetti and other cheerful things x
+
+- Audio indicator for transcription feature during recording
