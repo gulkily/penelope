@@ -1,16 +1,21 @@
 # Mentor Transcript Option A (Step 1: Solution Assessment)
 
 ## Problem statement
-We need evidence-backed transcript updates with server-side validation to eliminate unsupported suggestions before mentors review them.
+We need the transcript dialog to be usable on slow or unstable connections by reducing the impact of network latency and low bandwidth during analysis.
 
-## Option A: Evidence fields + client-only gating
+## Option A: UI-only resilience + lighter requests
+**Incremental path**
+- Establishes baseline UI resilience (draft persistence, retries, lighter payloads) that Option B can build on with server-side jobs.
+
 **Pros**
-- Minimal backend changes.
-- Faster to ship than full server validation.
+- No backend changes required.
+- Faster perceived responsiveness with better in-dialog feedback.
+- Reduces repeat uploads by persisting drafts locally.
 
 **Cons**
-- Evidence can be bypassed by clients.
-- Harder to enforce consistency across surfaces.
+- Does not reduce LLM processing time.
+- Still requires a full request/response on slow connections.
+- No cross-device resume.
 
 ## Recommendation
-Proceed with Option A when speed-to-ship is the top priority and we can accept weaker enforcement until server validation is added.
+Proceed with Option A when we need the fastest relief for slow networks without backend changes.

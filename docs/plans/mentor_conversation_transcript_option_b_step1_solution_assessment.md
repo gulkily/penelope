@@ -1,16 +1,21 @@
 # Mentor Transcript Option B (Step 1: Solution Assessment)
 
 ## Problem statement
-We need evidence-backed transcript updates with server-side validation to eliminate unsupported suggestions before mentors review them.
+We need the transcript dialog to be usable on slow or unstable connections by reducing the impact of network latency and low bandwidth during analysis.
 
-## Option B: Evidence schema + server validation
+## Option B: Async analysis job + server-side transcript storage
+**Incremental path**
+- Builds on Option A by moving long-running analysis to a server job with a resumable status flow.
+
 **Pros**
-- Strong guardrails before suggestions reach the UI.
-- Centralized enforcement for auditability.
+- Returns a job ID quickly so the UI can poll and stay responsive.
+- Allows resume after disconnects without re-uploading the transcript.
+- Reduces bandwidth by reusing stored transcripts for retries.
 
 **Cons**
-- Requires new schema fields and backend logic.
-- More effort to tune evidence requirements.
+- Requires backend storage and cleanup policies for transcripts and job state.
+- More API surface area to maintain (status + result endpoints).
+- Adds privacy/retention considerations.
 
 ## Recommendation
-Proceed with Option B when we want consistent, enforceable evidence requirements across all clients and review surfaces.
+Proceed with Option B when resilience on low-bandwidth connections is a priority and backend changes are acceptable.

@@ -1,16 +1,21 @@
 # Mentor Transcript Option C (Step 1: Solution Assessment)
 
 ## Problem statement
-We need evidence-backed transcript updates with server-side validation to eliminate unsupported suggestions before mentors review them.
+We need the transcript dialog to be usable on slow or unstable connections by reducing the impact of network latency and low bandwidth during analysis.
 
-## Option C: Two-pass extraction (evidence first, then updates)
+## Option C: Streaming/progressive results on top of async jobs
+**Incremental path**
+- Builds on Option B by streaming partial results as they are ready to cut perceived wait time.
+
 **Pros**
-- Separates evidence collection from update generation.
-- Easier to debug false positives.
+- Shows early suggestions without waiting for the full response.
+- Improves perceived latency on slow connections.
+- Allows mentors to start review sooner.
 
 **Cons**
-- Two LLM calls and higher latency/cost.
-- More moving parts to orchestrate.
+- Highest complexity in client/server coordination.
+- Requires partial-result UX and retry handling.
+- More testing surface for flaky connections.
 
 ## Recommendation
-Proceed with Option C when debugging precision and traceability outweigh the added latency and orchestration complexity.
+Proceed with Option C when we need the best perceived responsiveness and can support streaming UX complexity.
