@@ -74,6 +74,7 @@ async def transcribe_audio(file: UploadFile = File(...)):
 - The browser should request mic permission and handle errors gracefully.
 - For long recordings, chunked uploads or a pre-signed storage flow may be needed.
 - This flow keeps the Dedalus API key server-side.
+- Dedalus transcription currently supports OpenAI-prefixed `openai/whisper-1` only, so we use that model for compatibility.
 - Single-mic, turn-taking audio should transcribe well, but speaker labeling will be best-effort.
 - If speaker labels are desired in v1, consider a lightweight heuristic (e.g., prepend
   "Speaker A"/"Speaker B" when the transcript includes explicit cues) and treat true
