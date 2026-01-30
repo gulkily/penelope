@@ -1113,8 +1113,16 @@ body {
   margin: 0;
 }
 
+.transcript-status[data-status="busy"] {
+  color: var(--text-subtle);
+}
+
 .transcript-status[data-status="error"] {
   color: var(--danger);
+}
+
+.transcript-status[data-status="offline"] {
+  color: var(--accent-strong);
 }
 
 .transcript-recorder [data-status="error"],

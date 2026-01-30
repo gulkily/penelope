@@ -2,6 +2,9 @@ const DEFAULT_GOAL = 100;
 const DEFAULT_RESIDENCY_YEAR = new Date().getUTCFullYear();
 const DEFAULT_RESIDENCY_START = `${DEFAULT_RESIDENCY_YEAR}-01-01`;
 const DEFAULT_RESIDENCY_END = `${DEFAULT_RESIDENCY_YEAR}-01-31`;
+const TRANSCRIPT_ANALYSIS_TIMEOUT_MS = 45000;
+const TRANSCRIPT_DRAFT_SAVE_DELAY_MS = 400;
+const TRANSCRIPT_DRAFT_STORAGE_PREFIX = "transcriptDraft:";
 
 const state = {
   projectId: null,
@@ -107,6 +110,9 @@ const transcriptState = {
   meterData: null,
   uploadBusy: false,
   uploadProgress: 0,
+  analysisController: null,
+  analysisTimeoutId: null,
+  draftTimerId: null,
 };
 
 function toggleInlineAdds(enabled) {
@@ -172,15 +178,155 @@ function formatSectionLabel(section) {
   return section.charAt(0).toUpperCase() + section.slice(1);
 }
 
-function setTranscriptStatus(message, isError = false) {
+function setTranscriptStatus(message, status = false) {
   if (!transcriptStatus) {
     return;
   }
   transcriptStatus.textContent = message || "";
-  if (message && isError) {
+  if (!message) {
+    delete transcriptStatus.dataset.status;
+    return;
+  }
+  if (typeof status === "string") {
+    transcriptStatus.dataset.status = status;
+    return;
+  }
+  if (status) {
     transcriptStatus.dataset.status = "error";
   } else {
     delete transcriptStatus.dataset.status;
+  }
+}
+
+function isTranscriptDialogOpen() {
+  return Boolean(transcriptDialog && transcriptDialog.open);
+}
+
+function isNavigatorOnline() {
+  if (typeof navigator === "undefined" || !("onLine" in navigator)) {
+    return true;
+  }
+  return navigator.onLine;
+}
+
+function shouldUpdateTranscriptNetworkStatus() {
+  if (!isTranscriptDialogOpen()) {
+    return false;
+  }
+  if (transcriptState.busy) {
+    return false;
+  }
+  if (transcriptState.proposal) {
+    return false;
+  }
+  return true;
+}
+
+function handleTranscriptNetworkChange() {
+  if (!shouldUpdateTranscriptNetworkStatus()) {
+    return;
+  }
+  if (isNavigatorOnline()) {
+    setTranscriptStatus("Back online. You can analyze the transcript.");
+  } else {
+    setTranscriptStatus(
+      "You're offline. We'll keep your transcript so you can retry when connected.",
+      "offline",
+    );
+  }
+}
+
+function getTranscriptDraftKey() {
+  if (!state.projectId) {
+    return null;
+  }
+  return `${TRANSCRIPT_DRAFT_STORAGE_PREFIX}${state.projectId}`;
+}
+
+function loadTranscriptDraft() {
+  const key = getTranscriptDraftKey();
+  if (!key) {
+    return "";
+  }
+  try {
+    return localStorage.getItem(key) || "";
+  } catch (error) {
+    console.warn("Failed to load transcript draft", error);
+    return "";
+  }
+}
+
+function saveTranscriptDraft(value) {
+  const key = getTranscriptDraftKey();
+  if (!key) {
+    return;
+  }
+  const trimmed = String(value || "").trim();
+  try {
+    if (!trimmed) {
+      localStorage.removeItem(key);
+      return;
+    }
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.warn("Failed to save transcript draft", error);
+  }
+}
+
+function scheduleTranscriptDraftSave() {
+  if (!transcriptInput) {
+    return;
+  }
+  if (transcriptState.draftTimerId) {
+    window.clearTimeout(transcriptState.draftTimerId);
+  }
+  transcriptState.draftTimerId = window.setTimeout(() => {
+    transcriptState.draftTimerId = null;
+    saveTranscriptDraft(transcriptInput.value);
+  }, TRANSCRIPT_DRAFT_SAVE_DELAY_MS);
+}
+
+function cancelTranscriptDraftSave() {
+  if (!transcriptState.draftTimerId) {
+    return;
+  }
+  window.clearTimeout(transcriptState.draftTimerId);
+  transcriptState.draftTimerId = null;
+}
+
+function restoreTranscriptDraft() {
+  if (!transcriptInput) {
+    return;
+  }
+  const draft = loadTranscriptDraft();
+  if (!draft) {
+    return;
+  }
+  transcriptInput.value = draft;
+  autoGrow(transcriptInput);
+  setTranscriptStatus("Draft restored.");
+}
+
+function clearTranscriptDraft() {
+  const key = getTranscriptDraftKey();
+  if (!key) {
+    return;
+  }
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.warn("Failed to clear transcript draft", error);
+  }
+}
+
+function abortTranscriptAnalysis() {
+  if (transcriptState.analysisController) {
+    transcriptState.analysisController.abort();
+    transcriptState.analysisController = null;
+  }
+  if (transcriptState.analysisTimeoutId) {
+    window.clearTimeout(transcriptState.analysisTimeoutId);
+    transcriptState.analysisTimeoutId = null;
   }
 }
 
@@ -204,6 +350,7 @@ function resetTranscriptDialog() {
   if (transcriptInput) {
     transcriptInput.value = "";
   }
+  cancelTranscriptDraftSave();
   setTranscriptStatus("");
   resetTranscriptSuggestions();
   resetRecordingState();
@@ -489,6 +636,7 @@ async function uploadAudioBlob(blob, filename) {
     if (data.text && transcriptInput) {
       transcriptInput.value = data.text;
       autoGrow(transcriptInput);
+      saveTranscriptDraft(transcriptInput.value);
     }
     setUploadStatus("Transcript ready.");
     setRecordingStatus("Transcript ready.");
@@ -511,6 +659,7 @@ function openTranscriptDialog() {
   if (typeof transcriptDialog.showModal === "function") {
     transcriptDialog.showModal();
   }
+  restoreTranscriptDraft();
   if (transcriptInput) {
     transcriptInput.focus();
   }
@@ -520,6 +669,7 @@ function closeTranscriptDialog() {
   if (!transcriptDialog || !transcriptDialog.open) {
     return;
   }
+  abortTranscriptAnalysis();
   transcriptDialog.close();
   resetTranscriptDialog();
 }
@@ -929,21 +1079,42 @@ async function analyzeTranscript() {
   if (!state.projectId || !transcriptInput) {
     return;
   }
+  if (transcriptState.busy) {
+    return;
+  }
   const transcript = transcriptInput.value.trim();
   if (!transcript) {
     setTranscriptStatus("Paste a transcript to analyze.", true);
     return;
   }
+  if (!isNavigatorOnline()) {
+    setTranscriptStatus(
+      "You're offline. We'll keep your transcript so you can retry when connected.",
+      "offline",
+    );
+    return;
+  }
 
-  setTranscriptStatus("Analyzing transcript...");
+  setTranscriptStatus("Analyzing transcript...", "busy");
   setTranscriptBusy(true);
   resetTranscriptSuggestions();
+  abortTranscriptAnalysis();
+
+  const controller = new AbortController();
+  let didTimeout = false;
+  const timeoutId = window.setTimeout(() => {
+    didTimeout = true;
+    controller.abort();
+  }, TRANSCRIPT_ANALYSIS_TIMEOUT_MS);
+  transcriptState.analysisController = controller;
+  transcriptState.analysisTimeoutId = timeoutId;
 
   try {
     const data = await requestJSON(`/api/projects/${state.projectId}/transcript`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ transcript }),
+      signal: controller.signal,
     });
     renderTranscriptSuggestions(data.proposal || {});
     if (data.proposal) {
@@ -953,8 +1124,31 @@ async function analyzeTranscript() {
     }
   } catch (error) {
     console.warn("Transcript analysis failed", error);
-    setTranscriptStatus("Transcript analysis failed. Try again.", true);
+    if (didTimeout) {
+      setTranscriptStatus(
+        "Analysis timed out on a slow connection. Try again when ready.",
+        true,
+      );
+    } else if (controller.signal.aborted) {
+      if (isTranscriptDialogOpen()) {
+        setTranscriptStatus("Analysis canceled.");
+      }
+    } else if (!isNavigatorOnline()) {
+      setTranscriptStatus(
+        "Connection lost. We'll keep your transcript so you can retry.",
+        "offline",
+      );
+    } else {
+      setTranscriptStatus("Transcript analysis failed. Try again.", true);
+    }
   } finally {
+    if (transcriptState.analysisTimeoutId === timeoutId) {
+      window.clearTimeout(timeoutId);
+      transcriptState.analysisTimeoutId = null;
+    }
+    if (transcriptState.analysisController === controller) {
+      transcriptState.analysisController = null;
+    }
     setTranscriptBusy(false);
   }
 }
@@ -1032,6 +1226,7 @@ async function applyTranscriptUpdates() {
 
     await loadProject(state.projectId);
     setTranscriptStatus("Updates applied.");
+    clearTranscriptDraft();
     closeTranscriptDialog();
   } catch (error) {
     console.warn("Failed to apply transcript updates", error);
@@ -1877,10 +2072,20 @@ if (transcriptClear) {
       transcriptInput.value = "";
       transcriptInput.focus();
     }
+    clearTranscriptDraft();
     resetTranscriptSuggestions();
     setTranscriptStatus("");
   });
 }
+
+if (transcriptInput) {
+  transcriptInput.addEventListener("input", () => {
+    scheduleTranscriptDraftSave();
+  });
+}
+
+window.addEventListener("online", handleTranscriptNetworkChange);
+window.addEventListener("offline", handleTranscriptNetworkChange);
 
 if (recordStart) {
   recordStart.addEventListener("click", () => {
