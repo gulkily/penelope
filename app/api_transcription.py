@@ -12,15 +12,20 @@ from app.schemas import (
     UploadSessionResponse,
 )
 from app.transcription_constants import ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES
-from app.transcription_uploads import UploadSessionError, create_upload_session, store_chunk
+from app.transcription_uploads import (
+    UploadSessionError,
+    assemble_upload,
+    cleanup_upload,
+    create_upload_session,
+    store_chunk,
+)
 
 router = APIRouter()
 
 DEDALUS_TRANSCRIBE_URL = "https://api.dedaluslabs.ai/v1/audio/transcriptions"
 
 
-def _validate_file(upload: UploadFile, payload: bytes) -> None:
-    content_type = (upload.content_type or "").lower()
+def _validate_payload(content_type: str, payload: bytes) -> None:
     if content_type and content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported audio type")
     if len(payload) > MAX_UPLOAD_BYTES:
@@ -31,6 +36,16 @@ def _build_files(upload: UploadFile, payload: bytes) -> dict[str, tuple[str, byt
     filename = upload.filename or "recording"
     content_type = upload.content_type or "application/octet-stream"
     return {"file": (filename, payload, content_type)}
+
+
+def _build_files_from_payload(
+    payload: bytes,
+    filename: str | None,
+    content_type: str | None,
+) -> dict[str, tuple[str, bytes, str]]:
+    safe_name = filename or "recording"
+    safe_type = content_type or "application/octet-stream"
+    return {"file": (safe_name, payload, safe_type)}
 
 
 def _build_form(model: str, response_format: str) -> dict[str, str]:
@@ -49,10 +64,23 @@ async def transcribe_audio(
         raise HTTPException(status_code=500, detail="DEDALUS_API_KEY is not configured")
 
     payload = await file.read()
-    _validate_file(file, payload)
+    return await transcribe_audio_bytes(payload, file.filename, file.content_type)
+
+
+async def transcribe_audio_bytes(
+    payload: bytes,
+    filename: str | None,
+    content_type: str | None,
+) -> TranscriptionResponse:
+    safe_content_type = (content_type or "").lower()
+    _validate_payload(safe_content_type, payload)
+
+    api_key = os.getenv("DEDALUS_API_KEY", "").strip()
+    if not api_key:
+        raise HTTPException(status_code=500, detail="DEDALUS_API_KEY is not configured")
 
     headers = {"Authorization": f"Bearer {api_key}"}
-    files = _build_files(file, payload)
+    files = _build_files_from_payload(payload, filename, content_type)
     data = _build_form(model="openai/whisper-1", response_format="json")
 
     try:
@@ -108,6 +136,9 @@ async def upload_transcription_chunk(
     total_size: int | None = Form(None),
 ) -> UploadChunkResponse:
     payload = await chunk.read()
+    normalized_content_type = content_type or chunk.content_type
+    if normalized_content_type == "application/octet-stream":
+        normalized_content_type = None
     try:
         received_chunks, expected_chunks, status = store_chunk(
             upload_id,
@@ -115,7 +146,7 @@ async def upload_transcription_chunk(
             total_chunks=total_chunks,
             payload=payload,
             filename=filename,
-            content_type=content_type or chunk.content_type,
+            content_type=normalized_content_type,
             total_size=total_size,
         )
     except UploadSessionError as exc:
@@ -126,3 +157,14 @@ async def upload_transcription_chunk(
         received_chunks=received_chunks,
         total_chunks=expected_chunks,
     )
+
+
+@router.post("/transcriptions/uploads/{upload_id}/complete", response_model=TranscriptionResponse)
+async def complete_transcription_upload(upload_id: str) -> TranscriptionResponse:
+    try:
+        payload, filename, content_type = assemble_upload(upload_id)
+        response = await transcribe_audio_bytes(payload, filename, content_type)
+    except UploadSessionError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    cleanup_upload(upload_id)
+    return response

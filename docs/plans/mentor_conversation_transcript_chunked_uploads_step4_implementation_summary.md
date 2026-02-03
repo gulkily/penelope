@@ -7,3 +7,8 @@
 - Changes: Added upload session storage module with temp filesystem backing and session TTL cleanup; introduced upload session creation and chunk intake endpoints with chunk tracking responses.
 - Verification: Not run (manual: POST `/api/transcriptions/uploads` to get an upload id, then PUT a chunk to `/api/transcriptions/uploads/{id}/chunks` and confirm response status/received count).
 - Notes: Chunked upload completion/transcription wiring comes next.
+
+## Stage 3 – Upload completion + transcription reuse
+- Changes: Added transcription helper for raw audio bytes, wired chunked upload completion endpoint to reassemble audio and reuse existing transcription flow, and normalized content-type handling for chunk uploads.
+- Verification: Not run (manual: complete chunked upload then POST `/api/transcriptions/uploads/{id}/complete` and confirm transcript text response).
+- Notes: Cleanup runs after successful completion only.
