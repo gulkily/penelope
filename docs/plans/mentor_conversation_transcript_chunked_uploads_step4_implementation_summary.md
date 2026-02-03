@@ -17,3 +17,8 @@
 - Changes: Added chunked upload client with retry/backoff, progress messaging, and resumable session handling; wired transcript upload/record flows to choose chunked uploads for larger files and keep transcript draft updates on success.
 - Verification: Not run (manual: throttle network, upload a large audio file, observe progress/retry messaging, confirm transcript insertion).
 - Notes: Resume is per-dialog session; closing the dialog cancels pending uploads.
+
+## Stage 5 – Upload cancellation + offline messaging
+- Changes: Guarded resumable sessions by file match, refined offline messaging for single vs chunked uploads, and ensured upload cancellation/cleanup on dialog reset.
+- Verification: Not run (manual: start a chunked upload, toggle offline to pause, then retry; close dialog mid-upload to confirm cancel/reset).
+- Notes: Chunked resume requires the same file name and size.

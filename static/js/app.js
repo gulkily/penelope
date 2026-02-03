@@ -832,9 +832,10 @@ async function uploadAudioBlob(blob, filename) {
   transcriptState.uploadController = new AbortController();
   setUploadBusy(true);
   setUploadProgressStatus("Preparing upload...");
+  const useChunked = shouldUseChunkedUpload(blob);
 
   try {
-    const data = shouldUseChunkedUpload(blob)
+    const data = useChunked
       ? await uploadAudioChunked(blob, filename)
       : await uploadAudioSingle(blob, filename);
     if (data.text && transcriptInput) {
@@ -850,13 +851,18 @@ async function uploadAudioBlob(blob, filename) {
       resetUploadState();
       return;
     }
-    if (error?.message === "offline") {
-      transcriptState.uploadPaused = true;
-      transcriptState.uploadController = null;
-      setUploadProgressStatus(
-        "You're offline. Upload paused; retry when connected.",
-        true,
-      );
+    if (error?.message === "offline" || !isNavigatorOnline()) {
+      if (useChunked) {
+        transcriptState.uploadPaused = true;
+        transcriptState.uploadController = null;
+        setUploadProgressStatus(
+          "You're offline. Upload paused; retry when connected.",
+          true,
+        );
+      } else {
+        setUploadProgressStatus("You're offline. Upload failed.", true);
+        resetUploadState();
+      }
       return;
     }
     console.warn("Upload failed", error);
