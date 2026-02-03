@@ -42,6 +42,7 @@ single-off planning docs.
 - `item_created_dates_step3_development_plan.md`
 - `item_created_dates_step4_implementation_summary.md`
 - `load_testing_step1_solution_assessment.md`
+- `mentor_conversation_transcript_chunked_uploads_step1_solution_assessment.md`
 - `mentor_conversation_transcript_option_b_step1_solution_assessment.md`
 - `mentor_conversation_transcript_option_c_step1_solution_assessment.md`
 - `mentor_conversation_transcript_partial_upload_assessment.md`
