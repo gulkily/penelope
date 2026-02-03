@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -117,3 +118,22 @@ class TranscriptionResponse(BaseModel):
         le=100,
         description="Optional progress percentage for upload/transcription.",
     )
+
+
+class UploadSessionCreateRequest(BaseModel):
+    filename: str | None = Field(None, description="Original audio filename.")
+    content_type: str | None = Field(None, description="Audio MIME type.")
+    total_size: int | None = Field(None, ge=1, description="Total size in bytes.")
+
+
+class UploadSessionResponse(BaseModel):
+    upload_id: str = Field(..., description="Upload session identifier.")
+    chunk_size: int = Field(..., ge=1, description="Chunk size in bytes.")
+    expires_at: datetime = Field(..., description="Session expiration timestamp.")
+
+
+class UploadChunkResponse(BaseModel):
+    upload_id: str = Field(..., description="Upload session identifier.")
+    status: Literal["partial", "complete"] = Field(..., description="Upload status.")
+    received_chunks: int = Field(..., ge=0, description="Chunks received so far.")
+    total_chunks: int = Field(..., ge=1, description="Expected chunks for upload.")

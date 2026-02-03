@@ -6,21 +6,10 @@ import httpx
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from app.schemas import TranscriptionResponse
+from app.transcription_constants import ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES
 
 router = APIRouter()
 
-ALLOWED_MIME_TYPES = {
-    "audio/mpeg",
-    "audio/mp3",
-    "audio/mp4",
-    "audio/wav",
-    "audio/x-wav",
-    "audio/webm",
-    "audio/ogg",
-    "audio/aac",
-    "audio/flac",
-}
-MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 DEDALUS_TRANSCRIBE_URL = "https://api.dedaluslabs.ai/v1/audio/transcriptions"
 
 
