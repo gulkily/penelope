@@ -3,10 +3,16 @@ from __future__ import annotations
 import os
 
 import httpx
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, UploadFile
 
-from app.schemas import TranscriptionResponse
+from app.schemas import (
+    TranscriptionResponse,
+    UploadChunkResponse,
+    UploadSessionCreateRequest,
+    UploadSessionResponse,
+)
 from app.transcription_constants import ALLOWED_MIME_TYPES, MAX_UPLOAD_BYTES
+from app.transcription_uploads import UploadSessionError, create_upload_session, store_chunk
 
 router = APIRouter()
 
@@ -69,3 +75,54 @@ async def transcribe_audio(
         text = ""
 
     return TranscriptionResponse(text=text, status="complete", progress=100)
+
+
+@router.post("/transcriptions/uploads", response_model=UploadSessionResponse)
+async def create_transcription_upload_session(
+    payload: UploadSessionCreateRequest | None = None,
+) -> UploadSessionResponse:
+    request = payload or UploadSessionCreateRequest()
+    try:
+        session = create_upload_session(
+            filename=request.filename,
+            content_type=request.content_type,
+            total_size=request.total_size,
+        )
+    except UploadSessionError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return UploadSessionResponse(
+        upload_id=session.upload_id,
+        chunk_size=session.chunk_size,
+        expires_at=session.expires_at,
+    )
+
+
+@router.put("/transcriptions/uploads/{upload_id}/chunks", response_model=UploadChunkResponse)
+async def upload_transcription_chunk(
+    upload_id: str,
+    chunk: UploadFile = File(...),
+    index: int = Form(...),
+    total_chunks: int = Form(...),
+    filename: str | None = Form(None),
+    content_type: str | None = Form(None),
+    total_size: int | None = Form(None),
+) -> UploadChunkResponse:
+    payload = await chunk.read()
+    try:
+        received_chunks, expected_chunks, status = store_chunk(
+            upload_id,
+            index=index,
+            total_chunks=total_chunks,
+            payload=payload,
+            filename=filename,
+            content_type=content_type or chunk.content_type,
+            total_size=total_size,
+        )
+    except UploadSessionError as exc:
+        raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc
+    return UploadChunkResponse(
+        upload_id=upload_id,
+        status=status,
+        received_chunks=received_chunks,
+        total_chunks=expected_chunks,
+    )
