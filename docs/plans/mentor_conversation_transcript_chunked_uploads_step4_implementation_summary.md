@@ -32,3 +32,8 @@
 - Changes: Allowed additional common audio MIME types (m4a/3gpp) for uploads and surfaced server error detail for failed single uploads.
 - Verification: Not run (manual: upload an m4a file under 5MB and confirm upload succeeds; upload an unsupported type to confirm descriptive error).
 - Notes: None.
+
+## Stage 8 – Octet-stream fallback for uploads
+- Changes: Treated `application/octet-stream` as an unknown/acceptable content type for validation to avoid false “Unsupported audio type” errors in Chrome.
+- Verification: Not run (manual: upload from Chrome when content type resolves to octet-stream and confirm success).
+- Notes: None.

@@ -25,6 +25,13 @@ router = APIRouter()
 DEDALUS_TRANSCRIBE_URL = "https://api.dedaluslabs.ai/v1/audio/transcriptions"
 
 
+def _normalize_content_type(content_type: str | None) -> str:
+    normalized = (content_type or "").lower()
+    if normalized == "application/octet-stream":
+        return ""
+    return normalized
+
+
 def _validate_payload(content_type: str, payload: bytes) -> None:
     if content_type and content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported audio type")
@@ -72,7 +79,7 @@ async def transcribe_audio_bytes(
     filename: str | None,
     content_type: str | None,
 ) -> TranscriptionResponse:
-    safe_content_type = (content_type or "").lower()
+    safe_content_type = _normalize_content_type(content_type)
     _validate_payload(safe_content_type, payload)
 
     api_key = os.getenv("DEDALUS_API_KEY", "").strip()
