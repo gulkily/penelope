@@ -12,3 +12,8 @@
 - Changes: Added analysis timeout/abort handling, guarded duplicate submissions, and improved failure messaging for slow or dropped connections.
 - Verification: Not run (manual: throttle network and confirm timeout messaging and retry path).
 - Notes: Timeout set to 45 seconds.
+
+## Stage 4 – Compact audio playback controls
+- Changes: Sized transcript dialog audio players to an audio-appropriate height to remove the oversized playback area.
+- Verification: Not run (manual: open transcript dialog, upload/record audio, confirm controls are compact).
+- Notes: None.
