@@ -5,6 +5,10 @@ const DEFAULT_RESIDENCY_END = `${DEFAULT_RESIDENCY_YEAR}-01-31`;
 const TRANSCRIPT_ANALYSIS_TIMEOUT_MS = 45000;
 const TRANSCRIPT_DRAFT_SAVE_DELAY_MS = 400;
 const TRANSCRIPT_DRAFT_STORAGE_PREFIX = "transcriptDraft:";
+const TRANSCRIPTION_CHUNK_SIZE_FALLBACK = 5 * 1024 * 1024;
+const TRANSCRIPTION_CHUNK_THRESHOLD_BYTES = 5 * 1024 * 1024;
+const TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS = 3;
+const TRANSCRIPTION_UPLOAD_RETRY_DELAY_MS = 800;
 
 const state = {
   projectId: null,
@@ -110,6 +114,9 @@ const transcriptState = {
   meterData: null,
   uploadBusy: false,
   uploadProgress: 0,
+  uploadController: null,
+  uploadSession: null,
+  uploadPaused: false,
   analysisController: null,
   analysisTimeoutId: null,
   draftTimerId: null,
@@ -355,6 +362,7 @@ function resetTranscriptDialog() {
   resetTranscriptSuggestions();
   resetRecordingState();
   clearUploadPreview();
+  resetUploadState();
 }
 
 function setTranscriptBusy(isBusy) {
@@ -613,37 +621,247 @@ function setRecordingStatus(message, isError = false) {
   }
 }
 
+function setUploadProgressStatus(message, isError = false) {
+  setUploadStatus(message, isError);
+  setRecordingStatus(message, isError);
+}
+
+function resetUploadState() {
+  transcriptState.uploadSession = null;
+  transcriptState.uploadPaused = false;
+  transcriptState.uploadProgress = 0;
+  if (transcriptState.uploadController) {
+    transcriptState.uploadController.abort();
+    transcriptState.uploadController = null;
+  }
+  setUploadBusy(false);
+}
+
+function abortTranscriptUpload() {
+  if (transcriptState.uploadController) {
+    transcriptState.uploadController.abort();
+    transcriptState.uploadController = null;
+  }
+  transcriptState.uploadPaused = false;
+  transcriptState.uploadSession = null;
+}
+
+function shouldUseChunkedUpload(blob) {
+  return blob.size > TRANSCRIPTION_CHUNK_THRESHOLD_BYTES;
+}
+
+function delay(ms) {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function formatUploadProgress(received, total) {
+  if (!total) {
+    return "Uploading...";
+  }
+  const percent = Math.min(100, Math.round((received / total) * 100));
+  return `Uploading... ${percent}%`;
+}
+
+async function createTranscriptionUploadSession(blob, filename) {
+  const response = await fetch("/api/transcriptions/uploads", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    signal: transcriptState.uploadController?.signal,
+    body: JSON.stringify({
+      filename,
+      content_type: blob.type || null,
+      total_size: blob.size || null,
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Upload session failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function uploadChunkWithRetry({
+  uploadId,
+  chunk,
+  index,
+  totalChunks,
+  filename,
+  contentType,
+  totalSize,
+  controller,
+}) {
+  let attempt = 0;
+  while (attempt < TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS) {
+    attempt += 1;
+    try {
+      const formData = new FormData();
+      formData.append("chunk", chunk, filename);
+      formData.append("index", String(index));
+      formData.append("total_chunks", String(totalChunks));
+      if (filename) {
+        formData.append("filename", filename);
+      }
+      if (contentType) {
+        formData.append("content_type", contentType);
+      }
+      if (totalSize) {
+        formData.append("total_size", String(totalSize));
+      }
+      const response = await fetch(
+        `/api/transcriptions/uploads/${uploadId}/chunks`,
+        {
+          method: "PUT",
+          body: formData,
+          signal: controller?.signal,
+        },
+      );
+      if (!response.ok) {
+        throw new Error(`Chunk upload failed: ${response.status}`);
+      }
+      return response.json();
+    } catch (error) {
+      if (error?.name === "AbortError") {
+        throw error;
+      }
+      if (!isNavigatorOnline()) {
+        throw new Error("offline");
+      }
+      if (attempt >= TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS) {
+        throw error;
+      }
+      await delay(TRANSCRIPTION_UPLOAD_RETRY_DELAY_MS * attempt);
+    }
+  }
+  throw new Error("Chunk upload failed");
+}
+
+async function completeChunkedUpload(uploadId, controller) {
+  const response = await fetch(`/api/transcriptions/uploads/${uploadId}/complete`, {
+    method: "POST",
+    signal: controller?.signal,
+  });
+  if (!response.ok) {
+    throw new Error(`Completion failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function uploadAudioSingle(blob, filename) {
+  const formData = new FormData();
+  formData.append("file", blob, filename);
+  const response = await fetch("/api/transcriptions", {
+    method: "POST",
+    body: formData,
+    signal: transcriptState.uploadController?.signal,
+  });
+  if (!response.ok) {
+    throw new Error(`Upload failed: ${response.status}`);
+  }
+  return response.json();
+}
+
+async function uploadAudioChunked(blob, filename) {
+  const resumeSession =
+    transcriptState.uploadPaused && transcriptState.uploadSession;
+  let session = transcriptState.uploadSession;
+  if (resumeSession) {
+    const matchesFile =
+      session.filename === filename && session.totalSize === blob.size;
+    if (!matchesFile) {
+      transcriptState.uploadSession = null;
+      transcriptState.uploadPaused = false;
+      session = null;
+    }
+  }
+
+  if (!resumeSession) {
+    const created = await createTranscriptionUploadSession(blob, filename);
+    const chunkSize = created.chunk_size || TRANSCRIPTION_CHUNK_SIZE_FALLBACK;
+    const totalChunks = Math.max(1, Math.ceil(blob.size / chunkSize));
+    session = {
+      uploadId: created.upload_id,
+      chunkSize,
+      totalChunks,
+      nextIndex: 0,
+      filename,
+      contentType: blob.type || null,
+      totalSize: blob.size,
+    };
+    transcriptState.uploadSession = session;
+  }
+
+  transcriptState.uploadPaused = false;
+  for (let index = session.nextIndex; index < session.totalChunks; index += 1) {
+    if (!isNavigatorOnline()) {
+      throw new Error("offline");
+    }
+    const start = index * session.chunkSize;
+    const end = Math.min(blob.size, start + session.chunkSize);
+    const chunk = blob.slice(start, end);
+    const result = await uploadChunkWithRetry({
+      uploadId: session.uploadId,
+      chunk,
+      index,
+      totalChunks: session.totalChunks,
+      filename: session.filename,
+      contentType: session.contentType,
+      totalSize: session.totalSize,
+      controller: transcriptState.uploadController,
+    });
+    session.nextIndex = index + 1;
+    transcriptState.uploadProgress = result.received_chunks || session.nextIndex;
+    setUploadProgressStatus(
+      formatUploadProgress(transcriptState.uploadProgress, session.totalChunks),
+    );
+  }
+
+  const response = await completeChunkedUpload(
+    session.uploadId,
+    transcriptState.uploadController,
+  );
+  transcriptState.uploadSession = null;
+  return response;
+}
+
 async function uploadAudioBlob(blob, filename) {
   if (!blob) {
     return;
   }
+  if (transcriptState.uploadBusy) {
+    abortTranscriptUpload();
+  }
+  transcriptState.uploadController = new AbortController();
   setUploadBusy(true);
-  setUploadStatus("Uploading...");
-  setRecordingStatus("Uploading...");
-
-  const formData = new FormData();
-  formData.append("file", blob, filename);
+  setUploadProgressStatus("Preparing upload...");
 
   try {
-    const response = await fetch("/api/transcriptions", {
-      method: "POST",
-      body: formData,
-    });
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.status}`);
-    }
-    const data = await response.json();
+    const data = shouldUseChunkedUpload(blob)
+      ? await uploadAudioChunked(blob, filename)
+      : await uploadAudioSingle(blob, filename);
     if (data.text && transcriptInput) {
       transcriptInput.value = data.text;
       autoGrow(transcriptInput);
       saveTranscriptDraft(transcriptInput.value);
     }
-    setUploadStatus("Transcript ready.");
-    setRecordingStatus("Transcript ready.");
+    setUploadProgressStatus("Transcript ready.");
+    resetUploadState();
   } catch (error) {
+    if (error?.name === "AbortError") {
+      setUploadProgressStatus("Upload canceled.");
+      resetUploadState();
+      return;
+    }
+    if (error?.message === "offline") {
+      transcriptState.uploadPaused = true;
+      transcriptState.uploadController = null;
+      setUploadProgressStatus(
+        "You're offline. Upload paused; retry when connected.",
+        true,
+      );
+      return;
+    }
     console.warn("Upload failed", error);
-    setUploadStatus("Upload failed. Try again.", true);
-    setRecordingStatus("Upload failed.", true);
+    setUploadProgressStatus("Upload failed. Try again.", true);
+    resetUploadState();
   } finally {
     setUploadBusy(false);
   }
@@ -670,6 +888,7 @@ function closeTranscriptDialog() {
     return;
   }
   abortTranscriptAnalysis();
+  abortTranscriptUpload();
   transcriptDialog.close();
   resetTranscriptDialog();
 }

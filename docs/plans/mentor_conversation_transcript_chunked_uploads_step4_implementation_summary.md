@@ -12,3 +12,8 @@
 - Changes: Added transcription helper for raw audio bytes, wired chunked upload completion endpoint to reassemble audio and reuse existing transcription flow, and normalized content-type handling for chunk uploads.
 - Verification: Not run (manual: complete chunked upload then POST `/api/transcriptions/uploads/{id}/complete` and confirm transcript text response).
 - Notes: Cleanup runs after successful completion only.
+
+## Stage 4 – Client chunked uploads + dialog integration
+- Changes: Added chunked upload client with retry/backoff, progress messaging, and resumable session handling; wired transcript upload/record flows to choose chunked uploads for larger files and keep transcript draft updates on success.
+- Verification: Not run (manual: throttle network, upload a large audio file, observe progress/retry messaging, confirm transcript insertion).
+- Notes: Resume is per-dialog session; closing the dialog cancels pending uploads.
