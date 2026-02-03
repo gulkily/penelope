@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import logging
 import os
 
 import httpx
@@ -22,7 +21,6 @@ from app.transcription_uploads import (
 )
 
 router = APIRouter()
-logger = logging.getLogger(__name__)
 
 DEDALUS_TRANSCRIBE_URL = "https://api.dedaluslabs.ai/v1/audio/transcriptions"
 
@@ -75,14 +73,6 @@ async def transcribe_audio(
         raise HTTPException(status_code=500, detail="DEDALUS_API_KEY is not configured")
 
     payload = await file.read()
-    logger.info(
-        "Transcription upload received",
-        extra={
-            "filename": file.filename,
-            "content_type": file.content_type,
-            "size_bytes": len(payload),
-        },
-    )
     return await transcribe_audio_bytes(payload, file.filename, file.content_type)
 
 
@@ -91,14 +81,6 @@ async def transcribe_audio_bytes(
     filename: str | None,
     content_type: str | None,
 ) -> TranscriptionResponse:
-    logger.info(
-        "Transcription upload normalized",
-        extra={
-            "filename": filename,
-            "content_type": content_type,
-            "size_bytes": len(payload),
-        },
-    )
     safe_content_type = _normalize_content_type(content_type)
     _validate_payload(safe_content_type, payload)
 
@@ -137,14 +119,6 @@ async def create_transcription_upload_session(
     payload: UploadSessionCreateRequest | None = None,
 ) -> UploadSessionResponse:
     request = payload or UploadSessionCreateRequest()
-    logger.info(
-        "Transcription upload session create",
-        extra={
-            "filename": request.filename,
-            "content_type": request.content_type,
-            "total_size": request.total_size,
-        },
-    )
     try:
         session = create_upload_session(
             filename=request.filename,
@@ -171,17 +145,6 @@ async def upload_transcription_chunk(
     total_size: int | None = Form(None),
 ) -> UploadChunkResponse:
     payload = await chunk.read()
-    logger.info(
-        "Transcription upload chunk received",
-        extra={
-            "upload_id": upload_id,
-            "index": index,
-            "total_chunks": total_chunks,
-            "filename": filename or chunk.filename,
-            "content_type": content_type or chunk.content_type,
-            "size_bytes": len(payload),
-        },
-    )
     normalized_content_type = content_type or chunk.content_type
     if normalized_content_type == "application/octet-stream":
         normalized_content_type = None
@@ -209,15 +172,6 @@ async def upload_transcription_chunk(
 async def complete_transcription_upload(upload_id: str) -> TranscriptionResponse:
     try:
         payload, filename, content_type = assemble_upload(upload_id)
-        logger.info(
-            "Transcription upload complete",
-            extra={
-                "upload_id": upload_id,
-                "filename": filename,
-                "content_type": content_type,
-                "size_bytes": len(payload),
-            },
-        )
         response = await transcribe_audio_bytes(payload, filename, content_type)
     except UploadSessionError as exc:
         raise HTTPException(status_code=exc.status_code, detail=exc.detail) from exc

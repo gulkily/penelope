@@ -47,3 +47,13 @@
 - Changes: Normalized content types by stripping codec parameters and persisting normalized MIME values for chunked sessions; expanded allowed list to include common video-wrapped audio types.
 - Verification: Not run (manual: upload the same audio file in Chrome and confirm the upload succeeds).
 - Notes: Accepts `audio/*` with codec parameters like `audio/webm;codecs=opus`.
+
+## Stage 11 – Remove debug logging + capture learnings
+- Changes: Removed temporary upload debug logging; documented Chrome-specific MIME behavior and normalization approach.
+- Verification: Not run (manual: confirm upload still succeeds without extra logs).
+- Notes: None.
+
+## Debugging learnings
+- Chrome may send audio as `video/webm` or `video/mp4` and often appends codec parameters (e.g., `audio/webm;codecs=opus`), which must be normalized before validation.
+- Some browsers fall back to `application/octet-stream`; treat it as unknown/acceptable rather than rejecting outright.
+- Firefox sent acceptable audio MIME types with no extra parameters during this issue.
