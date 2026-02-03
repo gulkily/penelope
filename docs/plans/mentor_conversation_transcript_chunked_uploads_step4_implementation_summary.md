@@ -37,3 +37,8 @@
 - Changes: Treated `application/octet-stream` as an unknown/acceptable content type for validation to avoid false “Unsupported audio type” errors in Chrome.
 - Verification: Not run (manual: upload from Chrome when content type resolves to octet-stream and confirm success).
 - Notes: None.
+
+## Stage 9 – Upload logging for diagnosis
+- Changes: Added structured logging for transcription upload requests, chunk uploads, and completion to capture filename/content type/size.
+- Verification: Not run (manual: trigger an upload and confirm logs show request metadata).
+- Notes: Logs rely on server logging configuration to surface `extra` fields.
