@@ -665,6 +665,18 @@ function formatUploadProgress(received, total) {
   return `Uploading... ${percent}%`;
 }
 
+async function readErrorDetail(response) {
+  try {
+    const data = await response.json();
+    if (data?.detail) {
+      return String(data.detail);
+    }
+  } catch (error) {
+    return "";
+  }
+  return "";
+}
+
 async function createTranscriptionUploadSession(blob, filename) {
   const response = await fetch("/api/transcriptions/uploads", {
     method: "POST",
@@ -757,7 +769,11 @@ async function uploadAudioSingle(blob, filename) {
     signal: transcriptState.uploadController?.signal,
   });
   if (!response.ok) {
-    throw new Error(`Upload failed: ${response.status}`);
+    const detail = await readErrorDetail(response);
+    const message = detail
+      ? `Upload failed: ${detail}`
+      : `Upload failed: ${response.status}`;
+    throw new Error(message);
   }
   return response.json();
 }

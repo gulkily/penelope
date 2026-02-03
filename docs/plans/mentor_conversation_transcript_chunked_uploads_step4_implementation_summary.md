@@ -27,3 +27,8 @@
 - Changes: Added disabled styling for link buttons and surfaced a tooltip on the transcript button when no resident is selected.
 - Verification: Not run (manual: clear selection/await load, confirm button is visibly disabled and tooltip appears on hover).
 - Notes: None.
+
+## Stage 7 – Broader MIME support + error detail
+- Changes: Allowed additional common audio MIME types (m4a/3gpp) for uploads and surfaced server error detail for failed single uploads.
+- Verification: Not run (manual: upload an m4a file under 5MB and confirm upload succeeds; upload an unsupported type to confirm descriptive error).
+- Notes: None.
