@@ -29,6 +29,8 @@ DEDALUS_TRANSCRIBE_URL = "https://api.dedaluslabs.ai/v1/audio/transcriptions"
 
 def _normalize_content_type(content_type: str | None) -> str:
     normalized = (content_type or "").lower()
+    if ";" in normalized:
+        normalized = normalized.split(";", 1)[0].strip()
     if normalized == "application/octet-stream":
         return ""
     return normalized
@@ -105,7 +107,7 @@ async def transcribe_audio_bytes(
         raise HTTPException(status_code=500, detail="DEDALUS_API_KEY is not configured")
 
     headers = {"Authorization": f"Bearer {api_key}"}
-    files = _build_files_from_payload(payload, filename, content_type)
+    files = _build_files_from_payload(payload, filename, safe_content_type or None)
     data = _build_form(model="openai/whisper-1", response_format="json")
 
     try:

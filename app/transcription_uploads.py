@@ -81,9 +81,20 @@ def _save_meta(upload_id: str, meta: dict) -> None:
     meta_path.write_text(json.dumps(meta, indent=2, sort_keys=True), encoding="utf-8")
 
 
-def _validate_content_type(content_type: str | None) -> None:
-    if content_type and content_type.lower() not in ALLOWED_MIME_TYPES:
+def _normalize_content_type(content_type: str | None) -> str:
+    normalized = (content_type or "").lower()
+    if ";" in normalized:
+        normalized = normalized.split(";", 1)[0].strip()
+    if normalized == "application/octet-stream":
+        return ""
+    return normalized
+
+
+def _validate_content_type(content_type: str | None) -> str:
+    normalized = _normalize_content_type(content_type)
+    if normalized and normalized not in ALLOWED_MIME_TYPES:
         raise UploadSessionError(status_code=400, detail="Unsupported audio type")
+    return normalized
 
 
 def _validate_total_size(total_size: int | None) -> None:
@@ -124,7 +135,7 @@ def create_upload_session(
     total_size: int | None = None,
     chunk_size: int = DEFAULT_CHUNK_SIZE,
 ) -> UploadSession:
-    _validate_content_type(content_type)
+    normalized_type = _validate_content_type(content_type)
     _validate_total_size(total_size)
     prune_expired_uploads()
 
@@ -144,7 +155,7 @@ def create_upload_session(
         "total_chunks": None,
         "received_bytes": 0,
         "filename": filename,
-        "content_type": content_type,
+        "content_type": normalized_type or None,
         "total_size": total_size,
     }
     _save_meta(upload_id, meta)
@@ -179,8 +190,8 @@ def store_chunk(
     if filename and not meta.get("filename"):
         meta["filename"] = filename
     if content_type and not meta.get("content_type"):
-        _validate_content_type(content_type)
-        meta["content_type"] = content_type
+        normalized_type = _validate_content_type(content_type)
+        meta["content_type"] = normalized_type or None
     if total_size and not meta.get("total_size"):
         _validate_total_size(total_size)
         meta["total_size"] = total_size
