@@ -154,6 +154,9 @@ function setInteractivity(enabled) {
   toggleReorderControls(enabled);
   if (transcriptOpen) {
     transcriptOpen.disabled = !enabled;
+    transcriptOpen.title = enabled
+      ? ""
+      : "Select a resident to add updates.";
   }
 }
 

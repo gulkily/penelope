@@ -22,3 +22,8 @@
 - Changes: Guarded resumable sessions by file match, refined offline messaging for single vs chunked uploads, and ensured upload cancellation/cleanup on dialog reset.
 - Verification: Not run (manual: start a chunked upload, toggle offline to pause, then retry; close dialog mid-upload to confirm cancel/reset).
 - Notes: Chunked resume requires the same file name and size.
+
+## Stage 6 – Disabled transcript button affordance
+- Changes: Added disabled styling for link buttons and surfaced a tooltip on the transcript button when no resident is selected.
+- Verification: Not run (manual: clear selection/await load, confirm button is visibly disabled and tooltip appears on hover).
+- Notes: None.
