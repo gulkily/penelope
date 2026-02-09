@@ -23,6 +23,8 @@ Feedback from Daniel
 
 transcripts
 	- store transcript in database for later review
+		- use supabase for storing
+		- convert to mp3 
 	- allow recording of session in-browser
 		- show audio indicator
 		- transcribe session
