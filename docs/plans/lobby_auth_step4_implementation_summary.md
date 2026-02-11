@@ -12,3 +12,8 @@
 - Changes: Added `/api/auth` router for registration, verification, lobby listing, approvals, username updates, session restore, and current-user lookup. Added auth request/response schemas.
 - Verification: Not run (needs app running to exercise endpoints).
 - Notes: Registration issues a 14-day code and challenge; approvals can optionally link a key to the approver account.
+
+## Stage 4 – Route Gating + Session Reset Page
+- Changes: Added auth middleware and lobby/reset routes in `app/main.py`, plus a session reset template and JS to restore cookies.
+- Verification: Not run (requires manual browser check).
+- Notes: Unauthorized API calls return 401; browser routes redirect to `/session/reset`.
