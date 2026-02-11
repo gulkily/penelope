@@ -18,6 +18,7 @@ from app.db_auth import (
     add_public_key,
     approve_lobby_request,
     append_ledger_event,
+    count_accounts,
     create_account,
     create_lobby_request,
     get_account,
@@ -64,4 +65,5 @@ __all__ = [
     "link_key_to_account",
     "update_username",
     "append_ledger_event",
+    "count_accounts",
 ]

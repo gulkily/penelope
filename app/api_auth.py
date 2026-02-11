@@ -111,6 +111,24 @@ def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
         subject_account_id=None,
         metadata={"request_id": request_row["request_id"]},
     )
+    if db.count_accounts() == 0:
+        approved = db.approve_lobby_request(
+            request_id=request_row["request_id"],
+            approved_by_account_id=None,
+            link_to_account_id=None,
+        )
+        db.append_ledger_event(
+            "lobby_bootstrap_approved",
+            actor_account_id=None,
+            subject_account_id=approved.get("account_id"),
+            metadata={"request_id": request_row["request_id"]},
+        )
+        return AuthStatusResponse(
+            request_id=request_row["request_id"],
+            status="approved",
+            code=None,
+            fingerprint=public_key_row["fingerprint"],
+        )
     return AuthStatusResponse(
         request_id=request_row["request_id"],
         status=request_row["status"],

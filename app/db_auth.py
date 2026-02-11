@@ -48,6 +48,12 @@ def update_username(account_id: int, new_username: str) -> dict:
         return get_account(account_id)
 
 
+def count_accounts() -> int:
+    with connect() as conn:
+        row = conn.execute("SELECT COUNT(*) AS count FROM accounts").fetchone()
+        return int(row["count"]) if row else 0
+
+
 def add_public_key(
     account_id: int | None,
     public_key: str,
@@ -174,7 +180,7 @@ def link_key_to_account(public_key_id: int, account_id: int) -> None:
 
 def approve_lobby_request(
     request_id: str,
-    approved_by_account_id: int,
+    approved_by_account_id: int | None,
     link_to_account_id: int | None,
 ) -> dict:
     with connect() as conn:

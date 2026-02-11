@@ -52,3 +52,8 @@
 - Changes: Lobby now attempts session restore when a keypair exists but no active request id is stored.
 - Verification: Not run.
 - Notes: Helps approved users recover without re-registering.
+
+## Stage 12 – Bootstrap Approval
+- Changes: Added account counting and bootstrap auto-approval when no accounts exist yet.
+- Verification: Not run.
+- Notes: First verified requester is auto-approved to avoid lockout.
