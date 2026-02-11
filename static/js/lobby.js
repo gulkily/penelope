@@ -26,6 +26,7 @@ const elements = {
 
 const textEncoder = new TextEncoder();
 let statusPoller = null;
+let currentUsername = "";
 
 function bufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -286,8 +287,8 @@ async function loadApprovals() {
   }
   const data = await response.json();
   elements.approvalPanel.hidden = false;
-  renderApprovalEntries(data.entries || []);
   await loadCurrentUser();
+  renderApprovalEntries(data.entries || []);
 }
 
 async function loadCurrentUser() {
@@ -297,7 +298,8 @@ async function loadCurrentUser() {
   }
   const data = await response.json();
   if (data.account && elements.usernameUpdate) {
-    elements.usernameUpdate.value = data.account.username || "";
+    currentUsername = data.account.username || "";
+    elements.usernameUpdate.value = currentUsername;
   }
   if (elements.requestPanel) {
     elements.requestPanel.hidden = true;
@@ -339,12 +341,6 @@ function renderApprovalEntries(entries) {
     approveButton.textContent = "Approve";
     approveButton.addEventListener("click", () => handleDecision(entry.request_id, false));
 
-    const linkButton = document.createElement("button");
-    linkButton.className = "link-button";
-    linkButton.type = "button";
-    linkButton.textContent = "Approve + link to me";
-    linkButton.addEventListener("click", () => handleDecision(entry.request_id, true));
-
     const rejectButton = document.createElement("button");
     rejectButton.className = "link-button danger";
     rejectButton.type = "button";
@@ -352,7 +348,17 @@ function renderApprovalEntries(entries) {
     rejectButton.addEventListener("click", () => handleReject(entry.request_id));
 
     actions.appendChild(approveButton);
-    actions.appendChild(linkButton);
+    if (
+      currentUsername.trim() &&
+      currentUsername.trim() === (entry.requested_username || "").trim()
+    ) {
+      const linkButton = document.createElement("button");
+      linkButton.className = "link-button";
+      linkButton.type = "button";
+      linkButton.textContent = "Approve + link to me";
+      linkButton.addEventListener("click", () => handleDecision(entry.request_id, true));
+      actions.appendChild(linkButton);
+    }
     actions.appendChild(rejectButton);
 
     card.appendChild(header);

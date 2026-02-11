@@ -82,3 +82,8 @@
 - Changes: Enter key now triggers the single action buttons for lobby username inputs.
 - Verification: Not run.
 - Notes: Applies to request access and display name update fields.
+
+## Stage 18 – Conditional Link Button
+- Changes: "Approve + link to me" only renders when the pending username matches the current user name.
+- Verification: Not run.
+- Notes: Comparison uses trimmed, case-sensitive equality.
