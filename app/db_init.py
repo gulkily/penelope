@@ -55,6 +55,85 @@ def init_db() -> None:
             ON progress_history (project_id, recorded_at, id)
             """
         )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS accounts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS public_keys (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                account_id INTEGER,
+                public_key TEXT NOT NULL,
+                public_key_format TEXT NOT NULL,
+                fingerprint TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS lobby_requests (
+                request_id TEXT PRIMARY KEY,
+                public_key_id INTEGER NOT NULL,
+                requested_username TEXT NOT NULL,
+                code TEXT NOT NULL,
+                status TEXT NOT NULL,
+                requested_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                challenge TEXT NOT NULL,
+                verified_at TEXT,
+                account_id INTEGER,
+                approved_by INTEGER,
+                approved_at TEXT,
+                rejected_by INTEGER,
+                rejected_at TEXT,
+                FOREIGN KEY(public_key_id) REFERENCES public_keys(id),
+                FOREIGN KEY(account_id) REFERENCES accounts(id),
+                FOREIGN KEY(approved_by) REFERENCES accounts(id),
+                FOREIGN KEY(rejected_by) REFERENCES accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS ledger_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                event_type TEXT NOT NULL,
+                actor_account_id INTEGER,
+                subject_account_id INTEGER,
+                metadata TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(actor_account_id) REFERENCES accounts(id),
+                FOREIGN KEY(subject_account_id) REFERENCES accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_public_keys_fingerprint
+            ON public_keys (fingerprint)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_lobby_requests_status
+            ON lobby_requests (status, requested_at)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_ledger_events_created
+            ON ledger_events (created_at)
+            """
+        )
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
         _ensure_column(
             conn,
@@ -73,6 +152,31 @@ def init_db() -> None:
         _ensure_column(conn, "projects", "summary", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "items", "sort_order", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "items", "created_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "accounts", "username", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "accounts", "created_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "accounts", "updated_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "public_keys", "public_key", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "public_keys", "public_key_format", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "public_keys", "fingerprint", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "public_keys", "created_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "public_keys", "account_id", "INTEGER")
+        _ensure_column(conn, "lobby_requests", "requested_username", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "code", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "status", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "requested_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "expires_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "challenge", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "verified_at", "TEXT")
+        _ensure_column(conn, "lobby_requests", "account_id", "INTEGER")
+        _ensure_column(conn, "lobby_requests", "approved_by", "INTEGER")
+        _ensure_column(conn, "lobby_requests", "approved_at", "TEXT")
+        _ensure_column(conn, "lobby_requests", "rejected_by", "INTEGER")
+        _ensure_column(conn, "lobby_requests", "rejected_at", "TEXT")
+        _ensure_column(conn, "ledger_events", "event_type", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "ledger_events", "actor_account_id", "INTEGER")
+        _ensure_column(conn, "ledger_events", "subject_account_id", "INTEGER")
+        _ensure_column(conn, "ledger_events", "metadata", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "ledger_events", "created_at", "TEXT NOT NULL DEFAULT ''")
         _seed_if_empty(conn)
         _backfill_item_order(conn)
 
