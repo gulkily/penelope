@@ -102,3 +102,8 @@
 - Changes: Added logout button to the approvals header so it remains visible after the request panel hides.
 - Verification: Not run.
 - Notes: Prevents the logout button from disappearing for signed-in users.
+
+## Stage 22 – Remove Logout From Request Panel
+- Changes: Removed the logout button from the Request Access header.
+- Verification: Not run.
+- Notes: Logout remains available in the approvals header for signed-in users.
