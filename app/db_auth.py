@@ -66,6 +66,11 @@ def add_public_key(
                     "UPDATE public_keys SET account_id = ? WHERE id = ?",
                     (account_id, existing["id"]),
                 )
+            if not existing["public_key_format"]:
+                conn.execute(
+                    "UPDATE public_keys SET public_key_format = ? WHERE id = ?",
+                    (public_key_format, existing["id"]),
+                )
             return _row_to_dict(existing)
 
         cursor = conn.execute(

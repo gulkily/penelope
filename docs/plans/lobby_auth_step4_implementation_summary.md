@@ -42,3 +42,8 @@
 - Changes: Improved lobby status polling messages for verifying/pending/approved/rejected states.
 - Verification: Not run.
 - Notes: Keeps lobby status clearer while awaiting approval.
+
+## Stage 10 – Public Key Format Backfill
+- Changes: Updated public key insert to fill missing `public_key_format` on existing rows.
+- Verification: Not run.
+- Notes: Avoids empty format values on repeated registrations.
