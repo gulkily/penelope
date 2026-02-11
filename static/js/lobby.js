@@ -11,6 +11,7 @@ const elements = {
   usernameInput: document.getElementById("username-input"),
   requestButton: document.getElementById("request-access"),
   requestMessage: document.getElementById("request-message"),
+  requestPanel: document.getElementById("request-panel"),
   lobbyStatus: document.getElementById("lobby-status"),
   statusText: document.getElementById("status-text"),
   statusCode: document.getElementById("status-code"),
@@ -209,6 +210,9 @@ async function fetchStatus() {
     if (meResponse.ok) {
       clearPendingRequest();
       stopStatusPolling();
+      if (elements.requestPanel) {
+        elements.requestPanel.hidden = true;
+      }
       updateLobbyStatus(
         "approved",
         null,
@@ -294,6 +298,9 @@ async function loadCurrentUser() {
   const data = await response.json();
   if (data.account && elements.usernameUpdate) {
     elements.usernameUpdate.value = data.account.username || "";
+  }
+  if (elements.requestPanel) {
+    elements.requestPanel.hidden = true;
   }
 }
 

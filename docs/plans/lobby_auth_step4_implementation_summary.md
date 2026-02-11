@@ -72,3 +72,8 @@
 - Changes: Lobby status polling now detects existing sessions and clears stale request ids instead of restoring and redirecting.
 - Verification: Not run.
 - Notes: Visiting `/lobby` no longer bounces to `/` once signed in.
+
+## Stage 16 – Hide Lobby Request Panel When Signed In
+- Changes: Lobby page now hides the request panel once a logged-in user is detected.
+- Verification: Not run.
+- Notes: Keeps the lobby view focused on approvals for authenticated users.
