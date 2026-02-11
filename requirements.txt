@@ -9,3 +9,4 @@ dedalus-labs
 python-dotenv
 httpx
 python-multipart
+cryptography
