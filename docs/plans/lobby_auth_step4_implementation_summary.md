@@ -62,3 +62,8 @@
 - Changes: Read newly inserted auth rows using the same DB connection to avoid missing data before commit.
 - Verification: Not run.
 - Notes: Fixes initial registration KeyError on first attempt.
+
+## Stage 14 – Lobby Link + Waiting Indicator
+- Changes: Added lobby link to main nav areas with a badge showing pending lobby count, plus a polling script. Stopped auto-redirect from lobby by removing auto-restore on load.
+- Verification: Not run.
+- Notes: `/lobby` now stays accessible for approved users.
