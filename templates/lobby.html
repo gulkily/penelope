@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Lobby · North Star Dashboard</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <script src="/static/js/theme.js" defer></script>
+    <script src="/static/js/lobby.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      <section class="card card-compact">
+        <header class="page-header">
+          <div>
+            <p class="page-title">Lobby</p>
+            <h1>Request Access</h1>
+          </div>
+        </header>
+        <div class="field">
+          <label class="field-label" for="username-input">Display name</label>
+          <input
+            id="username-input"
+            class="field-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Enter a name to show in the lobby"
+          />
+        </div>
+        <div class="link-button-group">
+          <button class="link-button" type="button" id="request-access">
+            Generate keypair + Request access
+          </button>
+        </div>
+        <p class="helper-text" id="request-message" hidden></p>
+      </section>
+
+      <section class="card card-compact" id="lobby-status" hidden>
+        <h2>Lobby Status</h2>
+        <div class="status-grid">
+          <div>
+            <p class="field-label">Status</p>
+            <p id="status-text">Pending</p>
+          </div>
+          <div>
+            <p class="field-label">Lobby code</p>
+            <p class="code" id="status-code">------</p>
+          </div>
+          <div>
+            <p class="field-label">Fingerprint</p>
+            <p id="status-fingerprint" class="mono"></p>
+          </div>
+        </div>
+        <p class="helper-text" id="status-message"></p>
+      </section>
+
+      <section class="card" id="approval-panel" hidden>
+        <header class="page-header">
+          <div>
+            <p class="page-title">Approvals</p>
+            <h2>Waiting Room</h2>
+          </div>
+        </header>
+        <div class="field">
+          <label class="field-label" for="username-update">Update your display name</label>
+          <input
+            id="username-update"
+            class="field-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Enter a new display name"
+          />
+          <div class="link-button-group">
+            <button class="link-button" type="button" id="username-save">
+              Save display name
+            </button>
+          </div>
+          <p class="helper-text" id="username-message" hidden></p>
+        </div>
+        <div id="approval-list" class="stack"></div>
+      </section>
+    </main>
+  </body>
+</html>

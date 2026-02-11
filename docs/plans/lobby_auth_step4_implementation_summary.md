@@ -17,3 +17,8 @@
 - Changes: Added auth middleware and lobby/reset routes in `app/main.py`, plus a session reset template and JS to restore cookies.
 - Verification: Not run (requires manual browser check).
 - Notes: Unauthorized API calls return 401; browser routes redirect to `/session/reset`.
+
+## Stage 5 – Lobby UI + Approval UI
+- Changes: Added lobby template and client script for key generation, registration, status polling, approvals, and username updates. Extended main styles for lobby layout.
+- Verification: Not run (requires manual browser check).
+- Notes: Lobby auto-restores session when approval arrives; approvers can optionally link requests to themselves.
