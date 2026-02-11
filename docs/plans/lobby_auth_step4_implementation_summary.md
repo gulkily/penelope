@@ -57,3 +57,8 @@
 - Changes: Added account counting and bootstrap auto-approval when no accounts exist yet.
 - Verification: Not run.
 - Notes: First verified requester is auto-approved to avoid lockout.
+
+## Stage 13 – Fix First-Request Insert Reads
+- Changes: Read newly inserted auth rows using the same DB connection to avoid missing data before commit.
+- Verification: Not run.
+- Notes: Fixes initial registration KeyError on first attempt.

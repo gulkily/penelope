@@ -26,7 +26,11 @@ def create_account(initial_username: str) -> dict:
             (initial_username, now, now),
         )
         account_id = cursor.lastrowid
-        return get_account(account_id)
+        row = conn.execute(
+            "SELECT * FROM accounts WHERE id = ?",
+            (account_id,),
+        ).fetchone()
+        return _row_to_dict(row)
 
 
 def get_account(account_id: int) -> dict:
@@ -87,7 +91,11 @@ def add_public_key(
             (account_id, public_key, public_key_format, fingerprint, now),
         )
         public_key_id = cursor.lastrowid
-        return get_public_key(public_key_id)
+        row = conn.execute(
+            "SELECT * FROM public_keys WHERE id = ?",
+            (public_key_id,),
+        ).fetchone()
+        return _row_to_dict(row)
 
 
 def get_public_key(public_key_id: int) -> dict:
@@ -143,7 +151,11 @@ def create_lobby_request(
                 challenge,
             ),
         )
-    return get_lobby_request(request_id)
+        row = conn.execute(
+            "SELECT * FROM lobby_requests WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+        return _row_to_dict(row)
 
 
 def get_lobby_request(request_id: str) -> dict:
