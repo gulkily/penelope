@@ -37,3 +37,8 @@
 - Changes: Added input validation for unsupported public key formats and signature verification errors.
 - Verification: Not run.
 - Notes: Prevents 500s on malformed auth payloads.
+
+## Stage 9 – Lobby Status Messaging
+- Changes: Improved lobby status polling messages for verifying/pending/approved/rejected states.
+- Verification: Not run.
+- Notes: Keeps lobby status clearer while awaiting approval.

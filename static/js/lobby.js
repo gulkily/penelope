@@ -192,7 +192,17 @@ async function fetchStatus() {
     return;
   }
   const data = await response.json();
-  updateLobbyStatus(data.status, data.code, data.fingerprint, "");
+  let message = "";
+  if (data.status === "verifying") {
+    message = "Verifying key ownership...";
+  } else if (data.status === "pending") {
+    message = "Waiting for approval...";
+  } else if (data.status === "approved") {
+    message = "Approved. Restoring session...";
+  } else if (data.status === "rejected") {
+    message = "Access was rejected.";
+  }
+  updateLobbyStatus(data.status, data.code, data.fingerprint, message);
 
   if (data.status === "approved") {
     await restoreSession();
