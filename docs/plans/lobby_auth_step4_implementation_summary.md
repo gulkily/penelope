@@ -77,3 +77,8 @@
 - Changes: Lobby page now hides the request panel once a logged-in user is detected.
 - Verification: Not run.
 - Notes: Keeps the lobby view focused on approvals for authenticated users.
+
+## Stage 17 – Enter To Submit Lobby Inputs
+- Changes: Enter key now triggers the single action buttons for lobby username inputs.
+- Verification: Not run.
+- Notes: Applies to request access and display name update fields.

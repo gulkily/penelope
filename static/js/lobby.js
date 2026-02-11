@@ -399,6 +399,18 @@ async function handleUsernameUpdate() {
 }
 
 function init() {
+  const wireEnterToButton = (inputEl, buttonEl) => {
+    if (!inputEl || !buttonEl) {
+      return;
+    }
+    inputEl.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        buttonEl.click();
+      }
+    });
+  };
+
   if (elements.requestButton) {
     elements.requestButton.addEventListener("click", async () => {
       try {
@@ -421,6 +433,8 @@ function init() {
   if (elements.usernameSave) {
     elements.usernameSave.addEventListener("click", handleUsernameUpdate);
   }
+  wireEnterToButton(elements.usernameInput, elements.requestButton);
+  wireEnterToButton(elements.usernameUpdate, elements.usernameSave);
 
   const storedUsername = localStorage.getItem(STORAGE_KEYS.username);
   if (storedUsername && elements.usernameInput) {
