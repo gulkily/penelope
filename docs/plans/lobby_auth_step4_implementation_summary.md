@@ -107,3 +107,8 @@
 - Changes: Removed the logout button from the Request Access header.
 - Verification: Not run.
 - Notes: Logout remains available in the approvals header for signed-in users.
+
+## Stage 23 – Lobby Navbar Links
+- Changes: Added dashboard, manage residents, and settings links to lobby headers.
+- Verification: Not run.
+- Notes: Links appear for both request and approvals views.
