@@ -137,3 +137,71 @@ class UploadChunkResponse(BaseModel):
     status: Literal["partial", "complete"] = Field(..., description="Upload status.")
     received_chunks: int = Field(..., ge=0, description="Chunks received so far.")
     total_chunks: int = Field(..., ge=1, description="Expected chunks for upload.")
+
+
+class AuthRegisterRequest(BaseModel):
+    username: str = Field(..., min_length=1, description="Requested display name.")
+    public_key: str = Field(..., min_length=1, description="Public key material.")
+    public_key_format: str = Field("spki", description="Public key format.")
+
+
+class AuthRegisterResponse(BaseModel):
+    request_id: str = Field(..., description="Lobby request identifier.")
+    fingerprint: str = Field(..., description="Public key fingerprint.")
+    code: str = Field(..., description="6-digit lobby code.")
+    challenge: str = Field(..., description="Challenge string to sign.")
+    expires_at: str = Field(..., description="ISO timestamp for code expiry.")
+    status: str = Field(..., description="verifying|pending|approved|rejected")
+
+
+class AuthVerifyRequest(BaseModel):
+    request_id: str = Field(..., description="Lobby request identifier.")
+    signature: str = Field(..., min_length=1, description="Signature over challenge.")
+
+
+class AuthStatusResponse(BaseModel):
+    request_id: str = Field(..., description="Lobby request identifier.")
+    status: str = Field(..., description="verifying|pending|approved|rejected")
+    code: str | None = Field(None, description="Lobby code if still pending.")
+    fingerprint: str = Field(..., description="Public key fingerprint.")
+
+
+class LobbyEntry(BaseModel):
+    request_id: str = Field(..., description="Lobby request identifier.")
+    requested_username: str = Field(..., description="Requested display name.")
+    fingerprint: str = Field(..., description="Public key fingerprint.")
+    code: str = Field(..., description="6-digit lobby code.")
+    requested_at: str = Field(..., description="Request timestamp.")
+    expires_at: str = Field(..., description="Expiry timestamp.")
+
+
+class LobbyListResponse(BaseModel):
+    entries: list[LobbyEntry]
+
+
+class LobbyDecisionRequest(BaseModel):
+    link_to_self: bool = Field(
+        False,
+        description="If true, link the key to the approver's account.",
+    )
+
+
+class LobbyDecisionResponse(BaseModel):
+    request_id: str = Field(..., description="Lobby request identifier.")
+    status: str = Field(..., description="approved|rejected")
+    account_id: int | None = Field(None, description="Linked account id if approved.")
+
+
+class UsernameUpdateRequest(BaseModel):
+    username: str = Field(..., min_length=1, description="New display name.")
+
+
+class SessionRestoreInitResponse(BaseModel):
+    challenge: str = Field(..., description="Challenge string to sign.")
+
+
+class SessionRestoreRequest(BaseModel):
+    public_key: str = Field(..., min_length=1, description="Public key material.")
+    public_key_format: str = Field("spki", description="Public key format.")
+    signature: str = Field(..., min_length=1, description="Signature over challenge.")
+    challenge: str = Field(..., min_length=1, description="Challenge string.")

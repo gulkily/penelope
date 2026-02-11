@@ -7,3 +7,8 @@
 - Changes: Added `app/auth.py` for cookie signing, fingerprinting, stateless challenges, and signature verification. Added `cryptography` dependency.
 - Verification: Not run (will verify once endpoints are wired).
 - Notes: Session cookie uses a long-lived HMAC signature and is restored via stateless challenge signing.
+
+## Stage 3 – Lobby/Public Auth API Endpoints
+- Changes: Added `/api/auth` router for registration, verification, lobby listing, approvals, username updates, session restore, and current-user lookup. Added auth request/response schemas.
+- Verification: Not run (needs app running to exercise endpoints).
+- Notes: Registration issues a 14-day code and challenge; approvals can optionally link a key to the approver account.
