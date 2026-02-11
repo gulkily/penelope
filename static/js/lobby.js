@@ -205,6 +205,18 @@ async function fetchStatus() {
   updateLobbyStatus(data.status, data.code, data.fingerprint, message);
 
   if (data.status === "approved") {
+    const meResponse = await fetch("/api/auth/me");
+    if (meResponse.ok) {
+      clearPendingRequest();
+      stopStatusPolling();
+      updateLobbyStatus(
+        "approved",
+        null,
+        data.fingerprint,
+        "You are approved and signed in."
+      );
+      return;
+    }
     await restoreSession();
     return;
   }
@@ -219,6 +231,18 @@ function startStatusPolling() {
   }
   statusPoller = setInterval(fetchStatus, 5000);
   fetchStatus();
+}
+
+function stopStatusPolling() {
+  if (statusPoller) {
+    clearInterval(statusPoller);
+    statusPoller = null;
+  }
+}
+
+function clearPendingRequest() {
+  localStorage.removeItem(STORAGE_KEYS.requestId);
+  localStorage.removeItem(STORAGE_KEYS.code);
 }
 
 async function restoreSession() {

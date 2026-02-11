@@ -67,3 +67,8 @@
 - Changes: Added lobby link to main nav areas with a badge showing pending lobby count, plus a polling script. Stopped auto-redirect from lobby by removing auto-restore on load.
 - Verification: Not run.
 - Notes: `/lobby` now stays accessible for approved users.
+
+## Stage 15 – Prevent Lobby Redirect Loop
+- Changes: Lobby status polling now detects existing sessions and clears stale request ids instead of restoring and redirecting.
+- Verification: Not run.
+- Notes: Visiting `/lobby` no longer bounces to `/` once signed in.
