@@ -22,3 +22,8 @@
 - Changes: Added lobby template and client script for key generation, registration, status polling, approvals, and username updates. Extended main styles for lobby layout.
 - Verification: Not run (requires manual browser check).
 - Notes: Lobby auto-restores session when approval arrives; approvers can optionally link requests to themselves.
+
+## Stage 6 – Client Keypair Generation + Persistence
+- Changes: Implemented in lobby client script (WebCrypto P-256 keypair generation, localStorage persistence, challenge signing).
+- Verification: Not run (requires manual browser check).
+- Notes: Signatures are sent as raw WebCrypto ECDSA and verified server-side.
