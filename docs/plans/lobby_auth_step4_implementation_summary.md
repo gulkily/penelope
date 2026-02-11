@@ -92,3 +92,8 @@
 - Changes: Added logout API and UI button to clear the session cookie and return to the lobby.
 - Verification: Not run.
 - Notes: Logout preserves local keypair for future restores.
+
+## Stage 20 – Move Logout To Lobby
+- Changes: Removed logout from main nav and added it to the lobby page.
+- Verification: Not run.
+- Notes: Logout remains available wherever `/lobby` is accessible.
