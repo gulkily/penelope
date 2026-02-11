@@ -97,3 +97,8 @@
 - Changes: Removed logout from main nav and added it to the lobby page.
 - Verification: Not run.
 - Notes: Logout remains available wherever `/lobby` is accessible.
+
+## Stage 21 – Persist Logout For Logged-In Lobby
+- Changes: Added logout button to the approvals header so it remains visible after the request panel hides.
+- Verification: Not run.
+- Notes: Prevents the logout button from disappearing for signed-in users.
