@@ -87,3 +87,8 @@
 - Changes: "Approve + link to me" only renders when the pending username matches the current user name.
 - Verification: Not run.
 - Notes: Comparison uses trimmed, case-sensitive equality.
+
+## Stage 19 – Logout Button
+- Changes: Added logout API and UI button to clear the session cookie and return to the lobby.
+- Verification: Not run.
+- Notes: Logout preserves local keypair for future restores.

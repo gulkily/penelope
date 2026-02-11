@@ -219,6 +219,12 @@ def update_username(payload: UsernameUpdateRequest, request: Request) -> dict:
     return {"username": updated["username"]}
 
 
+@router.post("/auth/logout")
+def logout(response: Response) -> dict:
+    auth.clear_session_cookie(response)
+    return {"status": "ok"}
+
+
 @router.get("/auth/session/challenge", response_model=SessionRestoreInitResponse)
 def session_challenge() -> dict:
     return {"challenge": auth.issue_stateless_challenge()}
