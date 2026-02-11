@@ -47,3 +47,8 @@
 - Changes: Updated public key insert to fill missing `public_key_format` on existing rows.
 - Verification: Not run.
 - Notes: Avoids empty format values on repeated registrations.
+
+## Stage 11 – Lobby Auto-Restore
+- Changes: Lobby now attempts session restore when a keypair exists but no active request id is stored.
+- Verification: Not run.
+- Notes: Helps approved users recover without re-registering.

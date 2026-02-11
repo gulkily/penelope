@@ -399,6 +399,8 @@ function init() {
   if (localStorage.getItem(STORAGE_KEYS.requestId)) {
     elements.lobbyStatus.hidden = false;
     startStatusPolling();
+  } else if (localStorage.getItem(STORAGE_KEYS.publicKey)) {
+    restoreSession();
   }
 
   loadApprovals();
