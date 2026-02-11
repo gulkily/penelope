@@ -27,3 +27,8 @@
 - Changes: Implemented in lobby client script (WebCrypto P-256 keypair generation, localStorage persistence, challenge signing).
 - Verification: Not run (requires manual browser check).
 - Notes: Signatures are sent as raw WebCrypto ECDSA and verified server-side.
+
+## Stage 7 – Test Coverage
+- Changes: Not implemented (per Step 4 guidance to avoid adding automated tests during implementation).
+- Verification: Not run.
+- Notes: Manual verification is required for lobby flow, approvals, and session restore.
