@@ -1,4 +1,7 @@
 - Hosting and publicly accessible
+	- basic auth
+	- tls
+	- reverse proxy
 
 - Add some simple prompting integration, like add suggestions as a mentor.
 	- Need to have project summaries for this, ideally.
