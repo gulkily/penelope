@@ -32,3 +32,8 @@
 - Changes: Not implemented (per Step 4 guidance to avoid adding automated tests during implementation).
 - Verification: Not run.
 - Notes: Manual verification is required for lobby flow, approvals, and session restore.
+
+## Stage 8 – API Validation Polish
+- Changes: Added input validation for unsupported public key formats and signature verification errors.
+- Verification: Not run.
+- Notes: Prevents 500s on malformed auth payloads.

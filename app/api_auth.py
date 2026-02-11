@@ -41,7 +41,10 @@ def register(payload: AuthRegisterRequest) -> dict:
         raise HTTPException(status_code=400, detail="Username required")
 
     public_key_format = payload.public_key_format or "spki"
-    fingerprint = auth.fingerprint_public_key(public_key, public_key_format)
+    try:
+        fingerprint = auth.fingerprint_public_key(public_key, public_key_format)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     key_row = db.add_public_key(None, public_key, public_key_format, fingerprint)
 
     code = f"{secrets.randbelow(1_000_000):06d}"
@@ -89,12 +92,15 @@ def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
     if not public_key_row:
         raise HTTPException(status_code=404, detail="Public key not found")
 
-    is_valid = auth.verify_signature(
-        public_key_row["public_key"],
-        public_key_row["public_key_format"],
-        payload.signature,
-        request_row["challenge"],
-    )
+    try:
+        is_valid = auth.verify_signature(
+            public_key_row["public_key"],
+            public_key_row["public_key_format"],
+            payload.signature,
+            request_row["challenge"],
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
@@ -207,17 +213,23 @@ def session_restore(payload: SessionRestoreRequest, response: Response) -> dict:
 
     public_key = payload.public_key.strip()
     public_key_format = payload.public_key_format or "spki"
-    fingerprint = auth.fingerprint_public_key(public_key, public_key_format)
+    try:
+        fingerprint = auth.fingerprint_public_key(public_key, public_key_format)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     public_key_row = db.get_public_key_by_fingerprint(fingerprint)
     if not public_key_row or not public_key_row.get("account_id"):
         raise HTTPException(status_code=403, detail="Key not approved")
 
-    is_valid = auth.verify_signature(
-        public_key,
-        public_key_format,
-        payload.signature,
-        payload.challenge,
-    )
+    try:
+        is_valid = auth.verify_signature(
+            public_key,
+            public_key_format,
+            payload.signature,
+            payload.challenge,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     if not is_valid:
         raise HTTPException(status_code=400, detail="Invalid signature")
 
