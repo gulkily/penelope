@@ -1,6 +1,5 @@
 {#
   Expected context:
-  - current_page: string identifier for the current page
   - show_ledger_link: bool
   - wrap_nav: bool (optional, defaults true)
 #}
@@ -8,25 +7,17 @@
 {% if wrap_nav %}
 <div class="link-button-group">
 {% endif %}
-  {% if current_page != "dashboard" %}
-    <a class="link-button" href="/">Back to dashboard</a>
-  {% endif %}
+  <a class="link-button" href="/">Back to dashboard</a>
 
-  {% if current_page != "lobby" %}
-    <a class="link-button" href="/lobby">
-      Lobby <span class="badge" data-lobby-count hidden></span>
-    </a>
-  {% endif %}
+  <a class="link-button" href="/lobby">
+    Lobby <span class="badge" data-lobby-count hidden></span>
+  </a>
 
-  {% if current_page != "projects" %}
-    <a class="link-button" href="/projects">Manage residents</a>
-  {% endif %}
+  <a class="link-button" href="/projects">Manage residents</a>
 
-  {% if current_page != "settings" %}
-    <a class="link-button" href="/settings">Settings</a>
-  {% endif %}
+  <a class="link-button" href="/settings">Settings</a>
 
-  {% if current_page != "ledger" and show_ledger_link %}
+  {% if show_ledger_link %}
     <a class="link-button" href="/ledger">Ledger</a>
   {% endif %}
 {% if wrap_nav %}

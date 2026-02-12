@@ -17,3 +17,8 @@
 - Changes: Added a dedicated top navbar partial and moved navigation out of module headers across all pages.
 - Verification: Not run.
 - Notes: Navbar now sits as the first element in each page layout.
+
+## Stage 5 – Keep All Nav Links Visible
+- Changes: Removed current-page hiding so nav links remain consistent across pages, with “Back to dashboard” always present.
+- Verification: Not run.
+- Notes: Ledger remains conditional based on Settings.
