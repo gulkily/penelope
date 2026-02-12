@@ -7,7 +7,6 @@ Feature work flows through four tightly scoped steps with an optional solution a
 Before drafting Step 1 (or jumping straight to Step 2 on simple work), skim the canonical project references so your plan aligns with current architecture and previous initiatives:
 - `AGENTS.md` – environment/setup guardrails, modular architecture expectations, and CLI conventions.
 - `README.md` – current product narrative plus the feature set that the new work must complement.
-- `docs/spec.md` – authoritative functional spec for auth, requests, sync, and UX patterns that every module must follow.
 
 ## How to Use This Chain
 1. Start with the highest-numbered approved step (usually Step 1 unless explicitly skipped).
