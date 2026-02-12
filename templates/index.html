@@ -13,6 +13,7 @@
   </head>
   <body>
     <main class="page">
+      {% include "partials/top_nav.html" with context %}
       <section class="card card-compact project-card">
         <header class="page-header dashboard-header">
           <div class="header-top">
@@ -26,9 +27,6 @@
               <button type="button" class="link-button" id="transcript-open">
                 Add update
               </button>
-              {% with wrap_nav = false %}
-                {% include "partials/navbar.html" with context %}
-              {% endwith %}
             </div>
           </div>
           <div class="field field-full">

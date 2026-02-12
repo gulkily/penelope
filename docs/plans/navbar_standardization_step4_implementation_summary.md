@@ -12,3 +12,8 @@
 - Changes: Added a Settings “Session” card with a logout action and removed logout from other pages. Added a session reset header using the navbar include.
 - Verification: Not run.
 - Notes: Ledger link only appears via Settings (link button and CTA), while Lobby remains in all navbars except the lobby page itself.
+
+## Stage 4 – Top-Level Navbar Placement
+- Changes: Added a dedicated top navbar partial and moved navigation out of module headers across all pages.
+- Verification: Not run.
+- Notes: Navbar now sits as the first element in each page layout.

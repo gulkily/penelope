@@ -107,6 +107,11 @@ body {
   gap: 20px;
 }
 
+.page-nav {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .page-header {
   display: flex;
   flex-wrap: wrap;

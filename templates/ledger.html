@@ -12,12 +12,12 @@
   </head>
   <body>
     <main class="page">
+      {% include "partials/top_nav.html" with context %}
       <header class="page-header">
         <div>
           <h1>Ledger</h1>
           <p class="hint">Approval history and admin activity.</p>
         </div>
-        {% include "partials/navbar.html" with context %}
       </header>
 
       <section class="card">

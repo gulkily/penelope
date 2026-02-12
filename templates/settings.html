@@ -13,12 +13,12 @@
   </head>
   <body>
     <main class="page">
+      {% include "partials/top_nav.html" with context %}
       <header class="page-header">
         <div>
           <h1>Settings</h1>
           <p class="hint">Backup data and adjust system preferences.</p>
         </div>
-        {% include "partials/navbar.html" with context %}
       </header>
 
       <section class="card card-compact">
