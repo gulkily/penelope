@@ -1,7 +1,6 @@
 {#
   Expected context:
   - current_page: string identifier for the current page
-  - show_back_to_dashboard: bool
   - show_ledger_link: bool
   - wrap_nav: bool (optional, defaults true)
 #}
@@ -9,10 +8,8 @@
 {% if wrap_nav %}
 <div class="link-button-group">
 {% endif %}
-  {% if show_back_to_dashboard %}
+  {% if current_page != "dashboard" %}
     <a class="link-button" href="/">Back to dashboard</a>
-  {% elif current_page != "dashboard" %}
-    <a class="link-button" href="/">Dashboard</a>
   {% endif %}
 
   {% if current_page != "lobby" %}

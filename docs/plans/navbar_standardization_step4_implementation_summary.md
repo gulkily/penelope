@@ -1,5 +1,5 @@
 ## Stage 1 – Shared Navbar Include
-- Changes: Added `templates/partials/navbar.html` with configurable link set, current-page hiding, lobby badge support, and optional wrapper control.
+- Changes: Added `templates/partials/navbar.html` with configurable link set, current-page hiding, lobby badge support, and optional wrapper control. Standardized “Back to dashboard” label for all non-dashboard pages.
 - Verification: Not run.
 - Notes: Navbar omits the current page and can render “Back to dashboard” when requested.
 
