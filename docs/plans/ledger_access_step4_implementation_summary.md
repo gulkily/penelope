@@ -17,3 +17,8 @@
 - Changes: Added `/ledger` route; access is gated by existing auth middleware. Added empty-state copy on the ledger page.
 - Verification: Not run.
 - Notes: Ledger page relies on standard auth redirect when unauthenticated.
+
+## Stage 4 – Move Ledger Link To Settings
+- Changes: Removed the Ledger link from non-settings navbars so it is accessed from Settings.
+- Verification: Not run.
+- Notes: Ledger remains accessible at `/ledger` and linked from Settings.
