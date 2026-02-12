@@ -3,44 +3,46 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Settings</title>
+    <title>Ledger</title>
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
     <script src="/static/js/lobby-indicator.js" defer></script>
-    <script src="/static/js/logout.js" defer></script>
-    <script src="/static/js/settings.js" defer></script>
+    <script src="/static/js/ledger.js" defer></script>
   </head>
   <body>
     <main class="page">
       <header class="page-header">
         <div>
-          <h1>Settings</h1>
-          <p class="hint">Backup data and adjust system preferences.</p>
+          <h1>Ledger</h1>
+          <p class="hint">Approval history and admin activity.</p>
         </div>
         <div class="link-button-group">
-          <a class="link-button" href="/">Back to dashboard</a>
+          <a class="link-button" href="/">Dashboard</a>
           <a class="link-button" href="/lobby"
             >Lobby <span class="badge" data-lobby-count hidden></span
           ></a>
-          <a class="link-button" href="/ledger">Ledger</a>
           <a class="link-button" href="/projects">Manage residents</a>
+          <a class="link-button" href="/settings">Settings</a>
         </div>
       </header>
 
-      <section class="card card-compact">
-        <div class="settings-row">
-          <div>
-            <h2>Database backup</h2>
-            <p class="hint">
-              Download a full backup to store with resident records.
-            </p>
-          </div>
-          <button type="button" class="action-button" id="backup-download">
-            Download backup
-          </button>
+      <section class="card">
+        <div class="table-wrapper">
+          <table class="project-table ledger-table">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Action</th>
+                <th>Approver</th>
+                <th>Subject</th>
+                <th>Details</th>
+              </tr>
+            </thead>
+            <tbody id="ledger-table-body"></tbody>
+          </table>
         </div>
-        <p class="hint" id="backup-status" role="status" aria-live="polite"></p>
+        <p class="hint" id="ledger-empty" hidden>No ledger entries yet.</p>
       </section>
     </main>
     <button type="button" class="theme-toggle" id="theme-toggle">

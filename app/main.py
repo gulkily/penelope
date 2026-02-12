@@ -66,6 +66,11 @@ def lobby(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("lobby.html", {"request": request})
 
 
+@app.get("/ledger", response_class=HTMLResponse)
+def ledger(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse("ledger.html", {"request": request})
+
+
 @app.get("/session/reset", response_class=HTMLResponse)
 def session_reset(request: Request) -> HTMLResponse:
     return templates.TemplateResponse("session_reset.html", {"request": request})
