@@ -1,3 +1,4 @@
+import json
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -223,6 +224,22 @@ def update_username(payload: UsernameUpdateRequest, request: Request) -> dict:
 def logout(response: Response) -> dict:
     auth.clear_session_cookie(response)
     return {"status": "ok"}
+
+
+@router.get("/auth/ledger")
+def ledger(request: Request, limit: int = 200, offset: int = 0) -> dict:
+    _require_session(request)
+    limit = max(1, min(limit, 500))
+    offset = max(0, offset)
+    entries = db.list_ledger_events(limit=limit, offset=offset)
+    total = db.count_ledger_events()
+    for entry in entries:
+        raw_metadata = entry.get("metadata") or "{}"
+        try:
+            entry["metadata"] = json.loads(raw_metadata)
+        except json.JSONDecodeError:
+            entry["metadata"] = {"raw": raw_metadata}
+    return {"entries": entries, "total": total, "limit": limit, "offset": offset}
 
 
 @router.get("/auth/session/challenge", response_model=SessionRestoreInitResponse)

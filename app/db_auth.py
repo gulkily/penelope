@@ -322,3 +322,33 @@ def append_ledger_event(
                 now,
             ),
         )
+
+
+def list_ledger_events(limit: int = 200, offset: int = 0) -> list[dict]:
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                ledger_events.id,
+                ledger_events.event_type,
+                ledger_events.actor_account_id,
+                ledger_events.subject_account_id,
+                ledger_events.metadata,
+                ledger_events.created_at,
+                actor.username AS actor_username,
+                subject.username AS subject_username
+            FROM ledger_events
+            LEFT JOIN accounts AS actor ON actor.id = ledger_events.actor_account_id
+            LEFT JOIN accounts AS subject ON subject.id = ledger_events.subject_account_id
+            ORDER BY ledger_events.created_at DESC, ledger_events.id DESC
+            LIMIT ? OFFSET ?
+            """,
+            (limit, offset),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
+def count_ledger_events() -> int:
+    with connect() as conn:
+        row = conn.execute("SELECT COUNT(*) AS count FROM ledger_events").fetchone()
+        return int(row["count"]) if row else 0
