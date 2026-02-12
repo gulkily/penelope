@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
     <script src="/static/js/confetti.js" defer></script>
+    <script src="/static/js/lobby-indicator.js" defer></script>
     <script src="/static/js/confetti-debug.js" defer></script>
   </head>
   <body>
@@ -23,6 +24,11 @@
           </div>
           <div class="link-button-group">
             <a class="link-button" href="/">Back to dashboard</a>
+            <a class="link-button" href="/lobby"
+              >Lobby <span class="badge" data-lobby-count hidden></span
+            ></a>
+            <a class="link-button" href="/projects">Manage residents</a>
+            <a class="link-button" href="/settings">Settings</a>
           </div>
         </header>
       </section>

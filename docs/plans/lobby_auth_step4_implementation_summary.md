@@ -112,3 +112,8 @@
 - Changes: Added dashboard, manage residents, and settings links to lobby headers.
 - Verification: Not run.
 - Notes: Links appear for both request and approvals views.
+
+## Stage 24 – Normalize Confetti Debug Navbar
+- Changes: Added lobby/manage/settings links (with lobby badge) to the confetti debug page.
+- Verification: Not run.
+- Notes: Keeps debug page nav aligned with the rest of the app.
