@@ -7,17 +7,19 @@
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
+    <script src="/static/js/lobby-indicator.js" defer></script>
     <script src="/static/js/session_reset.js" defer></script>
   </head>
   <body>
     <main class="page">
+      <header class="page-header">
+        <div>
+          <h1>Session Reset</h1>
+          <p class="hint">Restore your session cookie if it was cleared.</p>
+        </div>
+        {% include "partials/navbar.html" with context %}
+      </header>
       <section class="card card-compact">
-        <header class="page-header">
-          <div>
-            <p class="page-title">Session Reset</p>
-            <h1>Restoring your session</h1>
-          </div>
-        </header>
         <p class="helper-text" id="reset-message">
           We lost your session cookie. We’ll attempt to restore it using your local keypair.
         </p>

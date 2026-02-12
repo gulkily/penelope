@@ -7,7 +7,7 @@
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
-    <script src="/static/js/logout.js" defer></script>
+    <script src="/static/js/lobby-indicator.js" defer></script>
     <script src="/static/js/lobby.js" defer></script>
   </head>
   <body>
@@ -18,11 +18,7 @@
             <p class="page-title">Lobby</p>
             <h1>Request Access</h1>
           </div>
-          <div class="link-button-group">
-            <a class="link-button" href="/">Dashboard</a>
-            <a class="link-button" href="/projects">Manage residents</a>
-            <a class="link-button" href="/settings">Settings</a>
-          </div>
+          {% include "partials/navbar.html" with context %}
         </header>
         <div class="field">
           <label class="field-label" for="username-input">Display name</label>
@@ -67,14 +63,7 @@
             <p class="page-title">Approvals</p>
             <h2>Waiting Room</h2>
           </div>
-          <div class="link-button-group">
-            <a class="link-button" href="/">Dashboard</a>
-            <a class="link-button" href="/projects">Manage residents</a>
-            <a class="link-button" href="/settings">Settings</a>
-            <button class="link-button" type="button" data-logout>
-              Log out
-            </button>
-          </div>
+          {% include "partials/navbar.html" with context %}
         </header>
         <div class="field">
           <label class="field-label" for="username-update">Update your display name</label>

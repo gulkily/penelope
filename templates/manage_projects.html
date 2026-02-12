@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
     <script src="/static/js/lobby-indicator.js" defer></script>
-    <script src="/static/js/logout.js" defer></script>
     <script src="/static/js/manage-projects.js" defer></script>
   </head>
   <body>
@@ -18,13 +17,7 @@
           <h1>Resident Management</h1>
           <p class="hint">Add new residents and archive completed work.</p>
         </div>
-        <div class="link-button-group">
-          <a class="link-button" href="/">Back to dashboard</a>
-          <a class="link-button" href="/lobby"
-            >Lobby <span class="badge" data-lobby-count hidden></span
-          ></a>
-          <a class="link-button" href="/settings">Settings</a>
-        </div>
+        {% include "partials/navbar.html" with context %}
       </header>
 
       <section class="card manage-card">

@@ -58,22 +58,54 @@ def startup() -> None:
 
 @app.get("/", response_class=HTMLResponse)
 def index(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("index.html", {"request": request})
+    return templates.TemplateResponse(
+        "index.html",
+        {
+            "request": request,
+            "current_page": "dashboard",
+            "show_back_to_dashboard": False,
+            "show_ledger_link": False,
+        },
+    )
 
 
 @app.get("/lobby", response_class=HTMLResponse)
 def lobby(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("lobby.html", {"request": request})
+    return templates.TemplateResponse(
+        "lobby.html",
+        {
+            "request": request,
+            "current_page": "lobby",
+            "show_back_to_dashboard": False,
+            "show_ledger_link": False,
+        },
+    )
 
 
 @app.get("/ledger", response_class=HTMLResponse)
 def ledger(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("ledger.html", {"request": request})
+    return templates.TemplateResponse(
+        "ledger.html",
+        {
+            "request": request,
+            "current_page": "ledger",
+            "show_back_to_dashboard": False,
+            "show_ledger_link": False,
+        },
+    )
 
 
 @app.get("/session/reset", response_class=HTMLResponse)
 def session_reset(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("session_reset.html", {"request": request})
+    return templates.TemplateResponse(
+        "session_reset.html",
+        {
+            "request": request,
+            "current_page": "session_reset",
+            "show_back_to_dashboard": False,
+            "show_ledger_link": False,
+        },
+    )
 
 
 @app.get("/favicon.ico", include_in_schema=False)
@@ -83,14 +115,38 @@ def favicon() -> FileResponse:
 
 @app.get("/projects", response_class=HTMLResponse)
 def manage_projects(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("manage_projects.html", {"request": request})
+    return templates.TemplateResponse(
+        "manage_projects.html",
+        {
+            "request": request,
+            "current_page": "projects",
+            "show_back_to_dashboard": True,
+            "show_ledger_link": False,
+        },
+    )
 
 
 @app.get("/settings", response_class=HTMLResponse)
 def settings(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("settings.html", {"request": request})
+    return templates.TemplateResponse(
+        "settings.html",
+        {
+            "request": request,
+            "current_page": "settings",
+            "show_back_to_dashboard": True,
+            "show_ledger_link": True,
+        },
+    )
 
 
 @app.get("/debug/confetti", response_class=HTMLResponse)
 def confetti_debug(request: Request) -> HTMLResponse:
-    return templates.TemplateResponse("confetti_debug.html", {"request": request})
+    return templates.TemplateResponse(
+        "confetti_debug.html",
+        {
+            "request": request,
+            "current_page": "confetti_debug",
+            "show_back_to_dashboard": True,
+            "show_ledger_link": False,
+        },
+    )

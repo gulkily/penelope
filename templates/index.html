@@ -9,7 +9,6 @@
     <script src="/static/js/theme.js" defer></script>
     <script src="/static/js/confetti.js" defer></script>
     <script src="/static/js/lobby-indicator.js" defer></script>
-    <script src="/static/js/logout.js" defer></script>
     <script src="/static/js/app.js" defer></script>
   </head>
   <body>
@@ -27,11 +26,9 @@
               <button type="button" class="link-button" id="transcript-open">
                 Add update
               </button>
-              <a class="link-button" href="/lobby"
-                >Lobby <span class="badge" data-lobby-count hidden></span
-              ></a>
-              <a class="link-button" href="/projects">Manage residents</a>
-              <a class="link-button" href="/settings">Settings</a>
+              {% with wrap_nav = false %}
+                {% include "partials/navbar.html" with context %}
+              {% endwith %}
             </div>
           </div>
           <div class="field field-full">

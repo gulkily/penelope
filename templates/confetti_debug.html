@@ -22,14 +22,7 @@
               confirm script load, reduced-motion state, and trigger behavior.
             </p>
           </div>
-          <div class="link-button-group">
-            <a class="link-button" href="/">Back to dashboard</a>
-            <a class="link-button" href="/lobby"
-              >Lobby <span class="badge" data-lobby-count hidden></span
-            ></a>
-            <a class="link-button" href="/projects">Manage residents</a>
-            <a class="link-button" href="/settings">Settings</a>
-          </div>
+          {% include "partials/navbar.html" with context %}
         </header>
       </section>
 
