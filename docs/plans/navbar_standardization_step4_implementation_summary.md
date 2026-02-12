@@ -22,3 +22,8 @@
 - Changes: Removed current-page hiding so nav links remain consistent across pages, with “Back to dashboard” always present.
 - Verification: Not run.
 - Notes: Ledger remains conditional based on Settings.
+
+## Stage 6 – Right-Aligned Navbar and Ledger Removal
+- Changes: Removed Ledger from the navbar so it only appears on the Settings page, and enforced right-aligned navbar positioning.
+- Verification: Not run.
+- Notes: All pages now render the same navbar link set.

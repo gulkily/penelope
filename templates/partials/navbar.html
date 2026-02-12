@@ -1,25 +1,39 @@
 {#
   Expected context:
-  - show_ledger_link: bool
   - wrap_nav: bool (optional, defaults true)
 #}
 {% set wrap_nav = wrap_nav | default(true) %}
 {% if wrap_nav %}
 <div class="link-button-group">
 {% endif %}
-  <a class="link-button" href="/">Back to dashboard</a>
+  <a
+    class="link-button{% if current_page == 'dashboard' %} is-current{% endif %}"
+    href="/"
+  >
+    Dashboard
+  </a>
 
-  <a class="link-button" href="/lobby">
+  <a
+    class="link-button{% if current_page == 'lobby' %} is-current{% endif %}"
+    href="/lobby"
+  >
     Lobby <span class="badge" data-lobby-count hidden></span>
   </a>
 
-  <a class="link-button" href="/projects">Manage residents</a>
+  <a
+    class="link-button{% if current_page == 'projects' %} is-current{% endif %}"
+    href="/projects"
+  >
+    Manage residents
+  </a>
 
-  <a class="link-button" href="/settings">Settings</a>
+  <a
+    class="link-button{% if current_page == 'settings' %} is-current{% endif %}"
+    href="/settings"
+  >
+    Settings
+  </a>
 
-  {% if show_ledger_link %}
-    <a class="link-button" href="/ledger">Ledger</a>
-  {% endif %}
 {% if wrap_nav %}
 </div>
 {% endif %}

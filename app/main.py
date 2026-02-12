@@ -63,7 +63,6 @@ def index(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "dashboard",
-            "show_ledger_link": False,
         },
     )
 
@@ -75,7 +74,6 @@ def lobby(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "lobby",
-            "show_ledger_link": False,
         },
     )
 
@@ -87,7 +85,6 @@ def ledger(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "ledger",
-            "show_ledger_link": False,
         },
     )
 
@@ -99,7 +96,6 @@ def session_reset(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "session_reset",
-            "show_ledger_link": False,
         },
     )
 
@@ -116,7 +112,6 @@ def manage_projects(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "projects",
-            "show_ledger_link": False,
         },
     )
 
@@ -128,7 +123,6 @@ def settings(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "settings",
-            "show_ledger_link": True,
         },
     )
 
@@ -140,6 +134,5 @@ def confetti_debug(request: Request) -> HTMLResponse:
         {
             "request": request,
             "current_page": "confetti_debug",
-            "show_ledger_link": False,
         },
     )
