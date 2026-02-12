@@ -22,3 +22,8 @@
 - Changes: Removed the Ledger link from non-settings navbars so it is accessed from Settings.
 - Verification: Not run.
 - Notes: Ledger remains accessible at `/ledger` and linked from Settings.
+
+## Stage 5 – Settings Ledger CTA
+- Changes: Added a Settings card with a "View ledger" action button styled like Database backup.
+- Verification: Not run.
+- Notes: Keeps Ledger access consistent with other admin tools.
