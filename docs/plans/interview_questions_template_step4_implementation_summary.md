@@ -40,3 +40,13 @@
   - Performed code-path review for `openTranscriptDialog()`, `resetTranscriptDialog()`, and recording/upload/analyze handlers to confirm no control wiring was removed.
 - Notes:
   - The guide remains independent from transcript draft/recording/upload state and does not block those actions.
+
+## Stage 5 - Add operator documentation
+- Changes:
+  - Updated `README.md` notes with the canonical interview template path:
+    - `static/templates/interview_questions_template.md`
+  - Documented the operator workflow for updating prompts (edit template file; reload page to consume updates).
+- Verification:
+  - Reviewed `README.md` references for path accuracy and alignment with implemented static asset loading.
+- Notes:
+  - Automated regression tests were intentionally not added in this step to align with the Step 4 process constraint to rely on manual smoke verification during implementation.

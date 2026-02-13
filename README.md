@@ -58,4 +58,6 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - The North Star goal value sets the progress slider range per resident.
 - Progress updates happen immediately via the integrated slider.
 - Questions auto-save while typing.
+- Interview guide prompts in the `Add update` dialog come from `static/templates/interview_questions_template.md`.
+- To update interview prompts, edit `static/templates/interview_questions_template.md`; changes are picked up on next page load.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.
