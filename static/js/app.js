@@ -5,6 +5,7 @@ const DEFAULT_RESIDENCY_END = `${DEFAULT_RESIDENCY_YEAR}-01-31`;
 const TRANSCRIPT_ANALYSIS_TIMEOUT_MS = 45000;
 const TRANSCRIPT_DRAFT_SAVE_DELAY_MS = 400;
 const TRANSCRIPT_DRAFT_STORAGE_PREFIX = "transcriptDraft:";
+const INTERVIEW_GUIDE_TEMPLATE_URL = "/static/templates/interview_questions_template.md";
 const TRANSCRIPTION_CHUNK_SIZE_FALLBACK = 5 * 1024 * 1024;
 const TRANSCRIPTION_CHUNK_THRESHOLD_BYTES = 5 * 1024 * 1024;
 const TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS = 3;
@@ -83,6 +84,10 @@ const uploadFilename = document.getElementById("upload-filename");
 const uploadAudio = document.getElementById("upload-audio");
 const uploadSubmit = document.getElementById("upload-submit");
 const uploadClear = document.getElementById("upload-clear");
+const interviewGuideToggle = document.getElementById("interview-guide-toggle");
+const interviewGuideStatus = document.getElementById("interview-guide-status");
+const interviewGuideContent = document.getElementById("interview-guide-content");
+const interviewGuideBody = document.getElementById("interview-guide-body");
 
 const undoState = {
   projectId: null,
@@ -120,6 +125,12 @@ const transcriptState = {
   analysisController: null,
   analysisTimeoutId: null,
   draftTimerId: null,
+};
+
+const interviewGuideState = {
+  content: "",
+  loaded: false,
+  loading: false,
 };
 
 function toggleInlineAdds(enabled) {
@@ -205,6 +216,87 @@ function setTranscriptStatus(message, status = false) {
     transcriptStatus.dataset.status = "error";
   } else {
     delete transcriptStatus.dataset.status;
+  }
+}
+
+function setInterviewGuideStatus(message, isError = false) {
+  if (!interviewGuideStatus) {
+    return;
+  }
+  interviewGuideStatus.textContent = message || "";
+  if (isError) {
+    interviewGuideStatus.dataset.status = "error";
+  } else {
+    delete interviewGuideStatus.dataset.status;
+  }
+}
+
+function renderInterviewQuestionsTemplate(content) {
+  if (!interviewGuideBody) {
+    return;
+  }
+  interviewGuideBody.textContent = String(content || "").trim();
+}
+
+function setInterviewGuideVisibility(isVisible) {
+  if (!interviewGuideContent || !interviewGuideToggle) {
+    return;
+  }
+  interviewGuideContent.hidden = !isVisible;
+  interviewGuideToggle.setAttribute("aria-expanded", isVisible ? "true" : "false");
+  interviewGuideToggle.textContent = isVisible ? "Hide guide" : "Show guide";
+}
+
+async function loadInterviewQuestionsTemplate() {
+  if (interviewGuideState.loaded) {
+    return interviewGuideState.content;
+  }
+  if (interviewGuideState.loading) {
+    return interviewGuideState.content;
+  }
+  interviewGuideState.loading = true;
+  setInterviewGuideStatus("Loading interview guide...");
+  try {
+    const response = await fetch(INTERVIEW_GUIDE_TEMPLATE_URL);
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.status}`);
+    }
+    const templateContent = await response.text();
+    if (!templateContent.trim()) {
+      throw new Error("Interview guide template is empty.");
+    }
+    interviewGuideState.content = templateContent;
+    interviewGuideState.loaded = true;
+    renderInterviewQuestionsTemplate(templateContent);
+    setInterviewGuideStatus("Guide loaded.");
+    return templateContent;
+  } catch (error) {
+    console.warn("Failed to load interview guide template", error);
+    setInterviewGuideStatus(
+      "Unable to load interview guide. You can continue recording.",
+      true,
+    );
+    throw error;
+  } finally {
+    interviewGuideState.loading = false;
+  }
+}
+
+async function toggleInterviewGuide() {
+  const shouldShow = Boolean(interviewGuideContent && interviewGuideContent.hidden);
+  setInterviewGuideVisibility(shouldShow);
+  if (!shouldShow) {
+    return;
+  }
+  if (interviewGuideState.loaded) {
+    renderInterviewQuestionsTemplate(interviewGuideState.content);
+    setInterviewGuideStatus("Guide loaded.");
+    return;
+  }
+  try {
+    await loadInterviewQuestionsTemplate();
+  } catch (_error) {
+    return;
   }
 }
 
@@ -2380,6 +2472,12 @@ if (uploadSubmit) {
 if (uploadClear) {
   uploadClear.addEventListener("click", () => {
     clearUploadPreview();
+  });
+}
+
+if (interviewGuideToggle) {
+  interviewGuideToggle.addEventListener("click", () => {
+    toggleInterviewGuide();
   });
 }
 

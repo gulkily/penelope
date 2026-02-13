@@ -15,3 +15,17 @@
   - Reviewed the dialog markup and CSS integration to confirm the new section stays within the existing `Add update` workflow structure and remains hidden by default.
 - Notes:
   - Kept this stage to structure/styling only; loading behavior is implemented in Stage 3.
+
+## Stage 3 - Wire template loading, rendering, and failure handling in client logic
+- Changes:
+  - Added interview guide state/elements and handlers in `static/js/app.js`.
+  - Implemented:
+    - `loadInterviewQuestionsTemplate()`
+    - `renderInterviewQuestionsTemplate(content)`
+    - `setInterviewGuideStatus(message, isError)`
+  - Added session-level caching so the template is fetched once and reused on subsequent guide opens.
+  - Added non-blocking load failure behavior that keeps interview recording workflows usable.
+- Verification:
+  - Ran `node --check static/js/app.js` to validate JavaScript syntax after the new guide logic was added.
+- Notes:
+  - The guide currently renders markdown as readable plain text (`<pre>`), avoiding new frontend dependencies.
