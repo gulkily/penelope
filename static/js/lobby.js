@@ -55,6 +55,10 @@ function showMessage(element, text, isError = false) {
   element.classList.toggle("helper-error", isError);
 }
 
+function normalizeUsername(value) {
+  return (value || "").trim().toLowerCase();
+}
+
 function updateLobbyStatus(status, code, fingerprint, message) {
   if (!elements.lobbyStatus) {
     return;
@@ -349,8 +353,8 @@ function renderApprovalEntries(entries) {
 
     actions.appendChild(approveButton);
     if (
-      currentUsername.trim() &&
-      currentUsername.trim() === (entry.requested_username || "").trim()
+      normalizeUsername(currentUsername) &&
+      normalizeUsername(currentUsername) === normalizeUsername(entry.requested_username)
     ) {
       const linkButton = document.createElement("button");
       linkButton.className = "link-button";

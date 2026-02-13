@@ -7,3 +7,8 @@
 - Changes: Updated `approve_lobby_request` in `app/db_auth.py` so when no explicit target account exists (`link_to_self` absent and key not already linked), the approval flow first resolves an existing account via `get_account_by_username_case_insensitive(requested_username)` before creating a new account.
 - Verification: Manual verification pending. Suggested smoke check: bootstrap first user as `Alex`, submit second request as `alex`, approve without `link_to_self`, and confirm both requests resolve to the same `account_id`.
 - Notes: Bootstrap approval path remains unchanged; explicit `link_to_self` still takes precedence.
+
+## Stage 3 - Align lobby link-to-self action with case-insensitive comparison
+- Changes: Updated `static/js/lobby.js` to normalize usernames before comparison so the “Approve + link to me” action appears for case variants (for example, `Alex` and `alex`) while keeping existing trimmed input behavior.
+- Verification: Manual verification pending. Suggested smoke check: sign in as a user whose display name is `Alex`, open approvals containing a request for `alex`, and confirm the “Approve + link to me” button is shown.
+- Notes: No API or template changes were required.
