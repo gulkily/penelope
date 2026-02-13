@@ -23,6 +23,10 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl test --help` for test-specific options (looping, delay, parallelism, etc).
 - `./pnl seed-demo` to add demo data (use `--allow-duplicates` if needed).
 
+## Public hosting
+- Server setup guide: `docs/production_install.md`
+- DNS/TLS handoff notes: `docs/domain_admin_brief.md`
+
 ## Testing
 1. Install test dependencies:
    - `pip install -r requirements.txt`

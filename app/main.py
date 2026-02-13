@@ -1,8 +1,11 @@
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -18,8 +21,28 @@ load_dotenv()
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+def _parse_csv_env(name: str) -> list[str]:
+    raw_value = os.getenv(name, "")
+    return [entry.strip() for entry in raw_value.split(",") if entry.strip()]
+
+
 app = FastAPI()
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
+trusted_hosts = _parse_csv_env("TRUSTED_HOSTS")
+if trusted_hosts:
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=trusted_hosts)
+
+cors_allow_origins = _parse_csv_env("CORS_ALLOW_ORIGINS")
+if cors_allow_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=cors_allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 app.include_router(api_router, prefix="/api")

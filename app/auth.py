@@ -23,6 +23,19 @@ COOKIE_NAME = "penelope_session"
 SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 365 * 10
 
 
+def _session_cookie_secure() -> bool:
+    return os.getenv("SESSION_COOKIE_SECURE", "").strip().lower() in {
+        "1",
+        "true",
+        "yes",
+        "on",
+    }
+
+
+def _session_cookie_domain() -> str | None:
+    return os.getenv("SESSION_COOKIE_DOMAIN", "").strip() or None
+
+
 @dataclass
 class SessionInfo:
     account_id: int
@@ -66,17 +79,21 @@ def _decode_cookie(cookie_value: str) -> int | None:
 
 
 def set_session_cookie(response: Response, account_id: int) -> None:
+    cookie_domain = _session_cookie_domain()
     response.set_cookie(
         COOKIE_NAME,
         _encode_cookie(account_id),
         httponly=True,
         samesite="Lax",
         max_age=SESSION_MAX_AGE_SECONDS,
+        secure=_session_cookie_secure(),
+        domain=cookie_domain,
+        path="/",
     )
 
 
 def clear_session_cookie(response: Response) -> None:
-    response.delete_cookie(COOKIE_NAME)
+    response.delete_cookie(COOKIE_NAME, domain=_session_cookie_domain(), path="/")
 
 
 def get_session_account(request: Request) -> SessionInfo | None:
