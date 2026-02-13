@@ -286,6 +286,7 @@ async function toggleInterviewGuide() {
   const shouldShow = Boolean(interviewGuideContent && interviewGuideContent.hidden);
   setInterviewGuideVisibility(shouldShow);
   if (!shouldShow) {
+    setInterviewGuideStatus("Open the guide to review interview prompts.");
     return;
   }
   if (interviewGuideState.loaded) {
@@ -298,6 +299,14 @@ async function toggleInterviewGuide() {
   } catch (_error) {
     return;
   }
+}
+
+function resetInterviewGuidePanel() {
+  setInterviewGuideVisibility(false);
+  if (interviewGuideBody) {
+    interviewGuideBody.textContent = "";
+  }
+  setInterviewGuideStatus("Open the guide to review interview prompts.");
 }
 
 function isTranscriptDialogOpen() {
@@ -453,6 +462,7 @@ function resetTranscriptDialog() {
     transcriptInput.value = "";
   }
   cancelTranscriptDraftSave();
+  resetInterviewGuidePanel();
   setTranscriptStatus("");
   resetTranscriptSuggestions();
   resetRecordingState();
@@ -988,6 +998,7 @@ function openTranscriptDialog() {
   if (!transcriptDialog || !state.projectId) {
     return;
   }
+  resetInterviewGuidePanel();
   updateTranscriptResidentName();
   resetTranscriptSuggestions();
   setTranscriptStatus("");

@@ -29,3 +29,14 @@
   - Ran `node --check static/js/app.js` to validate JavaScript syntax after the new guide logic was added.
 - Notes:
   - The guide currently renders markdown as readable plain text (`<pre>`), avoiding new frontend dependencies.
+
+## Stage 4 - Ensure coexistence with recording/upload/analyze interactions
+- Changes:
+  - Added `resetInterviewGuidePanel()` in `static/js/app.js` to consistently collapse/reset guide UI state without touching transcript/recording data.
+  - Integrated guide resets into transcript dialog open/reset flows so closing/reopening the dialog starts from a predictable guide state.
+  - Updated guide toggle behavior to restore neutral status messaging when the panel is closed.
+- Verification:
+  - Ran `node --check static/js/app.js` after state-flow changes.
+  - Performed code-path review for `openTranscriptDialog()`, `resetTranscriptDialog()`, and recording/upload/analyze handlers to confirm no control wiring was removed.
+- Notes:
+  - The guide remains independent from transcript draft/recording/upload state and does not block those actions.
