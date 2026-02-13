@@ -229,6 +229,12 @@ def approve_lobby_request(
         if link_to_account_id:
             target_account_id = link_to_account_id
         if not target_account_id:
+            existing_account = get_account_by_username_case_insensitive(
+                request_row["requested_username"]
+            )
+            if existing_account:
+                target_account_id = existing_account["id"]
+        if not target_account_id:
             now = _utc_now()
             cursor = conn.execute(
                 """
