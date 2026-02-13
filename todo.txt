@@ -55,3 +55,7 @@ user profiles
 click here and show all the questions to ask
 
 import the current records
+
+auth
+	add email records
+	allow auth by email
