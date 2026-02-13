@@ -19,6 +19,9 @@ We want HTTPS on `beta.penelope.livetheresidency.com`.
 - Use a public certificate from Let’s Encrypt (domain required).
 - Terminate TLS at the reverse proxy.
 - The app itself stays on HTTP (loopback) behind the proxy.
+- If using Certbot with Nginx, confirm the plugin exists before issuing:
+  - `certbot plugins` (must include `nginx`)
+  - `certbot --nginx --dry-run -d beta.penelope.livetheresidency.com`
 
 ## App Config for Public Host
 Set these in `.env` on the server:

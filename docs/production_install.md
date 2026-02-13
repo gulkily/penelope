@@ -8,6 +8,25 @@ sudo apt-get update
 sudo apt-get install -y python3 python3-venv python3-pip git nginx certbot python3-certbot-nginx
 ```
 
+Confirm Certbot can see the Nginx plugin:
+```bash
+certbot plugins
+```
+Expected: plugin list includes `nginx`.
+
+If `nginx` is missing, you likely have mixed Certbot install sources (apt/snap/pip). Check and normalize to apt:
+```bash
+type -a certbot
+readlink -f "$(command -v certbot)"
+certbot --version
+dpkg -l | grep -E 'certbot|python3-certbot' || true
+snap list certbot || true
+python3 -m pip show certbot certbot-nginx || true
+sudo apt-get install -y certbot python3-certbot-nginx
+hash -r
+certbot plugins
+```
+
 ## 2) App user + directories
 ```bash
 sudo useradd -m -d /srv/penelope -s /bin/bash penelope
@@ -101,6 +120,8 @@ sudo systemctl reload nginx
 
 Issue TLS cert and enable HTTPS redirect:
 ```bash
+sudo certbot plugins | sed -n '/\* nginx/,+8p'
+sudo certbot --nginx --dry-run -d beta.penelope.livetheresidency.com
 sudo certbot --nginx -d beta.penelope.livetheresidency.com
 ```
 
@@ -114,6 +135,8 @@ sudo ufw allow 'Nginx Full'
 ```bash
 curl -I http://127.0.0.1:8000/
 curl -I https://beta.penelope.livetheresidency.com/
+sudo certbot renew --dry-run
+systemctl status certbot.timer --no-pager
 ```
 
 ## 9) Upgrade via git
