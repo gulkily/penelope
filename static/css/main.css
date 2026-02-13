@@ -542,11 +542,16 @@ html {
 }
 
 .action-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 10px 16px;
   border: 1px solid var(--accent-border);
   border-radius: 6px;
   background: var(--accent-soft);
   color: var(--accent-strong);
+  text-decoration: none;
+  line-height: 1.2;
   font-size: 13px;
   font-weight: 600;
   cursor: pointer;
