@@ -250,6 +250,28 @@
               placeholder="Paste the mentor + mentee transcript here..."
             ></textarea>
           </div>
+          <section class="interview-guide" id="interview-guide">
+            <div class="interview-guide-header">
+              <div>
+                <h3>Interview guide</h3>
+                <p class="hint interview-guide-status" id="interview-guide-status">
+                  Open the guide to review interview prompts.
+                </p>
+              </div>
+              <button
+                type="button"
+                class="link-button"
+                id="interview-guide-toggle"
+                aria-expanded="false"
+                aria-controls="interview-guide-content"
+              >
+                Show guide
+              </button>
+            </div>
+            <div class="interview-guide-content" id="interview-guide-content" hidden>
+              <pre class="interview-guide-body" id="interview-guide-body"></pre>
+            </div>
+          </section>
           <section class="transcript-recorder" id="transcript-recorder">
             <div class="transcript-recorder-header">
               <div>
