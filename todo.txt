@@ -48,3 +48,10 @@ stakeHolders:
 	residents
 	architects
 	coaches
+
+user profiles
+	- linked to community
+
+click here and show all the questions to ask
+
+import the current records
