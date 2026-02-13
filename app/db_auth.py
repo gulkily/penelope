@@ -42,6 +42,21 @@ def get_account(account_id: int) -> dict:
         return _row_to_dict(row)
 
 
+def get_account_by_username_case_insensitive(username: str) -> dict:
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT *
+            FROM accounts
+            WHERE LOWER(TRIM(username)) = LOWER(TRIM(?))
+            ORDER BY id ASC
+            LIMIT 1
+            """,
+            (username,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
 def update_username(account_id: int, new_username: str) -> dict:
     now = _utc_now()
     with connect() as conn:
