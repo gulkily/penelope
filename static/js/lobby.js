@@ -27,6 +27,29 @@ const elements = {
 const textEncoder = new TextEncoder();
 let statusPoller = null;
 let currentUsername = "";
+const WEB_CRYPTO_ERROR =
+  "Secure cryptography is unavailable. Use HTTPS (not HTTP) and a modern browser.";
+
+function resolveSubtleCrypto() {
+  if (window.crypto && window.crypto.subtle) {
+    return window.crypto.subtle;
+  }
+  if (window.crypto && window.crypto.webkitSubtle) {
+    return window.crypto.webkitSubtle;
+  }
+  if (window.msCrypto && window.msCrypto.subtle) {
+    return window.msCrypto.subtle;
+  }
+  return null;
+}
+
+function requireSubtleCrypto() {
+  const subtleCrypto = resolveSubtleCrypto();
+  if (!subtleCrypto) {
+    throw new Error(WEB_CRYPTO_ERROR);
+  }
+  return subtleCrypto;
+}
 
 function bufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -38,7 +61,8 @@ function bufferToBase64(buffer) {
 }
 
 async function sha256Hex(buffer) {
-  const digest = await crypto.subtle.digest("SHA-256", buffer);
+  const subtleCrypto = requireSubtleCrypto();
+  const digest = await subtleCrypto.digest("SHA-256", buffer);
   const bytes = new Uint8Array(digest);
   return Array.from(bytes)
     .map((b) => b.toString(16).padStart(2, "0"))
@@ -77,7 +101,8 @@ function updateLobbyStatus(status, code, fingerprint, message) {
 }
 
 async function generateKeypair() {
-  const keyPair = await crypto.subtle.generateKey(
+  const subtleCrypto = requireSubtleCrypto();
+  const keyPair = await subtleCrypto.generateKey(
     {
       name: "ECDSA",
       namedCurve: "P-256",
@@ -86,8 +111,8 @@ async function generateKeypair() {
     ["sign", "verify"]
   );
 
-  const publicKeySpki = await crypto.subtle.exportKey("spki", keyPair.publicKey);
-  const privateKeyJwk = await crypto.subtle.exportKey("jwk", keyPair.privateKey);
+  const publicKeySpki = await subtleCrypto.exportKey("spki", keyPair.publicKey);
+  const privateKeyJwk = await subtleCrypto.exportKey("jwk", keyPair.privateKey);
   const fingerprint = await sha256Hex(publicKeySpki);
 
   localStorage.setItem(STORAGE_KEYS.publicKey, bufferToBase64(publicKeySpki));
@@ -102,12 +127,13 @@ async function generateKeypair() {
 }
 
 async function importPrivateKey() {
+  const subtleCrypto = requireSubtleCrypto();
   const stored = localStorage.getItem(STORAGE_KEYS.privateKey);
   if (!stored) {
     return null;
   }
   const jwk = JSON.parse(stored);
-  return crypto.subtle.importKey(
+  return subtleCrypto.importKey(
     "jwk",
     jwk,
     { name: "ECDSA", namedCurve: "P-256" },
@@ -117,11 +143,12 @@ async function importPrivateKey() {
 }
 
 async function signChallenge(challenge) {
+  const subtleCrypto = requireSubtleCrypto();
   const privateKey = await importPrivateKey();
   if (!privateKey) {
     throw new Error("Private key missing");
   }
-  const signature = await crypto.subtle.sign(
+  const signature = await subtleCrypto.sign(
     { name: "ECDSA", hash: "SHA-256" },
     privateKey,
     textEncoder.encode(challenge)
@@ -255,32 +282,36 @@ function clearPendingRequest() {
 }
 
 async function restoreSession() {
-  const publicKey = localStorage.getItem(STORAGE_KEYS.publicKey);
-  if (!publicKey) {
-    return;
-  }
-  const challengeResponse = await fetch("/api/auth/session/challenge");
-  if (!challengeResponse.ok) {
-    return;
-  }
-  const { challenge } = await challengeResponse.json();
-  const signature = await signChallenge(challenge);
+  try {
+    const publicKey = localStorage.getItem(STORAGE_KEYS.publicKey);
+    if (!publicKey) {
+      return;
+    }
+    const challengeResponse = await fetch("/api/auth/session/challenge");
+    if (!challengeResponse.ok) {
+      return;
+    }
+    const { challenge } = await challengeResponse.json();
+    const signature = await signChallenge(challenge);
 
-  const response = await fetch("/api/auth/session/restore", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      public_key: publicKey,
-      public_key_format: "spki",
-      signature,
-      challenge,
-    }),
-  });
+    const response = await fetch("/api/auth/session/restore", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        public_key: publicKey,
+        public_key_format: "spki",
+        signature,
+        challenge,
+      }),
+    });
 
-  if (response.ok) {
-    window.location.href = "/";
-  } else {
-    showMessage(elements.statusMessage, "Approved, but failed to restore session.", true);
+    if (response.ok) {
+      window.location.href = "/";
+    } else {
+      showMessage(elements.statusMessage, "Approved, but failed to restore session.", true);
+    }
+  } catch (error) {
+    showMessage(elements.statusMessage, error.message || "Failed to restore session.", true);
   }
 }
 
@@ -422,6 +453,10 @@ function init() {
   };
 
   if (elements.requestButton) {
+    if (!resolveSubtleCrypto()) {
+      elements.requestButton.disabled = true;
+      showMessage(elements.requestMessage, WEB_CRYPTO_ERROR, true);
+    }
     elements.requestButton.addEventListener("click", async () => {
       try {
         const username = elements.usernameInput.value.trim();
