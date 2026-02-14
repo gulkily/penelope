@@ -235,7 +235,89 @@ function renderInterviewQuestionsTemplate(content) {
   if (!interviewGuideBody) {
     return;
   }
-  interviewGuideBody.textContent = String(content || "").trim();
+  interviewGuideBody.replaceChildren();
+  const markdown = String(content || "").trim();
+  if (!markdown) {
+    return;
+  }
+
+  const lines = markdown.split(/\r?\n/);
+  let paragraphLines = [];
+  let activeList = null;
+  let activeListType = "";
+
+  const flushParagraph = () => {
+    if (!paragraphLines.length) {
+      return;
+    }
+    const paragraph = document.createElement("p");
+    paragraph.textContent = paragraphLines.join(" ");
+    interviewGuideBody.appendChild(paragraph);
+    paragraphLines = [];
+  };
+
+  const closeList = () => {
+    activeList = null;
+    activeListType = "";
+  };
+
+  const ensureList = (type) => {
+    if (activeList && activeListType === type) {
+      return activeList;
+    }
+    closeList();
+    const list = document.createElement(type);
+    interviewGuideBody.appendChild(list);
+    activeList = list;
+    activeListType = type;
+    return list;
+  };
+
+  for (const rawLine of lines) {
+    const trimmed = rawLine.trim();
+    if (!trimmed) {
+      flushParagraph();
+      closeList();
+      continue;
+    }
+
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
+    if (headingMatch) {
+      flushParagraph();
+      closeList();
+      const level = Math.min(6, headingMatch[1].length);
+      const heading = document.createElement(`h${level}`);
+      heading.textContent = headingMatch[2].trim();
+      interviewGuideBody.appendChild(heading);
+      continue;
+    }
+
+    const unorderedMatch = trimmed.match(/^[-*+]\s+(.+)$/);
+    if (unorderedMatch) {
+      flushParagraph();
+      const list = ensureList("ul");
+      const item = document.createElement("li");
+      item.textContent = unorderedMatch[1].trim();
+      list.appendChild(item);
+      continue;
+    }
+
+    const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
+    if (orderedMatch) {
+      flushParagraph();
+      const list = ensureList("ol");
+      const item = document.createElement("li");
+      item.textContent = orderedMatch[1].trim();
+      list.appendChild(item);
+      continue;
+    }
+
+    closeList();
+    paragraphLines.push(trimmed);
+  }
+
+  flushParagraph();
+  closeList();
 }
 
 function setInterviewGuideVisibility(isVisible) {

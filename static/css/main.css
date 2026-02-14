@@ -1330,10 +1330,42 @@ html {
 
 .interview-guide-body {
   margin: 0;
-  white-space: pre-wrap;
+  display: grid;
+  gap: 10px;
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-main);
+}
+
+.interview-guide-body h1,
+.interview-guide-body h2,
+.interview-guide-body h3,
+.interview-guide-body h4,
+.interview-guide-body h5,
+.interview-guide-body h6,
+.interview-guide-body p,
+.interview-guide-body ul,
+.interview-guide-body ol {
+  margin: 0;
+}
+
+.interview-guide-body h1 {
+  font-size: 18px;
+}
+
+.interview-guide-body h2 {
+  font-size: 15px;
+}
+
+.interview-guide-body h3 {
+  font-size: 14px;
+}
+
+.interview-guide-body ul,
+.interview-guide-body ol {
+  padding-left: 18px;
+  display: grid;
+  gap: 4px;
 }
 
 .transcript-recorder-header,

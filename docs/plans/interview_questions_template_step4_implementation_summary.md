@@ -25,6 +25,7 @@
     - `setInterviewGuideStatus(message, isError)`
   - Added session-level caching so the template is fetched once and reused on subsequent guide opens.
   - Added non-blocking load failure behavior that keeps interview recording workflows usable.
+  - Follow-up: switched guide rendering from plain text to Markdown-derived HTML (headings, paragraphs, and lists) using a lightweight in-app renderer.
 - Verification:
   - Ran `node --check static/js/app.js` to validate JavaScript syntax after the new guide logic was added.
 - Notes:
