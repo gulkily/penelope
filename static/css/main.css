@@ -583,6 +583,10 @@ html {
   font-size: 15px;
 }
 
+.card > .field {
+  flex: 0 0 auto;
+}
+
 .section-list {
   list-style: none;
   margin: 0;
