@@ -15,6 +15,16 @@ def _row_to_dict(row) -> dict:
     return dict(row) if row else {}
 
 
+def _is_expired(iso_timestamp: str) -> bool:
+    try:
+        expires_at = datetime.fromisoformat(iso_timestamp)
+    except ValueError:
+        return True
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    return expires_at <= datetime.now(timezone.utc)
+
+
 def create_account(initial_username: str) -> dict:
     now = _utc_now()
     with connect() as conn:
@@ -137,6 +147,7 @@ def create_lobby_request(
     code: str,
     expires_at: str,
     challenge: str,
+    magic_token_id: str | None = None,
 ) -> dict:
     now = _utc_now()
     request_id = str(uuid.uuid4())
@@ -147,18 +158,20 @@ def create_lobby_request(
                 request_id,
                 public_key_id,
                 requested_username,
+                magic_token_id,
                 code,
                 status,
                 requested_at,
                 expires_at,
                 challenge
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
             (
                 request_id,
                 public_key_id,
                 requested_username,
+                magic_token_id,
                 code,
                 "verifying",
                 now,
@@ -178,6 +191,141 @@ def get_lobby_request(request_id: str) -> dict:
         row = conn.execute(
             "SELECT * FROM lobby_requests WHERE request_id = ?",
             (request_id,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
+def create_magic_login_token(
+    configured_username: str,
+    created_by_account_id: int,
+    expires_at: str,
+    token_hash: str,
+) -> dict:
+    now = _utc_now()
+    token_id = str(uuid.uuid4())
+    with connect() as conn:
+        conn.execute(
+            """
+            INSERT INTO magic_login_tokens (
+                id,
+                token_hash,
+                configured_username,
+                created_by_account_id,
+                created_at,
+                expires_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
+            """,
+            (
+                token_id,
+                token_hash,
+                configured_username,
+                created_by_account_id,
+                now,
+                expires_at,
+            ),
+        )
+        row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (token_id,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
+def get_magic_login_token(token_id: str) -> dict:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (token_id,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
+def get_magic_login_token_by_hash(token_hash: str) -> dict:
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE token_hash = ?",
+            (token_hash,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
+def is_magic_login_token_usable(token_id: str) -> bool:
+    token_row = get_magic_login_token(token_id)
+    if not token_row:
+        return False
+    if token_row.get("revoked_at") or token_row.get("consumed_at"):
+        return False
+    return not _is_expired(token_row["expires_at"])
+
+
+def attach_magic_token_to_lobby_request(request_id: str, token_id: str) -> None:
+    with connect() as conn:
+        conn.execute(
+            "UPDATE lobby_requests SET magic_token_id = ? WHERE request_id = ?",
+            (token_id, request_id),
+        )
+
+
+def consume_magic_login_token(token_id: str, request_id: str, account_id: int) -> dict:
+    with connect() as conn:
+        token_row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (token_id,),
+        ).fetchone()
+        if not token_row:
+            raise ValueError("Magic token not found")
+        if token_row["consumed_at"]:
+            raise ValueError("Magic token already used")
+        if token_row["revoked_at"]:
+            raise ValueError("Magic token revoked")
+        if _is_expired(token_row["expires_at"]):
+            raise ValueError("Magic token expired")
+
+        now = _utc_now()
+        conn.execute(
+            """
+            UPDATE magic_login_tokens
+            SET consumed_at = ?,
+                consumed_by_account_id = ?,
+                consumed_request_id = ?
+            WHERE id = ?
+            """,
+            (now, account_id, request_id, token_id),
+        )
+        row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (token_id,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
+def mark_magic_login_token_revoked(token_id: str, actor_account_id: int) -> dict:
+    with connect() as conn:
+        token_row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (token_id,),
+        ).fetchone()
+        if not token_row:
+            raise ValueError("Magic token not found")
+        if token_row["consumed_at"]:
+            raise ValueError("Magic token already used")
+        if token_row["revoked_at"]:
+            return _row_to_dict(token_row)
+
+        now = _utc_now()
+        conn.execute(
+            """
+            UPDATE magic_login_tokens
+            SET revoked_at = ?,
+                revoked_by_account_id = ?
+            WHERE id = ?
+            """,
+            (now, actor_account_id, token_id),
+        )
+        row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (token_id,),
         ).fetchone()
         return _row_to_dict(row)
 

@@ -36,6 +36,11 @@ def _session_cookie_domain() -> str | None:
     return os.getenv("SESSION_COOKIE_DOMAIN", "").strip() or None
 
 
+def _parse_csv_env(name: str) -> list[str]:
+    raw_value = os.getenv(name, "")
+    return [entry.strip().lower() for entry in raw_value.split(",") if entry.strip()]
+
+
 @dataclass
 class SessionInfo:
     account_id: int
@@ -191,3 +196,17 @@ def parse_public_key_payload(payload: str) -> tuple[str, str]:
     if isinstance(parsed, dict) and "value" in parsed and "format" in parsed:
         return parsed["value"], parsed["format"]
     return payload, "spki"
+
+
+def hash_magic_login_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def is_admin_account(account_id: int) -> bool:
+    account = db.get_account(account_id)
+    if not account:
+        return False
+    admin_usernames = _parse_csv_env("MAGIC_LINK_ADMIN_USERNAMES")
+    if not admin_usernames:
+        return True
+    return (account.get("username") or "").strip().lower() in admin_usernames

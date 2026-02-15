@@ -80,10 +80,32 @@ def init_db() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS magic_login_tokens (
+                id TEXT PRIMARY KEY,
+                token_hash TEXT NOT NULL,
+                configured_username TEXT NOT NULL,
+                created_by_account_id INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                revoked_at TEXT,
+                revoked_by_account_id INTEGER,
+                consumed_at TEXT,
+                consumed_by_account_id INTEGER,
+                consumed_request_id TEXT,
+                FOREIGN KEY(created_by_account_id) REFERENCES accounts(id),
+                FOREIGN KEY(revoked_by_account_id) REFERENCES accounts(id),
+                FOREIGN KEY(consumed_by_account_id) REFERENCES accounts(id),
+                FOREIGN KEY(consumed_request_id) REFERENCES lobby_requests(request_id)
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS lobby_requests (
                 request_id TEXT PRIMARY KEY,
                 public_key_id INTEGER NOT NULL,
                 requested_username TEXT NOT NULL,
+                magic_token_id TEXT,
                 code TEXT NOT NULL,
                 status TEXT NOT NULL,
                 requested_at TEXT NOT NULL,
@@ -96,6 +118,7 @@ def init_db() -> None:
                 rejected_by INTEGER,
                 rejected_at TEXT,
                 FOREIGN KEY(public_key_id) REFERENCES public_keys(id),
+                FOREIGN KEY(magic_token_id) REFERENCES magic_login_tokens(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id),
                 FOREIGN KEY(approved_by) REFERENCES accounts(id),
                 FOREIGN KEY(rejected_by) REFERENCES accounts(id)
@@ -120,6 +143,18 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_public_keys_fingerprint
             ON public_keys (fingerprint)
+            """
+        )
+        conn.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_magic_login_tokens_hash
+            ON magic_login_tokens (token_hash)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_magic_login_tokens_created
+            ON magic_login_tokens (created_at)
             """
         )
         conn.execute(
@@ -160,7 +195,20 @@ def init_db() -> None:
         _ensure_column(conn, "public_keys", "fingerprint", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "public_keys", "created_at", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "public_keys", "account_id", "INTEGER")
+        _ensure_column(conn, "magic_login_tokens", "token_hash", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(
+            conn, "magic_login_tokens", "configured_username", "TEXT NOT NULL DEFAULT ''"
+        )
+        _ensure_column(conn, "magic_login_tokens", "created_by_account_id", "INTEGER")
+        _ensure_column(conn, "magic_login_tokens", "created_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "magic_login_tokens", "expires_at", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "magic_login_tokens", "revoked_at", "TEXT")
+        _ensure_column(conn, "magic_login_tokens", "revoked_by_account_id", "INTEGER")
+        _ensure_column(conn, "magic_login_tokens", "consumed_at", "TEXT")
+        _ensure_column(conn, "magic_login_tokens", "consumed_by_account_id", "INTEGER")
+        _ensure_column(conn, "magic_login_tokens", "consumed_request_id", "TEXT")
         _ensure_column(conn, "lobby_requests", "requested_username", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "lobby_requests", "magic_token_id", "TEXT")
         _ensure_column(conn, "lobby_requests", "code", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "lobby_requests", "status", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "lobby_requests", "requested_at", "TEXT NOT NULL DEFAULT ''")
