@@ -24,6 +24,45 @@
       <section class="card card-compact">
         <div class="settings-row">
           <div>
+            <h2>Magic login links</h2>
+            <p class="hint">
+              Issue one-click lobby links with a preconfigured username.
+            </p>
+          </div>
+        </div>
+        <div class="field">
+          <label class="field-label" for="magic-link-username">Configured username</label>
+          <input
+            id="magic-link-username"
+            class="field-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Enter the username to prefill"
+          />
+        </div>
+        <div class="link-button-group">
+          <button type="button" class="link-button" id="magic-link-generate">Generate link</button>
+          <button type="button" class="link-button" id="magic-link-copy" disabled>Copy link</button>
+          <button type="button" class="link-button danger" id="magic-link-revoke" disabled>
+            Revoke latest link
+          </button>
+        </div>
+        <div class="field field-full">
+          <label class="field-label" for="magic-link-output">Latest link</label>
+          <input
+            id="magic-link-output"
+            class="field-input mono"
+            type="text"
+            readonly
+            placeholder="No magic link generated yet"
+          />
+        </div>
+        <p class="hint" id="magic-link-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card card-compact">
+        <div class="settings-row">
+          <div>
             <h2>Database backup</h2>
             <p class="hint">
               Download a full backup to store with resident records.

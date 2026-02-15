@@ -40,3 +40,13 @@
   - Ran `python -m compileall app` to confirm backend dependencies used by lobby flow remain valid.
 - Notes:
   - Token flow now reuses the same key generation and challenge verification path as manual lobby onboarding.
+
+## Stage 5 - Extend Settings UI for admin issue/revoke workflow
+- Changes:
+  - Added a new Settings card in `templates/settings.html` for magic link operations (configured username input, generate, copy, revoke, and latest-link display).
+  - Reworked `static/js/settings.js` to support magic link issue/copy/revoke actions while preserving existing backup download behavior.
+  - Added admin-friendly status/error messaging for unauthorized or failed issue/revoke calls.
+- Verification:
+  - Ran `python -m compileall app` to verify server-side template dependencies remain loadable.
+- Notes:
+  - Revoke action currently targets the most recently generated link in the current browser session.
