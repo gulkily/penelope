@@ -150,6 +150,17 @@ def settings(request: Request) -> HTMLResponse:
     )
 
 
+@app.get("/settings/magic-links", response_class=HTMLResponse)
+def magic_links(request: Request) -> HTMLResponse:
+    return templates.TemplateResponse(
+        "magic_links.html",
+        {
+            "request": request,
+            "current_page": "settings",
+        },
+    )
+
+
 @app.get("/debug/confetti", response_class=HTMLResponse)
 def confetti_debug(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(

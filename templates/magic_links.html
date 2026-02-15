@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Magic Login Links</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <script src="/static/js/theme.js" defer></script>
+    <script src="/static/js/lobby-indicator.js" defer></script>
+    <script src="/static/js/logout.js" defer></script>
+    <script src="/static/js/magic-links.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      {% include "partials/top_nav.html" with context %}
+      <header class="page-header">
+        <div>
+          <h1>Magic Login Links</h1>
+          <p class="hint">
+            Issue reusable one-click login links and revoke active links.
+          </p>
+        </div>
+      </header>
+
+      <section class="card card-compact">
+        <div class="field">
+          <label class="field-label" for="magic-link-username">Configured username</label>
+          <input
+            id="magic-link-username"
+            class="field-input"
+            type="text"
+            autocomplete="off"
+            placeholder="Enter the username to prefill"
+          />
+        </div>
+        <div class="link-button-group">
+          <button type="button" class="link-button" id="magic-link-generate">Generate link</button>
+          <button type="button" class="link-button" id="magic-link-copy" disabled>Copy link</button>
+        </div>
+        <p class="hint">Full link values are hidden after generation for safety.</p>
+        <p class="hint" id="magic-link-status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="card card-compact">
+        <h2>Active links</h2>
+        <div class="table-wrapper">
+          <table class="project-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Token ID</th>
+                <th>Issued By</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="magic-link-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <button type="button" class="theme-toggle" id="theme-toggle">
+      System
+    </button>
+  </body>
+</html>
