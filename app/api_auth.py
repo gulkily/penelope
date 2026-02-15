@@ -1,6 +1,7 @@
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
+from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
@@ -14,6 +15,10 @@ from app.schemas import (
     LobbyDecisionRequest,
     LobbyDecisionResponse,
     LobbyListResponse,
+    MagicLinkBootstrapResponse,
+    MagicLinkCreateRequest,
+    MagicLinkCreateResponse,
+    MagicLinkRevokeResponse,
     SessionRestoreInitResponse,
     SessionRestoreRequest,
     UsernameUpdateRequest,
@@ -23,6 +28,7 @@ router = APIRouter()
 
 CODE_TTL_DAYS = 14
 CHALLENGE_TTL_SECONDS = 60 * 60 * 24
+MAGIC_LINK_TTL_SECONDS = 60 * 60
 
 
 def _require_session(request: Request) -> auth.SessionInfo:
@@ -30,6 +36,124 @@ def _require_session(request: Request) -> auth.SessionInfo:
     if not session:
         raise HTTPException(status_code=401, detail="Unauthorized")
     return session
+
+
+def _require_admin(request: Request) -> auth.SessionInfo:
+    session = _require_session(request)
+    if not auth.is_admin_account(session.account_id):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return session
+
+
+def _resolve_magic_link_ttl(requested_ttl_seconds: int | None) -> int:
+    if requested_ttl_seconds:
+        return requested_ttl_seconds
+    return MAGIC_LINK_TTL_SECONDS
+
+
+def _build_magic_link(request: Request, token: str) -> str:
+    base = str(request.base_url).rstrip("/")
+    return f"{base}/lobby?magic_token={quote(token)}"
+
+
+def _classify_magic_token(token_row: dict) -> str:
+    if not token_row:
+        return "invalid"
+    if token_row.get("consumed_at"):
+        return "used"
+    if token_row.get("revoked_at"):
+        return "revoked"
+    expires_at_raw = token_row.get("expires_at")
+    if not expires_at_raw:
+        return "invalid"
+    try:
+        expires_at = datetime.fromisoformat(expires_at_raw)
+    except ValueError:
+        return "invalid"
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at <= datetime.now(timezone.utc):
+        return "expired"
+    return "usable"
+
+
+@router.post("/auth/magic-links", response_model=MagicLinkCreateResponse)
+def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
+    session = _require_admin(request)
+    configured_username = payload.configured_username.strip()
+    if not configured_username:
+        raise HTTPException(status_code=400, detail="Configured username required")
+
+    ttl_seconds = _resolve_magic_link_ttl(payload.ttl_seconds)
+    expires_at = (datetime.now(timezone.utc) + timedelta(seconds=ttl_seconds)).isoformat()
+    token = secrets.token_urlsafe(32)
+    token_hash = auth.hash_magic_login_token(token)
+
+    token_row = db.create_magic_login_token(
+        configured_username=configured_username,
+        created_by_account_id=session.account_id,
+        expires_at=expires_at,
+        token_hash=token_hash,
+    )
+    db.append_ledger_event(
+        "magic_link_issued",
+        actor_account_id=session.account_id,
+        subject_account_id=None,
+        metadata={
+            "token_id": token_row["id"],
+            "configured_username": configured_username,
+            "expires_at": expires_at,
+        },
+    )
+    return {
+        "token_id": token_row["id"],
+        "configured_username": configured_username,
+        "magic_link": _build_magic_link(request, token),
+        "expires_at": expires_at,
+    }
+
+
+@router.post("/auth/magic-links/{token_id}/revoke", response_model=MagicLinkRevokeResponse)
+def revoke_magic_link(token_id: str, request: Request) -> dict:
+    session = _require_admin(request)
+    try:
+        token_row = db.mark_magic_login_token_revoked(token_id, session.account_id)
+    except ValueError as exc:
+        message = str(exc)
+        if "not found" in message:
+            raise HTTPException(status_code=404, detail=message) from exc
+        if "already used" in message:
+            raise HTTPException(status_code=409, detail=message) from exc
+        raise HTTPException(status_code=400, detail=message) from exc
+
+    db.append_ledger_event(
+        "magic_link_revoked",
+        actor_account_id=session.account_id,
+        subject_account_id=None,
+        metadata={"token_id": token_row["id"]},
+    )
+    return {"token_id": token_row["id"], "status": "revoked"}
+
+
+@router.get("/auth/magic-links/bootstrap", response_model=MagicLinkBootstrapResponse)
+def bootstrap_magic_link(token: str = "") -> dict:
+    candidate = token.strip()
+    if not candidate:
+        return {"status": "invalid", "configured_username": None}
+
+    token_hash = auth.hash_magic_login_token(candidate)
+    token_row = db.get_magic_login_token_by_hash(token_hash)
+    status = _classify_magic_token(token_row)
+    if status != "usable":
+        db.append_ledger_event(
+            "magic_link_bootstrap_blocked",
+            actor_account_id=None,
+            subject_account_id=None,
+            metadata={"status": status},
+        )
+        return {"status": status, "configured_username": None}
+
+    return {"status": "usable", "configured_username": token_row["configured_username"]}
 
 
 @router.post("/auth/register", response_model=AuthRegisterResponse)

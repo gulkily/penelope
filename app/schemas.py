@@ -143,6 +143,10 @@ class AuthRegisterRequest(BaseModel):
     username: str = Field(..., min_length=1, description="Requested display name.")
     public_key: str = Field(..., min_length=1, description="Public key material.")
     public_key_format: str = Field("spki", description="Public key format.")
+    magic_token: str | None = Field(
+        None,
+        description="Optional magic login token from one-click invite link.",
+    )
 
 
 class AuthRegisterResponse(BaseModel):
@@ -205,3 +209,40 @@ class SessionRestoreRequest(BaseModel):
     public_key_format: str = Field("spki", description="Public key format.")
     signature: str = Field(..., min_length=1, description="Signature over challenge.")
     challenge: str = Field(..., min_length=1, description="Challenge string.")
+
+
+class MagicLinkCreateRequest(BaseModel):
+    configured_username: str = Field(
+        ...,
+        min_length=1,
+        description="Username preconfigured into the generated magic link.",
+    )
+    ttl_seconds: int | None = Field(
+        None,
+        ge=60,
+        le=60 * 60 * 24 * 7,
+        description="Optional token lifetime in seconds.",
+    )
+
+
+class MagicLinkCreateResponse(BaseModel):
+    token_id: str = Field(..., description="Magic token identifier.")
+    configured_username: str = Field(..., description="Username bound to the token.")
+    magic_link: str = Field(..., description="One-click lobby link with token query param.")
+    expires_at: str = Field(..., description="ISO timestamp for link expiration.")
+
+
+class MagicLinkBootstrapResponse(BaseModel):
+    status: Literal["usable", "invalid", "expired", "revoked", "used"] = Field(
+        ...,
+        description="Bootstrap state for the provided token.",
+    )
+    configured_username: str | None = Field(
+        None,
+        description="Configured username when token is usable.",
+    )
+
+
+class MagicLinkRevokeResponse(BaseModel):
+    token_id: str = Field(..., description="Magic token identifier.")
+    status: Literal["revoked"] = Field(..., description="Updated token status.")
