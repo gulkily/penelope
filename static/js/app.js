@@ -53,6 +53,7 @@ const progressGraphEmpty = document.getElementById("progress-graph-empty");
 const reorderLive = document.getElementById("reorder-live");
 const transcriptOpen = document.getElementById("transcript-open");
 const transcriptDialog = document.getElementById("transcript-dialog");
+const transcriptWorkspace = document.getElementById("transcript-workspace");
 const transcriptClose = document.getElementById("transcript-close");
 const transcriptInput = document.getElementById("transcript-input");
 const transcriptAnalyze = document.getElementById("transcript-analyze");
@@ -86,8 +87,12 @@ const uploadSubmit = document.getElementById("upload-submit");
 const uploadClear = document.getElementById("upload-clear");
 const interviewGuideToggle = document.getElementById("interview-guide-toggle");
 const interviewGuideStatus = document.getElementById("interview-guide-status");
+const interviewGuideProgress = document.getElementById("interview-guide-progress");
+const interviewGuide = document.getElementById("interview-guide");
 const interviewGuideContent = document.getElementById("interview-guide-content");
 const interviewGuideBody = document.getElementById("interview-guide-body");
+const interviewGuideBackdrop = document.getElementById("interview-guide-backdrop");
+const interviewGuideClose = document.getElementById("interview-guide-close");
 
 const undoState = {
   projectId: null,
@@ -231,6 +236,10 @@ function setInterviewGuideStatus(message, isError = false) {
   }
 }
 
+function isMobileGuideMode() {
+  return window.matchMedia("(max-width: 899px)").matches;
+}
+
 function renderInterviewQuestionsTemplate(content) {
   if (!interviewGuideBody) {
     return;
@@ -321,10 +330,16 @@ function renderInterviewQuestionsTemplate(content) {
 }
 
 function setInterviewGuideVisibility(isVisible) {
-  if (!interviewGuideContent || !interviewGuideToggle) {
+  if (!interviewGuide || !interviewGuideToggle) {
     return;
   }
-  interviewGuideContent.hidden = !isVisible;
+  interviewGuide.hidden = !isVisible;
+  if (interviewGuideBackdrop) {
+    interviewGuideBackdrop.hidden = !isVisible || !isMobileGuideMode();
+  }
+  if (transcriptWorkspace) {
+    transcriptWorkspace.classList.toggle("has-guide-open", isVisible);
+  }
   interviewGuideToggle.setAttribute("aria-expanded", isVisible ? "true" : "false");
   interviewGuideToggle.textContent = isVisible ? "Hide guide" : "Show guide";
 }
@@ -365,7 +380,7 @@ async function loadInterviewQuestionsTemplate() {
 }
 
 async function toggleInterviewGuide() {
-  const shouldShow = Boolean(interviewGuideContent && interviewGuideContent.hidden);
+  const shouldShow = Boolean(interviewGuide && interviewGuide.hidden);
   setInterviewGuideVisibility(shouldShow);
   if (!shouldShow) {
     setInterviewGuideStatus("Open the guide to review interview prompts.");
@@ -387,6 +402,9 @@ function resetInterviewGuidePanel() {
   setInterviewGuideVisibility(false);
   if (interviewGuideBody) {
     interviewGuideBody.textContent = "";
+  }
+  if (interviewGuideProgress) {
+    interviewGuideProgress.textContent = "0/0 asked";
   }
   setInterviewGuideStatus("Open the guide to review interview prompts.");
 }
@@ -2571,6 +2589,18 @@ if (uploadClear) {
 if (interviewGuideToggle) {
   interviewGuideToggle.addEventListener("click", () => {
     toggleInterviewGuide();
+  });
+}
+
+if (interviewGuideBackdrop) {
+  interviewGuideBackdrop.addEventListener("click", () => {
+    setInterviewGuideVisibility(false);
+  });
+}
+
+if (interviewGuideClose) {
+  interviewGuideClose.addEventListener("click", () => {
+    setInterviewGuideVisibility(false);
   });
 }
 

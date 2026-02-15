@@ -240,38 +240,55 @@
               Close
             </button>
           </header>
-          <div class="field field-full">
-            <label class="field-label" for="transcript-input">Transcript</label>
-            <textarea
-              id="transcript-input"
-              class="field-input field-textarea"
-              rows="8"
-              autocomplete="off"
-              placeholder="Paste the mentor + mentee transcript here..."
-            ></textarea>
-          </div>
-          <section class="interview-guide" id="interview-guide">
-            <div class="interview-guide-header">
-              <div>
-                <h3>Interview guide</h3>
-                <p class="hint interview-guide-status" id="interview-guide-status">
-                  Open the guide to review interview prompts.
-                </p>
+          <div class="transcript-workspace" id="transcript-workspace">
+            <div class="field field-full transcript-field">
+              <div class="transcript-field-header">
+                <label class="field-label" for="transcript-input">Transcript</label>
+                <button
+                  type="button"
+                  class="link-button"
+                  id="interview-guide-toggle"
+                  aria-expanded="false"
+                  aria-controls="interview-guide"
+                >
+                  Show guide
+                </button>
               </div>
-              <button
-                type="button"
-                class="link-button"
-                id="interview-guide-toggle"
-                aria-expanded="false"
-                aria-controls="interview-guide-content"
-              >
-                Show guide
-              </button>
+              <textarea
+                id="transcript-input"
+                class="field-input field-textarea"
+                rows="8"
+                autocomplete="off"
+                placeholder="Paste the mentor + mentee transcript here..."
+              ></textarea>
             </div>
-            <div class="interview-guide-content" id="interview-guide-content" hidden>
-              <div class="interview-guide-body" id="interview-guide-body"></div>
-            </div>
-          </section>
+            <section class="interview-guide" id="interview-guide" hidden>
+              <div class="interview-guide-header">
+                <div>
+                  <h3>Interview guide</h3>
+                  <p class="hint interview-guide-status" id="interview-guide-status">
+                    Open the guide to review interview prompts.
+                  </p>
+                  <p class="hint interview-guide-progress" id="interview-guide-progress">
+                    0/0 asked
+                  </p>
+                </div>
+                <button type="button" class="dialog-close" id="interview-guide-close">
+                  Close
+                </button>
+              </div>
+              <div class="interview-guide-content" id="interview-guide-content">
+                <div class="interview-guide-body" id="interview-guide-body"></div>
+              </div>
+            </section>
+            <button
+              type="button"
+              class="interview-guide-backdrop"
+              id="interview-guide-backdrop"
+              hidden
+              aria-label="Close interview guide"
+            ></button>
+          </div>
           <section class="transcript-recorder" id="transcript-recorder">
             <div class="transcript-recorder-header">
               <div>

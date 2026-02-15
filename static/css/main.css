@@ -1174,7 +1174,7 @@ html {
 }
 
 .transcript-dialog {
-  width: min(760px, 92vw);
+  width: min(980px, 94vw);
   border: none;
   padding: 0;
   border-radius: 12px;
@@ -1195,6 +1195,20 @@ html {
   gap: 16px;
   max-height: 85vh;
   overflow: auto;
+}
+
+.transcript-workspace {
+  position: relative;
+  display: grid;
+  gap: 12px;
+}
+
+.transcript-field-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
 }
 
 .transcript-dialog-header {
@@ -1317,6 +1331,10 @@ html {
   font-size: 14px;
 }
 
+.interview-guide-progress {
+  margin-top: 2px;
+}
+
 .interview-guide-status[data-status="error"] {
   color: #ff9090;
 }
@@ -1366,6 +1384,10 @@ html {
   padding-left: 18px;
   display: grid;
   gap: 4px;
+}
+
+.interview-guide-backdrop {
+  display: none;
 }
 
 .transcript-recorder-header,
@@ -1435,4 +1457,61 @@ html {
   width: 0%;
   background: linear-gradient(90deg, #4aa3ff, #2f6bff);
   transition: width 0.1s linear;
+}
+
+@media (max-width: 899px) {
+  .interview-guide {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    z-index: 1100;
+    max-height: 72vh;
+    overflow: auto;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px var(--shadow-toast);
+  }
+
+  .interview-guide-content {
+    max-height: 52vh;
+    overflow: auto;
+  }
+
+  .interview-guide-backdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 1090;
+    border: 0;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    background: rgba(15, 18, 28, 0.4);
+  }
+}
+
+@media (min-width: 900px) {
+  .transcript-workspace {
+    grid-template-columns: minmax(0, 1fr);
+    align-items: start;
+  }
+
+  .transcript-workspace.has-guide-open {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 34vw);
+  }
+
+  .transcript-workspace.has-guide-open .interview-guide {
+    position: sticky;
+    top: 0;
+    max-height: 64vh;
+    overflow: auto;
+    resize: horizontal;
+    min-width: 280px;
+    max-width: 520px;
+  }
+
+  .interview-guide-backdrop,
+  .interview-guide-close {
+    display: none !important;
+  }
 }
