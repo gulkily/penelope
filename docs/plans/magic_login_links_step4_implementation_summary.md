@@ -30,3 +30,13 @@
   - Ran `python -m compileall app` to confirm register/verify and DB-layer updates compile.
 - Notes:
   - Token auto-approval returns a conflict response when token state changes between register and verify.
+
+## Stage 4 - Add one-click lobby entry UX for token links
+- Changes:
+  - Updated `static/js/lobby.js` to read `magic_token` from URL query params, call bootstrap validation, and auto-start the existing register+verify flow with token-bound username.
+  - Added blocked-token messaging (`invalid|expired|revoked|used`) and failure-safe behavior that avoids auto-approval when bootstrap is not usable.
+  - Added URL cleanup via `history.replaceState` so the token is removed from browser address/history after initial processing.
+- Verification:
+  - Ran `python -m compileall app` to confirm backend dependencies used by lobby flow remain valid.
+- Notes:
+  - Token flow now reuses the same key generation and challenge verification path as manual lobby onboarding.

@@ -6,6 +6,7 @@ const STORAGE_KEYS = {
   requestId: "auth_request_id",
   code: "auth_lobby_code",
 };
+const MAGIC_TOKEN_PARAM = "magic_token";
 
 const elements = {
   usernameInput: document.getElementById("username-input"),
@@ -156,7 +157,7 @@ async function signChallenge(challenge) {
   return bufferToBase64(signature);
 }
 
-async function registerAccess(username) {
+async function registerAccess(username, magicToken = null) {
   showMessage(elements.requestMessage, "Generating keypair...", false);
 
   let publicKey = localStorage.getItem(STORAGE_KEYS.publicKey);
@@ -176,6 +177,7 @@ async function registerAccess(username) {
       username,
       public_key: publicKey,
       public_key_format: "spki",
+      magic_token: magicToken,
     }),
   });
 
@@ -213,6 +215,70 @@ async function registerAccess(username) {
     "Waiting for approval..."
   );
   startStatusPolling();
+}
+
+function clearMagicTokenFromUrl() {
+  const url = new URL(window.location.href);
+  if (!url.searchParams.has(MAGIC_TOKEN_PARAM)) {
+    return;
+  }
+  url.searchParams.delete(MAGIC_TOKEN_PARAM);
+  const nextSearch = url.searchParams.toString();
+  const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash || ""}`;
+  window.history.replaceState({}, document.title, nextUrl);
+}
+
+function magicTokenFailureMessage(status) {
+  if (status === "expired") {
+    return "This magic link has expired. Ask an admin to issue a new one.";
+  }
+  if (status === "revoked") {
+    return "This magic link was revoked. Ask an admin for a replacement link.";
+  }
+  if (status === "used") {
+    return "This magic link was already used. Ask an admin for a new link.";
+  }
+  return "This magic link is invalid. Ask an admin to resend it.";
+}
+
+async function bootstrapMagicLink(token) {
+  const response = await fetch(
+    `/api/auth/magic-links/bootstrap?token=${encodeURIComponent(token)}`
+  );
+  if (!response.ok) {
+    throw new Error("Failed to validate magic link.");
+  }
+  return response.json();
+}
+
+async function startMagicLinkFlow(token) {
+  if (!elements.usernameInput || !elements.requestButton) {
+    return;
+  }
+  showMessage(elements.requestMessage, "Validating magic link...");
+  const data = await bootstrapMagicLink(token);
+  if (data.status !== "usable") {
+    showMessage(elements.requestMessage, magicTokenFailureMessage(data.status), true);
+    return;
+  }
+
+  const username = (data.configured_username || "").trim();
+  if (!username) {
+    showMessage(elements.requestMessage, "Magic link is missing a configured username.", true);
+    return;
+  }
+
+  elements.usernameInput.value = username;
+  elements.usernameInput.readOnly = true;
+  elements.requestButton.disabled = true;
+  try {
+    await registerAccess(username, token);
+    showMessage(elements.requestMessage, "Magic link request submitted.");
+  } catch (error) {
+    showMessage(elements.requestMessage, error.message || "Magic link request failed.", true);
+  } finally {
+    elements.requestButton.disabled = false;
+  }
 }
 
 async function fetchStatus() {
@@ -489,6 +555,21 @@ function init() {
   if (localStorage.getItem(STORAGE_KEYS.requestId)) {
     elements.lobbyStatus.hidden = false;
     startStatusPolling();
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const magicToken = (params.get(MAGIC_TOKEN_PARAM) || "").trim();
+  if (magicToken) {
+    clearPendingRequest();
+    stopStatusPolling();
+    clearMagicTokenFromUrl();
+    if (!resolveSubtleCrypto()) {
+      showMessage(elements.requestMessage, WEB_CRYPTO_ERROR, true);
+    } else {
+      startMagicLinkFlow(magicToken).catch((error) => {
+        showMessage(elements.requestMessage, error.message || "Magic link request failed.", true);
+      });
+    }
   }
 
   loadApprovals();
