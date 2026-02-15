@@ -20,3 +20,13 @@
   - Ran `python -m compileall app` to confirm endpoint/schema updates compile.
 - Notes:
   - Bootstrap endpoint returns non-sensitive token states (`usable|invalid|expired|revoked|used`) without exposing token internals.
+
+## Stage 3 - Integrate token into existing register/verify session flow
+- Changes:
+  - Added atomic data-layer helper `approve_lobby_request_with_magic_token` in `app/db_auth.py` to consume token + approve request in one transaction boundary.
+  - Updated `/api/auth/register` in `app/api_auth.py` to accept optional `magic_token`, validate it, and bind it to the lobby request while enforcing token-configured username.
+  - Updated `/api/auth/verify` in `app/api_auth.py` to auto-approve verified requests with a bound magic token and return approved status without manual approver intervention.
+- Verification:
+  - Ran `python -m compileall app` to confirm register/verify and DB-layer updates compile.
+- Notes:
+  - Token auto-approval returns a conflict response when token state changes between register and verify.

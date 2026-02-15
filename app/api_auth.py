@@ -164,6 +164,15 @@ def register(payload: AuthRegisterRequest) -> dict:
     username = payload.username.strip()
     if not username:
         raise HTTPException(status_code=400, detail="Username required")
+    magic_token_id = None
+    if payload.magic_token:
+        token_hash = auth.hash_magic_login_token(payload.magic_token.strip())
+        token_row = db.get_magic_login_token_by_hash(token_hash)
+        token_status = _classify_magic_token(token_row)
+        if token_status != "usable":
+            raise HTTPException(status_code=400, detail=f"Magic link {token_status}")
+        magic_token_id = token_row["id"]
+        username = token_row["configured_username"]
 
     public_key_format = payload.public_key_format or "spki"
     try:
@@ -182,6 +191,7 @@ def register(payload: AuthRegisterRequest) -> dict:
         code=code,
         expires_at=expires_at,
         challenge=challenge,
+        magic_token_id=magic_token_id,
     )
     db.append_ledger_event(
         "lobby_requested",
@@ -191,6 +201,7 @@ def register(payload: AuthRegisterRequest) -> dict:
             "request_id": request_row["request_id"],
             "fingerprint": fingerprint,
             "username": username,
+            "magic_token_id": magic_token_id,
         },
     )
     return {
@@ -236,6 +247,26 @@ def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
         subject_account_id=None,
         metadata={"request_id": request_row["request_id"]},
     )
+    if request_row.get("magic_token_id"):
+        try:
+            approved = db.approve_lobby_request_with_magic_token(request_row["request_id"])
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        db.append_ledger_event(
+            "magic_link_auto_approved",
+            actor_account_id=None,
+            subject_account_id=approved.get("account_id"),
+            metadata={
+                "request_id": request_row["request_id"],
+                "magic_token_id": request_row["magic_token_id"],
+            },
+        )
+        return AuthStatusResponse(
+            request_id=request_row["request_id"],
+            status="approved",
+            code=None,
+            fingerprint=public_key_row["fingerprint"],
+        )
     if db.count_accounts() == 0:
         approved = db.approve_lobby_request(
             request_id=request_row["request_id"],

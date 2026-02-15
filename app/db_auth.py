@@ -25,6 +25,42 @@ def _is_expired(iso_timestamp: str) -> bool:
     return expires_at <= datetime.now(timezone.utc)
 
 
+def _resolve_target_account_id(
+    conn,
+    requested_username: str,
+    public_key_account_id: int | None,
+    link_to_account_id: int | None = None,
+) -> int:
+    target_account_id = public_key_account_id
+    if link_to_account_id:
+        target_account_id = link_to_account_id
+    if not target_account_id:
+        existing_account = conn.execute(
+            """
+            SELECT *
+            FROM accounts
+            WHERE LOWER(TRIM(username)) = LOWER(TRIM(?))
+            ORDER BY id ASC
+            LIMIT 1
+            """,
+            (requested_username,),
+        ).fetchone()
+        if existing_account:
+            target_account_id = int(existing_account["id"])
+    if target_account_id:
+        return target_account_id
+
+    now = _utc_now()
+    cursor = conn.execute(
+        """
+        INSERT INTO accounts (username, created_at, updated_at)
+        VALUES (?, ?, ?)
+        """,
+        (requested_username, now, now),
+    )
+    return int(cursor.lastrowid)
+
+
 def create_account(initial_username: str) -> dict:
     now = _utc_now()
     with connect() as conn:
@@ -373,25 +409,12 @@ def approve_lobby_request(
         if not public_key_row:
             raise ValueError("Public key not found")
 
-        target_account_id = public_key_row["account_id"]
-        if link_to_account_id:
-            target_account_id = link_to_account_id
-        if not target_account_id:
-            existing_account = get_account_by_username_case_insensitive(
-                request_row["requested_username"]
-            )
-            if existing_account:
-                target_account_id = existing_account["id"]
-        if not target_account_id:
-            now = _utc_now()
-            cursor = conn.execute(
-                """
-                INSERT INTO accounts (username, created_at, updated_at)
-                VALUES (?, ?, ?)
-                """,
-                (request_row["requested_username"], now, now),
-            )
-            target_account_id = cursor.lastrowid
+        target_account_id = _resolve_target_account_id(
+            conn=conn,
+            requested_username=request_row["requested_username"],
+            public_key_account_id=public_key_row["account_id"],
+            link_to_account_id=link_to_account_id,
+        )
 
         conn.execute(
             "UPDATE public_keys SET account_id = ? WHERE id = ?",
@@ -415,6 +438,80 @@ def approve_lobby_request(
                 (request_id,),
             ).fetchone()
         )
+
+
+def approve_lobby_request_with_magic_token(request_id: str) -> dict:
+    with connect() as conn:
+        request_row = conn.execute(
+            "SELECT * FROM lobby_requests WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+        if not request_row or request_row["status"] != "pending":
+            raise ValueError("Lobby request not pending")
+        if not request_row["magic_token_id"]:
+            raise ValueError("Lobby request missing magic token")
+
+        token_row = conn.execute(
+            "SELECT * FROM magic_login_tokens WHERE id = ?",
+            (request_row["magic_token_id"],),
+        ).fetchone()
+        if not token_row:
+            raise ValueError("Magic token not found")
+        if token_row["consumed_at"]:
+            raise ValueError("Magic token already used")
+        if token_row["revoked_at"]:
+            raise ValueError("Magic token revoked")
+        if _is_expired(token_row["expires_at"]):
+            raise ValueError("Magic token expired")
+
+        public_key_row = conn.execute(
+            "SELECT * FROM public_keys WHERE id = ?",
+            (request_row["public_key_id"],),
+        ).fetchone()
+        if not public_key_row:
+            raise ValueError("Public key not found")
+
+        target_account_id = _resolve_target_account_id(
+            conn=conn,
+            requested_username=request_row["requested_username"],
+            public_key_account_id=public_key_row["account_id"],
+        )
+        now = _utc_now()
+        conn.execute(
+            "UPDATE public_keys SET account_id = ? WHERE id = ?",
+            (target_account_id, public_key_row["id"]),
+        )
+        conn.execute(
+            """
+            UPDATE lobby_requests
+            SET status = 'approved',
+                approved_by = NULL,
+                approved_at = ?,
+                account_id = ?
+            WHERE request_id = ?
+            """,
+            (now, target_account_id, request_id),
+        )
+        consumed_cursor = conn.execute(
+            """
+            UPDATE magic_login_tokens
+            SET consumed_at = ?,
+                consumed_by_account_id = ?,
+                consumed_request_id = ?
+            WHERE id = ?
+              AND consumed_at IS NULL
+              AND revoked_at IS NULL
+            """,
+            (now, target_account_id, request_id, token_row["id"]),
+        )
+        if consumed_cursor.rowcount != 1:
+            raise ValueError("Magic token was consumed concurrently")
+
+        row = conn.execute(
+            "SELECT * FROM lobby_requests WHERE request_id = ?",
+            (request_id,),
+        ).fetchone()
+        return _row_to_dict(row)
 
 
 def reject_lobby_request(request_id: str, rejected_by_account_id: int) -> dict:
