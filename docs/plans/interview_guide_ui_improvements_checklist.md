@@ -8,10 +8,10 @@
 - [ ] Verify guide remains readable and transcript controls remain accessible at common viewport sizes.
 
 ## 2. Section Checklist + Progress Count
-- [ ] Parse guide sections/questions into renderable checklist items.
-- [ ] Add per-question checkbox UI in the rendered guide.
-- [ ] Add progress indicator (e.g., `3/9 asked`) that updates live.
-- [ ] Ensure checklist toggles do not modify the underlying template file.
+- [x] Parse guide sections/questions into renderable checklist items.
+- [x] Add per-question checkbox UI in the rendered guide.
+- [x] Add progress indicator (e.g., `3/9 asked`) that updates live.
+- [x] Ensure checklist toggles do not modify the underlying template file.
 - [ ] Verify toggling works while recording/uploading/analyzing.
 
 ## 3. Accessibility Polish

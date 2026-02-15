@@ -1386,6 +1386,34 @@ html {
   gap: 4px;
 }
 
+.interview-guide-section {
+  display: grid;
+  gap: 8px;
+}
+
+.interview-guide-checklist {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.interview-guide-checkitem {
+  margin: 0;
+}
+
+.interview-guide-checklabel {
+  display: inline-flex;
+  align-items: flex-start;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.interview-guide-checklabel input[type="checkbox"] {
+  margin-top: 2px;
+}
+
 .interview-guide-backdrop {
   display: none;
 }

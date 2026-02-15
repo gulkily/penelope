@@ -136,6 +136,8 @@ const interviewGuideState = {
   content: "",
   loaded: false,
   loading: false,
+  sections: [],
+  checkedQuestionIds: new Set(),
 };
 
 function toggleInlineAdds(enabled) {
@@ -240,93 +242,121 @@ function isMobileGuideMode() {
   return window.matchMedia("(max-width: 899px)").matches;
 }
 
+function parseInterviewGuideTemplate(content) {
+  const lines = String(content || "").split(/\r?\n/);
+  const parsed = {
+    title: "",
+    sections: [],
+  };
+  let currentSection = null;
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      continue;
+    }
+    const docTitleMatch = trimmed.match(/^#\s+(.+)$/);
+    if (docTitleMatch) {
+      parsed.title = docTitleMatch[1].trim();
+      continue;
+    }
+    const sectionMatch = trimmed.match(/^##\s+(.+)$/);
+    if (sectionMatch) {
+      currentSection = {
+        title: sectionMatch[1].trim(),
+        questions: [],
+      };
+      parsed.sections.push(currentSection);
+      continue;
+    }
+    const questionMatch = trimmed.match(/^[-*+]\s+(.+)$/) ||
+      trimmed.match(/^\d+\.\s+(.+)$/);
+    if (questionMatch && currentSection) {
+      currentSection.questions.push(questionMatch[1].trim());
+      continue;
+    }
+    if (currentSection) {
+      currentSection.questions.push(trimmed);
+    }
+  }
+
+  return parsed;
+}
+
+function getInterviewGuideQuestionId(sectionIndex, questionIndex) {
+  return `s${sectionIndex}q${questionIndex}`;
+}
+
+function updateInterviewGuideProgress() {
+  if (!interviewGuideProgress) {
+    return;
+  }
+  const totalQuestions = interviewGuideState.sections.reduce(
+    (sum, section) => sum + (section.questions?.length || 0),
+    0,
+  );
+  const askedQuestions = interviewGuideState.checkedQuestionIds.size;
+  interviewGuideProgress.textContent = `${askedQuestions}/${totalQuestions} asked`;
+}
+
 function renderInterviewQuestionsTemplate(content) {
   if (!interviewGuideBody) {
     return;
   }
   interviewGuideBody.replaceChildren();
-  const markdown = String(content || "").trim();
-  if (!markdown) {
-    return;
+  const parsed = parseInterviewGuideTemplate(content);
+  interviewGuideState.sections = parsed.sections;
+
+  if (parsed.title) {
+    const title = document.createElement("h2");
+    title.textContent = parsed.title;
+    interviewGuideBody.appendChild(title);
   }
 
-  const lines = markdown.split(/\r?\n/);
-  let paragraphLines = [];
-  let activeList = null;
-  let activeListType = "";
+  parsed.sections.forEach((section, sectionIndex) => {
+    const sectionWrapper = document.createElement("section");
+    sectionWrapper.className = "interview-guide-section";
 
-  const flushParagraph = () => {
-    if (!paragraphLines.length) {
-      return;
-    }
-    const paragraph = document.createElement("p");
-    paragraph.textContent = paragraphLines.join(" ");
-    interviewGuideBody.appendChild(paragraph);
-    paragraphLines = [];
-  };
+    const sectionTitle = document.createElement("h3");
+    sectionTitle.textContent = section.title;
+    sectionWrapper.appendChild(sectionTitle);
 
-  const closeList = () => {
-    activeList = null;
-    activeListType = "";
-  };
+    const list = document.createElement("ul");
+    list.className = "interview-guide-checklist";
 
-  const ensureList = (type) => {
-    if (activeList && activeListType === type) {
-      return activeList;
-    }
-    closeList();
-    const list = document.createElement(type);
-    interviewGuideBody.appendChild(list);
-    activeList = list;
-    activeListType = type;
-    return list;
-  };
-
-  for (const rawLine of lines) {
-    const trimmed = rawLine.trim();
-    if (!trimmed) {
-      flushParagraph();
-      closeList();
-      continue;
-    }
-
-    const headingMatch = trimmed.match(/^(#{1,6})\s+(.+)$/);
-    if (headingMatch) {
-      flushParagraph();
-      closeList();
-      const level = Math.min(6, headingMatch[1].length);
-      const heading = document.createElement(`h${level}`);
-      heading.textContent = headingMatch[2].trim();
-      interviewGuideBody.appendChild(heading);
-      continue;
-    }
-
-    const unorderedMatch = trimmed.match(/^[-*+]\s+(.+)$/);
-    if (unorderedMatch) {
-      flushParagraph();
-      const list = ensureList("ul");
+    (section.questions || []).forEach((questionText, questionIndex) => {
       const item = document.createElement("li");
-      item.textContent = unorderedMatch[1].trim();
+      item.className = "interview-guide-checkitem";
+
+      const label = document.createElement("label");
+      label.className = "interview-guide-checklabel";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      const questionId = getInterviewGuideQuestionId(sectionIndex, questionIndex);
+      checkbox.checked = interviewGuideState.checkedQuestionIds.has(questionId);
+      checkbox.addEventListener("change", () => {
+        if (checkbox.checked) {
+          interviewGuideState.checkedQuestionIds.add(questionId);
+        } else {
+          interviewGuideState.checkedQuestionIds.delete(questionId);
+        }
+        updateInterviewGuideProgress();
+      });
+
+      const text = document.createElement("span");
+      text.textContent = questionText;
+
+      label.append(checkbox, text);
+      item.appendChild(label);
       list.appendChild(item);
-      continue;
-    }
+    });
 
-    const orderedMatch = trimmed.match(/^\d+\.\s+(.+)$/);
-    if (orderedMatch) {
-      flushParagraph();
-      const list = ensureList("ol");
-      const item = document.createElement("li");
-      item.textContent = orderedMatch[1].trim();
-      list.appendChild(item);
-      continue;
-    }
+    sectionWrapper.appendChild(list);
+    interviewGuideBody.appendChild(sectionWrapper);
+  });
 
-    closeList();
-    paragraphLines.push(trimmed);
-  }
-
-  flushParagraph();
-  closeList();
+  updateInterviewGuideProgress();
 }
 
 function setInterviewGuideVisibility(isVisible) {
@@ -403,6 +433,8 @@ function resetInterviewGuidePanel() {
   if (interviewGuideBody) {
     interviewGuideBody.textContent = "";
   }
+  interviewGuideState.sections = [];
+  interviewGuideState.checkedQuestionIds.clear();
   if (interviewGuideProgress) {
     interviewGuideProgress.textContent = "0/0 asked";
   }
