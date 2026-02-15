@@ -5,7 +5,7 @@
 - [x] Update transcript dialog markup to include a resizable/split guide container on desktop.
 - [x] Add mobile drawer toggle/open/close controls and close-on-backdrop behavior.
 - [x] Add CSS layout rules for desktop split + mobile drawer states.
-- [ ] Verify guide remains readable and transcript controls remain accessible at common viewport sizes.
+- [x] Verify guide remains readable and transcript controls remain accessible at common viewport sizes.
 
 ## 2. Section Checklist + Progress Count
 - [x] Parse guide sections/questions into renderable checklist items.
@@ -22,6 +22,6 @@
 - [ ] Run a manual keyboard-only walkthrough of the full interview flow.
 
 ## 4. Regression Coverage + Docs
-- [ ] Add focused E2E checks for guide visibility and checklist updates.
-- [ ] Add/update docs for interviewer usage and operator-maintained template workflow.
-- [ ] Add concise release note in the Step 4 summary after implementation is complete.
+- [x] Add focused E2E checks for guide visibility and checklist updates.
+- [x] Add/update docs for interviewer usage and operator-maintained template workflow.
+- [x] Add concise release note in the Step 4 summary after implementation is complete.

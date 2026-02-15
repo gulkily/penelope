@@ -60,4 +60,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Questions auto-save while typing.
 - Interview guide prompts in the `Add update` dialog come from `static/templates/interview_questions_template.md`.
 - To update interview prompts, edit `static/templates/interview_questions_template.md`; changes are picked up on next page load.
+- Interview guide prompts render as a checklist with a live asked counter (`x/y asked`).
+- In the `Add update` dialog, press `g` to toggle the interview guide when focus is not inside a text input.
+- On mobile widths, the interview guide opens as a bottom drawer and closes via backdrop tap.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.

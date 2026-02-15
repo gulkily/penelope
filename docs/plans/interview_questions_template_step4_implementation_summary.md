@@ -29,7 +29,7 @@
 - Verification:
   - Ran `node --check static/js/app.js` to validate JavaScript syntax after the new guide logic was added.
 - Notes:
-  - The guide currently renders markdown as readable plain text (`<pre>`), avoiding new frontend dependencies.
+  - The guide renders markdown via a lightweight in-app renderer with no third-party frontend dependency.
 
 ## Stage 4 - Ensure coexistence with recording/upload/analyze interactions
 - Changes:
@@ -51,3 +51,6 @@
   - Reviewed `README.md` references for path accuracy and alignment with implemented static asset loading.
 - Notes:
   - Automated regression tests were intentionally not added in this step to align with the Step 4 process constraint to rely on manual smoke verification during implementation.
+
+## Release Note
+- Interview Guide now supports desktop split view and mobile drawer behavior, checklist-style prompt tracking with live asked counts, and improved accessibility (ARIA live updates, keyboard toggle shortcut `g`, and stronger mobile controls).

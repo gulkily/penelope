@@ -89,7 +89,6 @@ const interviewGuideToggle = document.getElementById("interview-guide-toggle");
 const interviewGuideStatus = document.getElementById("interview-guide-status");
 const interviewGuideProgress = document.getElementById("interview-guide-progress");
 const interviewGuide = document.getElementById("interview-guide");
-const interviewGuideContent = document.getElementById("interview-guide-content");
 const interviewGuideBody = document.getElementById("interview-guide-body");
 const interviewGuideBackdrop = document.getElementById("interview-guide-backdrop");
 const interviewGuideClose = document.getElementById("interview-guide-close");
