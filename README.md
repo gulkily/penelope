@@ -54,6 +54,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Item additions use inline add rows; edit and delete are available per item with an undo toast.
 - Project Management lists are paginated at 100 items per page with next/previous controls.
 - Settings includes a database backup download for saving recovery copies.
+- Settings includes admin tools to generate one-click magic lobby links with preconfigured usernames.
 - The North Star objective can be updated per resident via the Save button.
 - The North Star goal value sets the progress slider range per resident.
 - Progress updates happen immediately via the integrated slider.
@@ -64,3 +65,5 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - In the `Add update` dialog, press `g` to toggle the interview guide when focus is not inside a text input.
 - On mobile widths, the interview guide opens as a bottom drawer and closes via backdrop tap.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.
+- Configure magic-link admins with `MAGIC_LINK_ADMIN_USERNAMES` (comma-separated usernames); when unset, any signed-in account can issue/revoke links.
+- Configure default magic-link expiration with `MAGIC_LINK_TTL_SECONDS` (default `3600`, min `60`, max `604800`).

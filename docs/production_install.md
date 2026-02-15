@@ -55,6 +55,8 @@ SESSION_COOKIE_SECURE=true
 # Optional:
 # SESSION_COOKIE_DOMAIN=beta.penelope.livetheresidency.com
 # CORS_ALLOW_ORIGINS=
+# MAGIC_LINK_ADMIN_USERNAMES=admin_username
+# MAGIC_LINK_TTL_SECONDS=3600
 EOF
 ```
 

@@ -50,3 +50,14 @@
   - Ran `python -m compileall app` to verify server-side template dependencies remain loadable.
 - Notes:
   - Revoke action currently targets the most recently generated link in the current browser session.
+
+## Stage 6 - Ledger instrumentation, hardening, and regression coverage
+- Changes:
+  - Added configurable default TTL handling in `app/api_auth.py` via `MAGIC_LINK_TTL_SECONDS` with safety bounds.
+  - Added explicit ledger event `magic_link_consumed` on successful token auto-approval; expanded bootstrap-blocked ledger metadata to include token id when available.
+  - Documented new magic-link environment settings in `.env.example`, `README.md`, and `docs/production_install.md`.
+- Verification:
+  - Ran `python -m compileall app` after hardening updates.
+  - Manual browser/API smoke verification not run in this environment (requires running app session).
+- Notes:
+  - Automated tests for this flow are still pending and should be added in a follow-up once a stable auth test harness is selected.

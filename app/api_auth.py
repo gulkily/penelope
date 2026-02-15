@@ -1,4 +1,5 @@
 import json
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from urllib.parse import quote
@@ -28,7 +29,8 @@ router = APIRouter()
 
 CODE_TTL_DAYS = 14
 CHALLENGE_TTL_SECONDS = 60 * 60 * 24
-MAGIC_LINK_TTL_SECONDS = 60 * 60
+DEFAULT_MAGIC_LINK_TTL_SECONDS = 60 * 60
+MAX_MAGIC_LINK_TTL_SECONDS = 60 * 60 * 24 * 7
 
 
 def _require_session(request: Request) -> auth.SessionInfo:
@@ -48,7 +50,14 @@ def _require_admin(request: Request) -> auth.SessionInfo:
 def _resolve_magic_link_ttl(requested_ttl_seconds: int | None) -> int:
     if requested_ttl_seconds:
         return requested_ttl_seconds
-    return MAGIC_LINK_TTL_SECONDS
+    raw_default = (os.getenv("MAGIC_LINK_TTL_SECONDS", "") or "").strip()
+    if not raw_default:
+        return DEFAULT_MAGIC_LINK_TTL_SECONDS
+    try:
+        parsed = int(raw_default)
+    except ValueError:
+        return DEFAULT_MAGIC_LINK_TTL_SECONDS
+    return max(60, min(parsed, MAX_MAGIC_LINK_TTL_SECONDS))
 
 
 def _build_magic_link(request: Request, token: str) -> str:
@@ -149,7 +158,10 @@ def bootstrap_magic_link(token: str = "") -> dict:
             "magic_link_bootstrap_blocked",
             actor_account_id=None,
             subject_account_id=None,
-            metadata={"status": status},
+            metadata={
+                "status": status,
+                "token_id": token_row.get("id") if token_row else None,
+            },
         )
         return {"status": status, "configured_username": None}
 
@@ -254,6 +266,15 @@ def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         db.append_ledger_event(
             "magic_link_auto_approved",
+            actor_account_id=None,
+            subject_account_id=approved.get("account_id"),
+            metadata={
+                "request_id": request_row["request_id"],
+                "magic_token_id": request_row["magic_token_id"],
+            },
+        )
+        db.append_ledger_event(
+            "magic_link_consumed",
             actor_account_id=None,
             subject_account_id=approved.get("account_id"),
             metadata={
