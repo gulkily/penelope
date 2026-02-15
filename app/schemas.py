@@ -143,7 +143,7 @@ class AuthRegisterRequest(BaseModel):
     username: str = Field(..., min_length=1, description="Requested display name.")
     public_key: str = Field(..., min_length=1, description="Public key material.")
     public_key_format: str = Field("spki", description="Public key format.")
-    magic_token: str | None = Field(
+    token: str | None = Field(
         None,
         description="Optional magic login token from one-click invite link.",
     )
@@ -217,23 +217,35 @@ class MagicLinkCreateRequest(BaseModel):
         min_length=1,
         description="Username preconfigured into the generated magic link.",
     )
-    ttl_seconds: int | None = Field(
-        None,
-        ge=60,
-        le=60 * 60 * 24 * 7,
-        description="Optional token lifetime in seconds.",
-    )
 
 
 class MagicLinkCreateResponse(BaseModel):
     token_id: str = Field(..., description="Magic token identifier.")
     configured_username: str = Field(..., description="Username bound to the token.")
     magic_link: str = Field(..., description="One-click lobby link with token query param.")
-    expires_at: str = Field(..., description="ISO timestamp for link expiration.")
+    expires_at: str | None = Field(
+        None,
+        description="Magic links do not expire automatically; value is null.",
+    )
+
+
+class MagicLinkListEntry(BaseModel):
+    token_id: str = Field(..., description="Magic token identifier.")
+    configured_username: str = Field(..., description="Username bound to the token.")
+    created_at: str = Field(..., description="ISO timestamp when the token was created.")
+    created_by_account_id: int = Field(..., description="Issuer account id.")
+    created_by_username: str | None = Field(
+        None,
+        description="Issuer username when available.",
+    )
+
+
+class MagicLinkListResponse(BaseModel):
+    entries: list[MagicLinkListEntry]
 
 
 class MagicLinkBootstrapResponse(BaseModel):
-    status: Literal["usable", "invalid", "expired", "revoked", "used"] = Field(
+    status: Literal["usable", "invalid", "revoked"] = Field(
         ...,
         description="Bootstrap state for the provided token.",
     )

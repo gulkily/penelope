@@ -6,7 +6,7 @@ const STORAGE_KEYS = {
   requestId: "auth_request_id",
   code: "auth_lobby_code",
 };
-const MAGIC_TOKEN_PARAM = "magic_token";
+const TOKEN_PARAM = "token";
 
 const elements = {
   usernameInput: document.getElementById("username-input"),
@@ -157,7 +157,7 @@ async function signChallenge(challenge) {
   return bufferToBase64(signature);
 }
 
-async function registerAccess(username, magicToken = null) {
+async function registerAccess(username, token = null) {
   showMessage(elements.requestMessage, "Generating keypair...", false);
 
   let publicKey = localStorage.getItem(STORAGE_KEYS.publicKey);
@@ -177,7 +177,7 @@ async function registerAccess(username, magicToken = null) {
       username,
       public_key: publicKey,
       public_key_format: "spki",
-      magic_token: magicToken,
+      token,
     }),
   });
 
@@ -217,18 +217,18 @@ async function registerAccess(username, magicToken = null) {
   startStatusPolling();
 }
 
-function clearMagicTokenFromUrl() {
+function clearTokenFromUrl() {
   const url = new URL(window.location.href);
-  if (!url.searchParams.has(MAGIC_TOKEN_PARAM)) {
+  if (!url.searchParams.has(TOKEN_PARAM)) {
     return;
   }
-  url.searchParams.delete(MAGIC_TOKEN_PARAM);
+  url.searchParams.delete(TOKEN_PARAM);
   const nextSearch = url.searchParams.toString();
   const nextUrl = `${url.pathname}${nextSearch ? `?${nextSearch}` : ""}${url.hash || ""}`;
   window.history.replaceState({}, document.title, nextUrl);
 }
 
-function magicTokenFailureMessage(status) {
+function tokenFailureMessage(status) {
   if (status === "expired") {
     return "This magic link has expired. Ask an admin to issue a new one.";
   }
@@ -251,14 +251,14 @@ async function bootstrapMagicLink(token) {
   return response.json();
 }
 
-async function startMagicLinkFlow(token) {
+async function startTokenFlow(token) {
   if (!elements.usernameInput || !elements.requestButton) {
     return;
   }
   showMessage(elements.requestMessage, "Validating magic link...");
   const data = await bootstrapMagicLink(token);
   if (data.status !== "usable") {
-    showMessage(elements.requestMessage, magicTokenFailureMessage(data.status), true);
+    showMessage(elements.requestMessage, tokenFailureMessage(data.status), true);
     return;
   }
 
@@ -558,15 +558,15 @@ function init() {
   }
 
   const params = new URLSearchParams(window.location.search);
-  const magicToken = (params.get(MAGIC_TOKEN_PARAM) || "").trim();
-  if (magicToken) {
+  const token = (params.get(TOKEN_PARAM) || "").trim();
+  if (token) {
     clearPendingRequest();
     stopStatusPolling();
-    clearMagicTokenFromUrl();
+    clearTokenFromUrl();
     if (!resolveSubtleCrypto()) {
       showMessage(elements.requestMessage, WEB_CRYPTO_ERROR, true);
     } else {
-      startMagicLinkFlow(magicToken).catch((error) => {
+      startTokenFlow(token).catch((error) => {
         showMessage(elements.requestMessage, error.message || "Magic link request failed.", true);
       });
     }

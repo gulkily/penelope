@@ -15,16 +15,6 @@ def _row_to_dict(row) -> dict:
     return dict(row) if row else {}
 
 
-def _is_expired(iso_timestamp: str) -> bool:
-    try:
-        expires_at = datetime.fromisoformat(iso_timestamp)
-    except ValueError:
-        return True
-    if expires_at.tzinfo is None:
-        expires_at = expires_at.replace(tzinfo=timezone.utc)
-    return expires_at <= datetime.now(timezone.utc)
-
-
 def _resolve_target_account_id(
     conn,
     requested_username: str,
@@ -290,9 +280,7 @@ def is_magic_login_token_usable(token_id: str) -> bool:
     token_row = get_magic_login_token(token_id)
     if not token_row:
         return False
-    if token_row.get("revoked_at") or token_row.get("consumed_at"):
-        return False
-    return not _is_expired(token_row["expires_at"])
+    return not token_row.get("revoked_at")
 
 
 def attach_magic_token_to_lobby_request(request_id: str, token_id: str) -> None:
@@ -311,29 +299,9 @@ def consume_magic_login_token(token_id: str, request_id: str, account_id: int) -
         ).fetchone()
         if not token_row:
             raise ValueError("Magic token not found")
-        if token_row["consumed_at"]:
-            raise ValueError("Magic token already used")
         if token_row["revoked_at"]:
             raise ValueError("Magic token revoked")
-        if _is_expired(token_row["expires_at"]):
-            raise ValueError("Magic token expired")
-
-        now = _utc_now()
-        conn.execute(
-            """
-            UPDATE magic_login_tokens
-            SET consumed_at = ?,
-                consumed_by_account_id = ?,
-                consumed_request_id = ?
-            WHERE id = ?
-            """,
-            (now, account_id, request_id, token_id),
-        )
-        row = conn.execute(
-            "SELECT * FROM magic_login_tokens WHERE id = ?",
-            (token_id,),
-        ).fetchone()
-        return _row_to_dict(row)
+        return _row_to_dict(token_row)
 
 
 def mark_magic_login_token_revoked(token_id: str, actor_account_id: int) -> dict:
@@ -344,8 +312,6 @@ def mark_magic_login_token_revoked(token_id: str, actor_account_id: int) -> dict
         ).fetchone()
         if not token_row:
             raise ValueError("Magic token not found")
-        if token_row["consumed_at"]:
-            raise ValueError("Magic token already used")
         if token_row["revoked_at"]:
             return _row_to_dict(token_row)
 
@@ -364,6 +330,28 @@ def mark_magic_login_token_revoked(token_id: str, actor_account_id: int) -> dict
             (token_id,),
         ).fetchone()
         return _row_to_dict(row)
+
+
+def list_active_magic_login_tokens(limit: int = 200) -> list[dict]:
+    safe_limit = max(1, min(limit, 500))
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                tokens.id,
+                tokens.configured_username,
+                tokens.created_at,
+                tokens.created_by_account_id,
+                creators.username AS created_by_username
+            FROM magic_login_tokens AS tokens
+            LEFT JOIN accounts AS creators ON creators.id = tokens.created_by_account_id
+            WHERE tokens.revoked_at IS NULL
+            ORDER BY tokens.created_at DESC, tokens.id DESC
+            LIMIT ?
+            """,
+            (safe_limit,),
+        ).fetchall()
+        return [dict(row) for row in rows]
 
 
 def list_pending_lobby_requests() -> list[dict]:
@@ -457,12 +445,8 @@ def approve_lobby_request_with_magic_token(request_id: str) -> dict:
         ).fetchone()
         if not token_row:
             raise ValueError("Magic token not found")
-        if token_row["consumed_at"]:
-            raise ValueError("Magic token already used")
         if token_row["revoked_at"]:
             raise ValueError("Magic token revoked")
-        if _is_expired(token_row["expires_at"]):
-            raise ValueError("Magic token expired")
 
         public_key_row = conn.execute(
             "SELECT * FROM public_keys WHERE id = ?",
@@ -492,20 +476,6 @@ def approve_lobby_request_with_magic_token(request_id: str) -> dict:
             """,
             (now, target_account_id, request_id),
         )
-        consumed_cursor = conn.execute(
-            """
-            UPDATE magic_login_tokens
-            SET consumed_at = ?,
-                consumed_by_account_id = ?,
-                consumed_request_id = ?
-            WHERE id = ?
-              AND consumed_at IS NULL
-              AND revoked_at IS NULL
-            """,
-            (now, target_account_id, request_id, token_row["id"]),
-        )
-        if consumed_cursor.rowcount != 1:
-            raise ValueError("Magic token was consumed concurrently")
 
         row = conn.execute(
             "SELECT * FROM lobby_requests WHERE request_id = ?",

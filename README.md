@@ -66,4 +66,4 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - On mobile widths, the interview guide opens as a bottom drawer and closes via backdrop tap.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.
 - Configure magic-link admins with `MAGIC_LINK_ADMIN_USERNAMES` (comma-separated usernames); when unset, any signed-in account can issue/revoke links.
-- Configure default magic-link expiration with `MAGIC_LINK_TTL_SECONDS` (default `3600`, min `60`, max `604800`).
+- Magic links remain valid until revoked by an admin.
