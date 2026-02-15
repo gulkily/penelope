@@ -15,10 +15,10 @@
 - [ ] Verify toggling works while recording/uploading/analyzing.
 
 ## 3. Accessibility Polish
-- [ ] Audit focus order for open/close guide, drawer controls, and checklist controls.
-- [ ] Add keyboard shortcuts (e.g., toggle guide) with conflict-safe handling.
-- [ ] Add/confirm ARIA live updates for load and error messages.
-- [ ] Ensure touch targets and contrast meet accessibility expectations.
+- [x] Audit focus order for open/close guide, drawer controls, and checklist controls.
+- [x] Add keyboard shortcuts (e.g., toggle guide) with conflict-safe handling.
+- [x] Add/confirm ARIA live updates for load and error messages.
+- [x] Ensure touch targets and contrast meet accessibility expectations.
 - [ ] Run a manual keyboard-only walkthrough of the full interview flow.
 
 ## 4. Regression Coverage + Docs

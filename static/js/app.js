@@ -372,6 +372,11 @@ function setInterviewGuideVisibility(isVisible) {
   }
   interviewGuideToggle.setAttribute("aria-expanded", isVisible ? "true" : "false");
   interviewGuideToggle.textContent = isVisible ? "Hide guide" : "Show guide";
+  if (isVisible && isMobileGuideMode() && interviewGuideClose) {
+    window.setTimeout(() => {
+      interviewGuideClose.focus();
+    }, 0);
+  }
 }
 
 async function loadInterviewQuestionsTemplate() {
@@ -443,6 +448,17 @@ function resetInterviewGuidePanel() {
 
 function isTranscriptDialogOpen() {
   return Boolean(transcriptDialog && transcriptDialog.open);
+}
+
+function isTypingTarget(element) {
+  if (!element || !(element instanceof HTMLElement)) {
+    return false;
+  }
+  if (element.isContentEditable) {
+    return true;
+  }
+  const tagName = element.tagName;
+  return tagName === "INPUT" || tagName === "TEXTAREA" || tagName === "SELECT";
 }
 
 function isNavigatorOnline() {
@@ -2533,6 +2549,10 @@ if (transcriptCancel) {
 if (transcriptDialog) {
   transcriptDialog.addEventListener("cancel", (event) => {
     event.preventDefault();
+    if (interviewGuide && !interviewGuide.hidden && isMobileGuideMode()) {
+      setInterviewGuideVisibility(false);
+      return;
+    }
     closeTranscriptDialog();
   });
 }
@@ -2623,6 +2643,23 @@ if (interviewGuideToggle) {
     toggleInterviewGuide();
   });
 }
+
+document.addEventListener("keydown", (event) => {
+  if (!isTranscriptDialogOpen()) {
+    return;
+  }
+  if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.altKey) {
+    return;
+  }
+  if (isTypingTarget(event.target)) {
+    return;
+  }
+  if (event.key.toLowerCase() !== "g") {
+    return;
+  }
+  event.preventDefault();
+  toggleInterviewGuide();
+});
 
 if (interviewGuideBackdrop) {
   interviewGuideBackdrop.addEventListener("click", () => {

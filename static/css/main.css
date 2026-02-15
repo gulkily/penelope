@@ -1336,7 +1336,7 @@ html {
 }
 
 .interview-guide-status[data-status="error"] {
-  color: #ff9090;
+  color: var(--danger);
 }
 
 .interview-guide-content {
@@ -1407,11 +1407,20 @@ html {
   display: inline-flex;
   align-items: flex-start;
   gap: 8px;
+  padding: 4px 0;
   line-height: 1.4;
 }
 
 .interview-guide-checklabel input[type="checkbox"] {
   margin-top: 2px;
+  width: 16px;
+  height: 16px;
+}
+
+.transcript-field-header .link-button,
+.interview-guide .dialog-close {
+  min-height: 36px;
+  padding: 6px 12px;
 }
 
 .interview-guide-backdrop {
