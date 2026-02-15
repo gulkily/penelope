@@ -59,3 +59,11 @@ import the current records
 auth
 	add email records
 	allow auth by email
+
+Interview Guide UI Improvements
+	- Split view on desktop, drawer on mobile.
+	- Section checklist during interview with asked-count progress.
+	- Search/filter within the guide prompts.
+	- Inline quick actions per question (copy, insert into transcript).
+	- Persist guide state per resident/session.
+	- Accessibility polish (focus order, keyboard shortcuts, ARIA live feedback).
