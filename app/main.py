@@ -17,7 +17,7 @@ from app.api_auth import router as auth_router
 from app.api_transcript import router as transcript_router
 from app.api_transcription import router as transcription_router
 from app.db import init_db
-from app.env_sync import sync_env_defaults
+from app.env_sync import get_missing_env_defaults
 from app.feature_flags import NAVBAR_ITEM_DEFINITIONS
 from app.feature_flags import get_feature_flags
 
@@ -25,30 +25,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 logger = logging.getLogger(__name__)
 
 
-def _sync_env_defaults_on_launch() -> None:
+def _notify_env_defaults_status_on_launch() -> None:
     try:
-        sync_result = sync_env_defaults(
+        status = get_missing_env_defaults(
             env_path=BASE_DIR / ".env",
             env_example_path=BASE_DIR / ".env.example",
         )
     except OSError:
-        logger.exception("Failed to synchronize .env defaults from .env.example.")
+        logger.exception("Failed to check missing .env defaults from .env.example.")
         return
-    if sync_result.get("updated"):
-        added_count = sync_result.get("added_count", 0)
-        if sync_result.get("env_created"):
-            logger.info(
-                "Created .env and added %s default settings from .env.example.",
-                added_count,
-            )
-        else:
-            logger.info(
-                "Added %s missing .env defaults from .env.example.",
-                added_count,
-            )
+    if not status.get("example_found"):
+        return
+    missing_count = int(status.get("missing_count", 0))
+    if missing_count <= 0:
+        return
+    logger.warning(
+        "Detected %s missing .env settings. Run `./pnl env-sync` to append defaults from .env.example.",
+        missing_count,
+    )
 
 
-_sync_env_defaults_on_launch()
+_notify_env_defaults_status_on_launch()
 load_dotenv(dotenv_path=BASE_DIR / ".env")
 
 

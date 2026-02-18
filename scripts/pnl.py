@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 
 def run_command(command: list[str]) -> int:
@@ -137,6 +139,46 @@ def run_seed_demo(allow_duplicates: bool) -> int:
     return run_command(command)
 
 
+def run_env_sync() -> int:
+    from app.env_sync import get_missing_env_defaults
+    from app.env_sync import sync_env_defaults
+
+    env_path = REPO_ROOT / ".env"
+    env_example_path = REPO_ROOT / ".env.example"
+
+    try:
+        status = get_missing_env_defaults(env_path=env_path, env_example_path=env_example_path)
+    except OSError as exc:
+        print(f"Failed to check env defaults: {exc}", file=sys.stderr)
+        return 1
+
+    if not status.get("example_found"):
+        print(f"Missing defaults file: {env_example_path}", file=sys.stderr)
+        return 1
+
+    missing_count = int(status.get("missing_count", 0))
+    if missing_count <= 0:
+        print("No missing .env settings found. Nothing to sync.")
+        return 0
+
+    try:
+        result = sync_env_defaults(env_path=env_path, env_example_path=env_example_path)
+    except OSError as exc:
+        print(f"Failed to sync .env defaults: {exc}", file=sys.stderr)
+        return 1
+
+    if not result.get("updated"):
+        print("No missing .env settings found. Nothing to sync.")
+        return 0
+
+    added_count = int(result.get("added_count", 0))
+    if result.get("env_created"):
+        print(f"Created .env and added {added_count} default setting(s) from .env.example.")
+    else:
+        print(f"Added {added_count} missing setting(s) to .env from .env.example.")
+    return 0
+
+
 def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     parser = argparse.ArgumentParser(
         prog="pnl",
@@ -225,6 +267,11 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         help="Insert demo projects even if names already exist.",
     )
 
+    subparsers.add_parser(
+        "env-sync",
+        help="Append missing .env settings from .env.example.",
+    )
+
     return parser, parser.parse_args()
 
 
@@ -255,6 +302,8 @@ def main() -> int:
         )
     if args.command == "seed-demo":
         return run_seed_demo(args.allow_duplicates)
+    if args.command == "env-sync":
+        return run_env_sync()
 
     return 1
 

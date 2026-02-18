@@ -53,3 +53,12 @@
   - Confirmed docs include startup sync behavior in both `.env.example` and `README.md`.
 - Notes:
   - This stage is documentation/indexing only; runtime behavior changes are unchanged from Stages 1-3.
+
+## Post-Implementation Adjustment - Command-Driven Sync
+- Changes:
+  - Moved `.env` mutation from startup to explicit `./pnl env-sync`.
+  - Startup now performs read-only missing-key checks and logs a notification when sync is needed.
+  - Updated `.env.example` and `README.md` to document command-driven sync.
+- Verification:
+  - Ran `python3 scripts/pnl.py --help` and confirmed `env-sync` command appears.
+  - Ran compile checks for `app/main.py`, `app/env_sync.py`, and `scripts/pnl.py`.

@@ -10,7 +10,7 @@ _ACTIVE_ASSIGNMENT_RE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\
 _COMMENTED_ASSIGNMENT_RE = re.compile(
     r"^\s*#\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$"
 )
-_SYNC_NOTE = "# Added automatically from .env.example on launch."
+_SYNC_NOTE = "# Added automatically from .env.example via ./pnl env-sync."
 
 
 def parse_env_keys(lines: list[str]) -> list[str]:
@@ -52,19 +52,18 @@ def _build_missing_defaults_block(entries: list[tuple[str, str]]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def sync_env_defaults(env_path: Path, env_example_path: Path) -> dict[str, int | bool]:
-    """
-    Append missing defaults from .env.example to .env.
-
-    Existing keys are never overwritten.
-    """
+def get_missing_env_defaults(
+    env_path: Path,
+    env_example_path: Path,
+) -> dict[str, bool | int | list[str] | list[tuple[str, str]]]:
     if not env_example_path.exists():
-        logger.warning("Env defaults sync skipped: missing %s", env_example_path)
+        logger.warning("Env defaults sync check skipped: missing %s", env_example_path)
         return {
             "example_found": False,
-            "env_created": False,
-            "added_count": 0,
-            "updated": False,
+            "env_exists": env_path.exists(),
+            "missing_count": 0,
+            "missing_keys": [],
+            "missing_entries": [],
         }
 
     env_example_lines = env_example_path.read_text(encoding="utf-8").splitlines()
@@ -72,15 +71,41 @@ def sync_env_defaults(env_path: Path, env_example_path: Path) -> dict[str, int |
     if not default_entries:
         return {
             "example_found": True,
-            "env_created": False,
-            "added_count": 0,
-            "updated": False,
+            "env_exists": env_path.exists(),
+            "missing_count": 0,
+            "missing_keys": [],
+            "missing_entries": [],
         }
 
     env_exists = env_path.exists()
     current_content = env_path.read_text(encoding="utf-8") if env_exists else ""
     current_keys = set(parse_env_keys(current_content.splitlines()))
     missing_entries = [(key, value) for key, value in default_entries if key not in current_keys]
+    return {
+        "example_found": True,
+        "env_exists": env_exists,
+        "missing_count": len(missing_entries),
+        "missing_keys": [key for key, _ in missing_entries],
+        "missing_entries": missing_entries,
+    }
+
+
+def sync_env_defaults(env_path: Path, env_example_path: Path) -> dict[str, int | bool]:
+    """
+    Append missing defaults from .env.example to .env.
+
+    Existing keys are never overwritten.
+    """
+    status = get_missing_env_defaults(env_path=env_path, env_example_path=env_example_path)
+    if not status.get("example_found"):
+        return {
+            "example_found": False,
+            "env_created": False,
+            "added_count": 0,
+            "updated": False,
+        }
+    env_exists = bool(status.get("env_exists"))
+    missing_entries = list(status.get("missing_entries", []))
 
     if not missing_entries:
         return {
@@ -91,6 +116,7 @@ def sync_env_defaults(env_path: Path, env_example_path: Path) -> dict[str, int |
         }
 
     env_path.parent.mkdir(parents=True, exist_ok=True)
+    current_content = env_path.read_text(encoding="utf-8") if env_exists else ""
     append_block = _build_missing_defaults_block(missing_entries)
     if current_content:
         if not current_content.endswith("\n"):

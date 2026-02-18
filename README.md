@@ -22,6 +22,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl test --duration 60 --workers 2` for light load-style loops.
 - `./pnl test --help` for test-specific options (looping, delay, parallelism, etc).
 - `./pnl seed-demo` to add demo data (use `--allow-duplicates` if needed).
+- `./pnl env-sync` to append missing `.env` settings from `.env.example`.
 
 ## Public hosting
 - Server setup guide: `docs/production_install.md`
@@ -70,4 +71,4 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Configure optional navbar links with `NAVBAR_ENABLED_ITEMS` (valid keys: `lobby,projects,settings`; Dashboard remains visible).
 - Set `LOBBY_AUTH_ENABLED=false` to disable lobby authentication and magic-link APIs while keeping `/lobby` reachable.
 - Set `RECORDER_ENABLED=false` to hide the "Record audio" section in the Add update dialog.
-- On app launch, missing keys from `.env.example` are added to `.env` automatically (existing `.env` values are preserved).
+- Startup now only warns when `.env` is missing keys from `.env.example`; run `./pnl env-sync` to append missing defaults.
