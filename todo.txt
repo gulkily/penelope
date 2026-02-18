@@ -71,8 +71,8 @@ Interview Guide UI Improvements
 
 MVP beta
 	- Indicate current user x
-	- Get rid of lobby
-	- No settings
-	- No residents manager
-	- Paste or upload, no recorder
+	- Get rid of lobby x
+	- No settings x
+	- No residents manager x
+	- Paste or upload, no recorder x
 	- Test with long transcript
