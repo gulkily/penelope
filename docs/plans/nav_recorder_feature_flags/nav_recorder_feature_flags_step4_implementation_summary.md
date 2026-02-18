@@ -44,3 +44,18 @@
   - Rendered `templates/index.html` and `templates/lobby.html` via Jinja with both enabled/disabled flag combinations (`render_ok`).
 - Notes:
   - `/lobby`, `/settings`, and `/projects` routes remain reachable directly even when their nav links are hidden.
+
+## Stage 5 - Documentation and Plan Artifact Organization
+- Changes:
+  - Updated `.env.example` with new settings and usage notes:
+    - `NAVBAR_ENABLED_ITEMS`
+    - `LOBBY_AUTH_ENABLED`
+    - `RECORDER_ENABLED`
+  - Updated `README.md` notes section to document the new feature flags.
+  - Moved all four plan artifacts into `docs/plans/nav_recorder_feature_flags/`.
+  - Updated `docs/plans/README.md` to include `nav_recorder_feature_flags/` in feature folders.
+- Verification:
+  - Ran `python -m compileall app`.
+  - Confirmed all four plan artifacts exist in `docs/plans/nav_recorder_feature_flags/`.
+- Notes:
+  - No automated tests were added in this stage; behavior verification remains manual/UI-driven.

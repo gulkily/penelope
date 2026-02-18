@@ -67,3 +67,6 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.
 - Configure magic-link admins with `MAGIC_LINK_ADMIN_USERNAMES` (comma-separated usernames); when unset, any signed-in account can issue/revoke links.
 - Magic links remain valid until revoked by an admin.
+- Configure optional navbar links with `NAVBAR_ENABLED_ITEMS` (valid keys: `lobby,projects,settings`; Dashboard remains visible).
+- Set `LOBBY_AUTH_ENABLED=false` to disable lobby authentication and magic-link APIs while keeping `/lobby` reachable.
+- Set `RECORDER_ENABLED=false` to hide the "Record audio" section in the Add update dialog.

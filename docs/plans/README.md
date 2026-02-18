@@ -22,6 +22,7 @@ Each folder groups Step 1-4 planning artifacts for a single feature.
 - `north_star_progress_confetti/`
 - `north_star_progress_graph/`
 - `north_star_progress_history/`
+- `nav_recorder_feature_flags/`
 - `parallel_test_execution/`
 - `project_goal_slider/`
 - `project_manage/`
