@@ -10,6 +10,7 @@ Each folder groups Step 1-4 planning artifacts for a single feature.
 - `database_backup_frontend/`
 - `e2e_full_data_coverage/`
 - `e2e_tests/`
+- `env_defaults_sync/`
 - `item_add_experience/`
 - `item_edit_delete/`
 - `item_reordering/`

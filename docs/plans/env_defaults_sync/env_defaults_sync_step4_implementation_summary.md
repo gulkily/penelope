@@ -41,3 +41,15 @@
     - write failure raises clear `PermissionError`.
 - Notes:
   - Sync errors are surfaced via exception logging in startup while avoiding partial writes to `.env`.
+
+## Stage 4 - Documentation and Configuration Notes
+- Changes:
+  - Updated `.env.example` with explicit notes that launch adds missing keys from `.env.example` to `.env` without overwriting existing values.
+  - Updated `README.md` notes to document launch-time env default synchronization behavior.
+  - Moved all Step 1-4 env sync planning artifacts into `docs/plans/env_defaults_sync/`.
+  - Updated `docs/plans/README.md` to include the new `env_defaults_sync/` feature folder.
+- Verification:
+  - Confirmed all four env-sync artifacts exist in `docs/plans/env_defaults_sync/`.
+  - Confirmed docs include startup sync behavior in both `.env.example` and `README.md`.
+- Notes:
+  - This stage is documentation/indexing only; runtime behavior changes are unchanged from Stages 1-3.
