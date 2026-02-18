@@ -7,6 +7,7 @@ from fastapi import APIRouter, HTTPException, Request, Response
 
 from app import db
 from app import auth
+from app.feature_flags import get_feature_flags
 from app.schemas import (
     AuthRegisterRequest,
     AuthRegisterResponse,
@@ -45,6 +46,11 @@ def _require_admin(request: Request) -> auth.SessionInfo:
     return session
 
 
+def _require_lobby_auth_enabled() -> None:
+    if not get_feature_flags().lobby_auth_enabled:
+        raise HTTPException(status_code=503, detail="Lobby authentication is disabled")
+
+
 def _build_magic_link(request: Request, token: str) -> str:
     base = str(request.base_url).rstrip("/")
     return f"{base}/lobby?token={quote(token)}"
@@ -60,6 +66,7 @@ def _classify_magic_token(token_row: dict) -> str:
 
 @router.post("/auth/magic-links", response_model=MagicLinkCreateResponse)
 def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
+    _require_lobby_auth_enabled()
     session = _require_admin(request)
     configured_username = payload.configured_username.strip()
     if not configured_username:
@@ -93,6 +100,7 @@ def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
 
 @router.get("/auth/magic-links", response_model=MagicLinkListResponse)
 def list_magic_links(request: Request, limit: int = 200) -> dict:
+    _require_lobby_auth_enabled()
     _require_admin(request)
     entries = db.list_active_magic_login_tokens(limit=limit)
     return {
@@ -111,6 +119,7 @@ def list_magic_links(request: Request, limit: int = 200) -> dict:
 
 @router.post("/auth/magic-links/{token_id}/revoke", response_model=MagicLinkRevokeResponse)
 def revoke_magic_link(token_id: str, request: Request) -> dict:
+    _require_lobby_auth_enabled()
     session = _require_admin(request)
     try:
         token_row = db.mark_magic_login_token_revoked(token_id, session.account_id)
@@ -131,6 +140,7 @@ def revoke_magic_link(token_id: str, request: Request) -> dict:
 
 @router.get("/auth/magic-links/bootstrap", response_model=MagicLinkBootstrapResponse)
 def bootstrap_magic_link(token: str = "") -> dict:
+    _require_lobby_auth_enabled()
     candidate = token.strip()
     if not candidate:
         return {"status": "invalid", "configured_username": None}
@@ -155,6 +165,7 @@ def bootstrap_magic_link(token: str = "") -> dict:
 
 @router.post("/auth/register", response_model=AuthRegisterResponse)
 def register(payload: AuthRegisterRequest) -> dict:
+    _require_lobby_auth_enabled()
     public_key = payload.public_key.strip()
     if not public_key:
         raise HTTPException(status_code=400, detail="Public key required")
@@ -213,6 +224,7 @@ def register(payload: AuthRegisterRequest) -> dict:
 
 @router.post("/auth/verify")
 def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
+    _require_lobby_auth_enabled()
     request_row = db.get_lobby_request(payload.request_id)
     if not request_row:
         raise HTTPException(status_code=404, detail="Request not found")
@@ -292,6 +304,7 @@ def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
 
 @router.get("/auth/status/{request_id}", response_model=AuthStatusResponse)
 def get_status(request_id: str) -> dict:
+    _require_lobby_auth_enabled()
     request_row = db.get_lobby_request(request_id)
     if not request_row:
         raise HTTPException(status_code=404, detail="Request not found")
@@ -308,6 +321,7 @@ def get_status(request_id: str) -> dict:
 
 @router.get("/auth/lobby", response_model=LobbyListResponse)
 def list_lobby(request: Request) -> dict:
+    _require_lobby_auth_enabled()
     _require_session(request)
     entries = db.list_pending_lobby_requests()
     return {"entries": entries}
@@ -326,6 +340,7 @@ def approve_lobby(
     payload: LobbyDecisionRequest,
     request: Request,
 ) -> dict:
+    _require_lobby_auth_enabled()
     session = _require_session(request)
     link_account_id = session.account_id if payload.link_to_self else None
     approved = db.approve_lobby_request(
@@ -348,6 +363,7 @@ def approve_lobby(
 
 @router.post("/auth/lobby/{request_id}/reject", response_model=LobbyDecisionResponse)
 def reject_lobby(request_id: str, request: Request) -> dict:
+    _require_lobby_auth_enabled()
     session = _require_session(request)
     db.reject_lobby_request(request_id, session.account_id)
     db.append_ledger_event(

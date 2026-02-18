@@ -31,3 +31,16 @@
   - Rendered `templates/partials/navbar.html` via Jinja in a CLI check to confirm expected links render from provided `navbar_items`.
 - Notes:
   - Navbar visibility is now controlled by one setting (`NAVBAR_ENABLED_ITEMS`) through server-provided template context.
+
+## Stage 4 - Recorder and Lobby-Auth Behavior Controls
+- Changes:
+  - Added lobby-auth gate checks in `app/api_auth.py` so lobby/auth + magic-link endpoints return `503` when `LOBBY_AUTH_ENABLED=false`.
+  - Updated `templates/index.html` to conditionally render the recorder section based on `recorder_enabled`.
+  - Updated `templates/lobby.html` to:
+    - Load `lobby.js` only when lobby auth is enabled.
+    - Show an informational disabled-state card when lobby auth is off.
+- Verification:
+  - Ran `python -m compileall app/api_auth.py app/main.py`.
+  - Rendered `templates/index.html` and `templates/lobby.html` via Jinja with both enabled/disabled flag combinations (`render_ok`).
+- Notes:
+  - `/lobby`, `/settings`, and `/projects` routes remain reachable directly even when their nav links are hidden.

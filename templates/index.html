@@ -299,6 +299,7 @@
               aria-label="Close interview guide"
             ></button>
           </div>
+          {% if recorder_enabled %}
           <section class="transcript-recorder" id="transcript-recorder">
             <div class="transcript-recorder-header">
               <div>
@@ -333,6 +334,7 @@
               </div>
             </div>
           </section>
+          {% endif %}
 
           <section class="transcript-upload">
             <div class="transcript-upload-header">
