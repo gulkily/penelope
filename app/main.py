@@ -51,11 +51,21 @@ app.include_router(transcript_router, prefix="/api")
 app.include_router(transcription_router, prefix="/api")
 
 
+def _build_template_context(request: Request, current_page: str) -> dict:
+    session_account = getattr(request.state, "session_account", None)
+    return {
+        "request": request,
+        "current_page": current_page,
+        "session_account": session_account,
+    }
+
+
 @app.middleware("http")
 async def require_auth(request: Request, call_next):
     path = request.url.path
     if request.method == "OPTIONS":
         return await call_next(request)
+    request.state.session_account = auth.get_session_account(request)
     if (
         path.startswith("/static/")
         or path == "/favicon.ico"
@@ -65,7 +75,7 @@ async def require_auth(request: Request, call_next):
     ):
         return await call_next(request)
 
-    session = auth.get_session_account(request)
+    session = request.state.session_account
     if session:
         return await call_next(request)
 
@@ -83,10 +93,7 @@ def startup() -> None:
 def index(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "index.html",
-        {
-            "request": request,
-            "current_page": "dashboard",
-        },
+        _build_template_context(request, "dashboard"),
     )
 
 
@@ -94,10 +101,7 @@ def index(request: Request) -> HTMLResponse:
 def lobby(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "lobby.html",
-        {
-            "request": request,
-            "current_page": "lobby",
-        },
+        _build_template_context(request, "lobby"),
     )
 
 
@@ -105,10 +109,7 @@ def lobby(request: Request) -> HTMLResponse:
 def ledger(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "ledger.html",
-        {
-            "request": request,
-            "current_page": "ledger",
-        },
+        _build_template_context(request, "ledger"),
     )
 
 
@@ -116,10 +117,7 @@ def ledger(request: Request) -> HTMLResponse:
 def session_reset(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "session_reset.html",
-        {
-            "request": request,
-            "current_page": "session_reset",
-        },
+        _build_template_context(request, "session_reset"),
     )
 
 
@@ -132,10 +130,7 @@ def favicon() -> FileResponse:
 def manage_projects(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "manage_projects.html",
-        {
-            "request": request,
-            "current_page": "projects",
-        },
+        _build_template_context(request, "projects"),
     )
 
 
@@ -143,10 +138,7 @@ def manage_projects(request: Request) -> HTMLResponse:
 def settings(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "settings.html",
-        {
-            "request": request,
-            "current_page": "settings",
-        },
+        _build_template_context(request, "settings"),
     )
 
 
@@ -154,10 +146,7 @@ def settings(request: Request) -> HTMLResponse:
 def magic_links(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "magic_links.html",
-        {
-            "request": request,
-            "current_page": "settings",
-        },
+        _build_template_context(request, "settings"),
     )
 
 
@@ -165,8 +154,5 @@ def magic_links(request: Request) -> HTMLResponse:
 def confetti_debug(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "confetti_debug.html",
-        {
-            "request": request,
-            "current_page": "confetti_debug",
-        },
+        _build_template_context(request, "confetti_debug"),
     )

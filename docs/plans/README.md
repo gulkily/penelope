@@ -13,6 +13,7 @@ Each folder groups Step 1-4 planning artifacts for a single feature.
 - `item_add_experience/`
 - `item_edit_delete/`
 - `item_reordering/`
+- `logged_in_identity/`
 - `mentor_conversation_transcript/`
 - `mentor_conversation_transcript_improvements/`
 - `mentor_conversation_transcript_option_a/`

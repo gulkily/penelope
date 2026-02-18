@@ -119,6 +119,9 @@ html {
 
 .page-nav {
   display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
   justify-content: flex-end;
   width: 100%;
   align-self: stretch;
@@ -126,6 +129,23 @@ html {
 
 .page-nav .link-button-group {
   margin-left: auto;
+}
+
+.session-identity {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-subtle);
+  padding: 6px 10px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  background: var(--surface-alt);
+  max-width: 100%;
+}
+
+.session-identity-name {
+  color: var(--text-primary);
+  font-weight: 600;
+  word-break: break-word;
 }
 
 .page-header {

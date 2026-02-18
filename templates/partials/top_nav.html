@@ -1,3 +1,8 @@
 <header class="page-nav">
+  {% if session_account %}
+  <p class="session-identity" data-session-identity>
+    Signed in as <span class="session-identity-name">{{ session_account.username }}</span>
+  </p>
+  {% endif %}
   {% include "partials/navbar.html" with context %}
 </header>
