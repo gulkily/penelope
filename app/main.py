@@ -16,6 +16,8 @@ from app.api_auth import router as auth_router
 from app.api_transcript import router as transcript_router
 from app.api_transcription import router as transcription_router
 from app.db import init_db
+from app.feature_flags import NAVBAR_ITEM_DEFINITIONS
+from app.feature_flags import get_feature_flags
 
 load_dotenv()
 
@@ -25,6 +27,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 def _parse_csv_env(name: str) -> list[str]:
     raw_value = os.getenv(name, "")
     return [entry.strip() for entry in raw_value.split(",") if entry.strip()]
+
+
+def _build_navbar_items(enabled_keys: set[str]) -> list[dict]:
+    return [item for item in NAVBAR_ITEM_DEFINITIONS if item["key"] in enabled_keys]
 
 
 app = FastAPI()
@@ -53,10 +59,15 @@ app.include_router(transcription_router, prefix="/api")
 
 def _build_template_context(request: Request, current_page: str) -> dict:
     session_account = getattr(request.state, "session_account", None)
+    feature_flags = get_feature_flags()
+    navbar_items = _build_navbar_items(set(feature_flags.navbar_enabled_items))
     return {
         "request": request,
         "current_page": current_page,
         "session_account": session_account,
+        "navbar_items": navbar_items,
+        "lobby_auth_enabled": feature_flags.lobby_auth_enabled,
+        "recorder_enabled": feature_flags.recorder_enabled,
     }
 
 
