@@ -25,3 +25,19 @@
   - Confirmed call ordering in `app/main.py`: `_sync_env_defaults_on_launch()` executes immediately before `load_dotenv(...)`.
 - Notes:
   - Integration is centralized in the app entrypoint and therefore shared across `./start.sh`, `./pnl start`, and direct `uvicorn app.main:app`.
+
+## Stage 3 - Safety, Idempotency, and Operator Visibility
+- Changes:
+  - Hardened `app/env_sync.py` temp-file handling to clean up partial temp files when write/replace fails.
+  - Updated startup logging in `app/main.py` to distinguish:
+    - created `.env` + defaults added,
+    - existing `.env` + missing defaults added.
+  - Preserved existing behavior that never overwrites pre-existing `.env` keys.
+- Verification:
+  - Ran `python -m compileall app/env_sync.py app/main.py`.
+  - Ran temporary-directory smoke checks confirming:
+    - existing values are preserved,
+    - repeated sync is idempotent,
+    - write failure raises clear `PermissionError`.
+- Notes:
+  - Sync errors are surfaced via exception logging in startup while avoiding partial writes to `.env`.

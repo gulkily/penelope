@@ -35,10 +35,17 @@ def _sync_env_defaults_on_launch() -> None:
         logger.exception("Failed to synchronize .env defaults from .env.example.")
         return
     if sync_result.get("updated"):
-        logger.info(
-            "Added %s missing .env defaults from .env.example.",
-            sync_result.get("added_count", 0),
-        )
+        added_count = sync_result.get("added_count", 0)
+        if sync_result.get("env_created"):
+            logger.info(
+                "Created .env and added %s default settings from .env.example.",
+                added_count,
+            )
+        else:
+            logger.info(
+                "Added %s missing .env defaults from .env.example.",
+                added_count,
+            )
 
 
 _sync_env_defaults_on_launch()

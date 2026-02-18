@@ -99,8 +99,16 @@ def sync_env_defaults(env_path: Path, env_example_path: Path) -> dict[str, int |
     next_content = current_content + append_block
 
     temp_path = env_path.with_name(f".{env_path.name}.tmp")
-    temp_path.write_text(next_content, encoding="utf-8")
-    temp_path.replace(env_path)
+    try:
+        temp_path.write_text(next_content, encoding="utf-8")
+        temp_path.replace(env_path)
+    except OSError:
+        if temp_path.exists():
+            try:
+                temp_path.unlink()
+            except OSError:
+                logger.warning("Failed to clean up temp env sync file: %s", temp_path)
+        raise
 
     return {
         "example_found": True,
