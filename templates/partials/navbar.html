@@ -1,8 +1,10 @@
 {#
   Expected context:
   - wrap_nav: bool (optional, defaults true)
+  - navbar_items: list[dict] (optional)
 #}
 {% set wrap_nav = wrap_nav | default(true) %}
+{% set navbar_items = navbar_items | default([]) %}
 {% if wrap_nav %}
 <div class="link-button-group">
 {% endif %}
@@ -13,26 +15,14 @@
     Dashboard
   </a>
 
+  {% for item in navbar_items %}
   <a
-    class="link-button{% if current_page == 'lobby' %} is-current{% endif %}"
-    href="/lobby"
+    class="link-button{% if current_page == item.current_page %} is-current{% endif %}"
+    href="{{ item.href }}"
   >
-    Lobby <span class="badge" data-lobby-count hidden></span>
+    {{ item.label }}{% if item.show_lobby_badge %} <span class="badge" data-lobby-count hidden></span>{% endif %}
   </a>
-
-  <a
-    class="link-button{% if current_page == 'projects' %} is-current{% endif %}"
-    href="/projects"
-  >
-    Manage residents
-  </a>
-
-  <a
-    class="link-button{% if current_page == 'settings' %} is-current{% endif %}"
-    href="/settings"
-  >
-    Settings
-  </a>
+  {% endfor %}
 
 {% if wrap_nav %}
 </div>

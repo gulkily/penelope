@@ -21,3 +21,13 @@
   - Ran `python -m compileall app/main.py` to confirm syntax/import validity.
 - Notes:
   - Route access behavior is unchanged; this stage only wires context for template rendering.
+
+## Stage 3 - Navbar Rendering via Single Navbar Setting
+- Changes:
+  - Refactored `templates/partials/navbar.html` to render optional nav links from the centralized `navbar_items` list.
+  - Kept Dashboard as a stable always-visible link.
+  - Preserved lobby badge markup so pending-count behavior remains available when Lobby nav is enabled.
+- Verification:
+  - Rendered `templates/partials/navbar.html` via Jinja in a CLI check to confirm expected links render from provided `navbar_items`.
+- Notes:
+  - Navbar visibility is now controlled by one setting (`NAVBAR_ENABLED_ITEMS`) through server-provided template context.
