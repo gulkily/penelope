@@ -14,3 +14,14 @@
     - repeated sync is idempotent.
 - Notes:
   - Sync inserts a marker comment (`# Added automatically from .env.example on launch.`) before appended keys.
+
+## Stage 2 - Launch-Time Integration
+- Changes:
+  - Updated `app/main.py` to run env default sync at module startup via `_sync_env_defaults_on_launch()`.
+  - Ensured sync runs before `load_dotenv(...)`, so missing keys are added before env values are loaded.
+  - Added startup logging for successful key additions and exception logging for sync failures.
+- Verification:
+  - Ran `python -m compileall app/main.py app/env_sync.py`.
+  - Confirmed call ordering in `app/main.py`: `_sync_env_defaults_on_launch()` executes immediately before `load_dotenv(...)`.
+- Notes:
+  - Integration is centralized in the app entrypoint and therefore shared across `./start.sh`, `./pnl start`, and direct `uvicorn app.main:app`.
