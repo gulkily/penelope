@@ -1,0 +1,11 @@
+## Stage 1 - Add import mapping storage for idempotency
+- Changes:
+  - Added import mapping tables to DB initialization in `app/db_init.py`:
+    - `import_builder_map` (`source_builder_id` -> `project_id`)
+    - `import_checkin_map` (`source_checkin_id`, `source_builder_id`, `week_of`, `project_id`)
+  - Added indexes for lookup paths used by importer reruns.
+  - Added `app/db_import_map.py` with read/upsert helpers for builder and check-in mappings.
+- Verification:
+  - Ran `python -m py_compile app/db_init.py app/db_import_map.py`.
+- Notes:
+  - Mapping tables are additive and isolated from product-facing tables, preserving existing app behavior.

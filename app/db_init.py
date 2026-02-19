@@ -143,6 +143,31 @@ def init_db() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS import_builder_map (
+                source_builder_id TEXT PRIMARY KEY,
+                project_id INTEGER UNIQUE NOT NULL,
+                imported_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(project_id) REFERENCES projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS import_checkin_map (
+                source_checkin_id TEXT PRIMARY KEY,
+                source_builder_id TEXT NOT NULL,
+                week_of TEXT NOT NULL,
+                project_id INTEGER NOT NULL,
+                imported_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(source_builder_id, week_of),
+                FOREIGN KEY(project_id) REFERENCES projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_public_keys_fingerprint
             ON public_keys (fingerprint)
             """
@@ -169,6 +194,18 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_ledger_events_created
             ON ledger_events (created_at)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_import_builder_project
+            ON import_builder_map (project_id)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_import_checkin_builder_week
+            ON import_checkin_map (source_builder_id, week_of)
             """
         )
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
