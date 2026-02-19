@@ -20,7 +20,7 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--source-db",
-        default="data/export_sebastian_ankita_amanda.db",
+        default="data/builder_import_source.db",
         help="Path to source SQLite export DB.",
     )
     parser.add_argument(

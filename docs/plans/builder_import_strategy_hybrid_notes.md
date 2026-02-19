@@ -1,7 +1,7 @@
 # Builder Import Strategy (SQLite -> App, Hybrid + LLM Enrichment)
 
 ## Dataset Reviewed
-- Source DB: `data/export_sebastian_ankita_amanda.db`
+- Source DB (example placeholder): `data/builder_import_source.db`
 - Tables: `builders`, `community_architects`, `houses`, `weekly_checkins`, `builder_nps_schedule`, `frontend_evaluations`, `frontend_eval_schedule`
 - Key counts:
   - `builders`: 21
