@@ -4,11 +4,13 @@ from dataclasses import dataclass, field
 
 from app.builder_import_source import SourceBuilderRecord, load_source_snapshot
 from app.db_connection import connect
+from app.db_import_content import replace_import_notes, replace_import_snapshot_items
 from app.db_import_map import (
     get_project_id_for_source_builder,
     upsert_builder_map,
     upsert_checkin_map,
 )
+from app.builder_import_transform import build_section_payloads
 
 
 @dataclass
@@ -50,6 +52,7 @@ def run_import(config: ImportConfig) -> ImportReport:
             report.builders_without_checkins += 1
         elif builder.latest_checkin.north_star_value is None:
             report.missing_progress_latest += 1
+        payload = build_section_payloads(builder, builder.latest_checkin)
 
         try:
             action, project_id = _upsert_builder_project(builder, config.dry_run)
@@ -66,16 +69,19 @@ def run_import(config: ImportConfig) -> ImportReport:
 
         if builder.latest_checkin is None:
             report.latest_checkins_skipped += 1
-            continue
+        else:
+            if not config.dry_run:
+                upsert_checkin_map(
+                    source_checkin_id=builder.latest_checkin.source_checkin_id,
+                    source_builder_id=builder.source_builder_id,
+                    week_of=builder.latest_checkin.week_of,
+                    project_id=project_id,
+                )
+            report.latest_checkins_imported += 1
 
         if not config.dry_run:
-            upsert_checkin_map(
-                source_checkin_id=builder.latest_checkin.source_checkin_id,
-                source_builder_id=builder.source_builder_id,
-                week_of=builder.latest_checkin.week_of,
-                project_id=project_id,
-            )
-        report.latest_checkins_imported += 1
+            replace_import_snapshot_items(project_id, payload)
+            replace_import_notes(project_id, payload.question_notes)
     return report
 
 

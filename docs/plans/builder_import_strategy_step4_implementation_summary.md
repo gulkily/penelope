@@ -37,3 +37,17 @@
   - Ran `python scripts/import_builder_snapshot.py --sample 2` (dry-run).
 - Notes:
   - Deterministic rerun behavior is now scaffolded before section-item and LLM enrichment stages.
+
+## Stage 4 - Add section-item mapping for latest check-in content
+- Changes:
+  - Added `app/builder_import_transform.py` to map latest check-in fields into section payloads and import notes.
+  - Added `app/db_import_content.py` to:
+    - replace prior import snapshot items (`[Import Snapshot]...`) per project,
+    - replace import-prefixed notes in `projects.questions` while preserving non-import questions.
+  - Updated `app/builder_import_pipeline.py` to apply section-item writes and import notes during write mode.
+- Verification:
+  - Ran `python -m py_compile app/builder_import_transform.py app/db_import_content.py app/builder_import_pipeline.py`.
+  - Ran `DATABASE_URL=sqlite:////tmp/builder_import_stage4.sqlite python scripts/import_builder_snapshot.py --sample 1 --write`.
+  - Queried `/tmp/builder_import_stage4.sqlite` and confirmed imported snapshot items + import notes were present.
+- Notes:
+  - Imported section entries are tagged with `[Import Snapshot] {week_of}: ...` to support rerun-safe replacement.
