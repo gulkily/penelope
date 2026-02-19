@@ -66,3 +66,22 @@
   - Ran `python scripts/import_builder_snapshot.py --sample 1` (LLM disabled path).
 - Notes:
   - LLM-enabled runtime was not executed in this environment because external API credentials/network are not guaranteed here.
+
+## Stage 6 - Implement dry-run/reporting contract
+- Changes:
+  - Expanded `ImportReport` in `app/builder_import_pipeline.py` to cover:
+    - builders scanned/imported/updated/skipped
+    - builders without check-ins
+    - latest check-ins created/updated/skipped
+    - missing latest `north_star_value`
+    - house warnings
+    - LLM outcomes
+    - validation/import errors.
+  - Added deterministic check-in action classification (`created`/`updated`/`skipped`) using existing check-in mapping rows.
+  - Added source-row validation guards for missing builder IDs/names.
+  - Updated report rendering in `scripts/import_builder_snapshot.py` to print the full contract counters.
+- Verification:
+  - Ran `python -m py_compile app/builder_import_pipeline.py scripts/import_builder_snapshot.py`.
+  - Ran `python scripts/import_builder_snapshot.py --sample 1`.
+- Notes:
+  - Dry-run output now distinguishes check-in mapping creation vs update vs skip, improving rerun auditability.

@@ -7,6 +7,7 @@ from app.builder_import_source import SourceBuilderRecord, load_source_snapshot
 from app.db_connection import connect
 from app.db_import_content import replace_import_notes, replace_import_snapshot_items
 from app.db_import_map import (
+    get_checkin_map_for_source_builder,
     get_project_id_for_source_builder,
     upsert_builder_map,
     upsert_checkin_map,
@@ -21,7 +22,8 @@ class ImportReport:
     builders_updated: int = 0
     builders_skipped: int = 0
     builders_without_checkins: int = 0
-    latest_checkins_imported: int = 0
+    latest_checkins_created: int = 0
+    latest_checkins_updated: int = 0
     latest_checkins_skipped: int = 0
     missing_progress_latest: int = 0
     house_warnings: list[str] = field(default_factory=list)
@@ -56,6 +58,14 @@ def run_import(config: ImportConfig) -> ImportReport:
     report = ImportReport(house_warnings=list(snapshot.house_warnings))
     for builder in snapshot.builders:
         report.builders_scanned += 1
+        if not builder.source_builder_id.strip():
+            report.errors.append("Encountered builder with empty source_builder_id.")
+            continue
+        if not builder.full_name.strip():
+            report.errors.append(
+                f"{builder.source_builder_id}: missing full_name; skipped builder."
+            )
+            continue
         if builder.latest_checkin is None:
             report.builders_without_checkins += 1
         elif builder.latest_checkin.north_star_value is None:
@@ -92,6 +102,13 @@ def run_import(config: ImportConfig) -> ImportReport:
         if builder.latest_checkin is None:
             report.latest_checkins_skipped += 1
         else:
+            existing_checkin = get_checkin_map_for_source_builder(builder.source_builder_id)
+            checkin_action = "created"
+            if existing_checkin:
+                if existing_checkin.get("source_checkin_id") == builder.latest_checkin.source_checkin_id:
+                    checkin_action = "skipped"
+                else:
+                    checkin_action = "updated"
             if not config.dry_run:
                 upsert_checkin_map(
                     source_checkin_id=builder.latest_checkin.source_checkin_id,
@@ -99,7 +116,12 @@ def run_import(config: ImportConfig) -> ImportReport:
                     week_of=builder.latest_checkin.week_of,
                     project_id=project_id,
                 )
-            report.latest_checkins_imported += 1
+            if checkin_action == "created":
+                report.latest_checkins_created += 1
+            elif checkin_action == "updated":
+                report.latest_checkins_updated += 1
+            else:
+                report.latest_checkins_skipped += 1
 
         if not config.dry_run:
             replace_import_snapshot_items(project_id, payload)
