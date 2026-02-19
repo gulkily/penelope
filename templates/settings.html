@@ -7,7 +7,9 @@
     <link rel="icon" href="data:," />
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
+    {% if lobby_auth_enabled %}
     <script src="/static/js/lobby-indicator.js" defer></script>
+    {% endif %}
     <script src="/static/js/logout.js" defer></script>
     <script src="/static/js/settings.js" defer></script>
   </head>
