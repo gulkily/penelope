@@ -12,6 +12,7 @@ from app.db_projects import (
     update_objective,
     update_progress,
     update_questions,
+    update_project_house,
     update_summary,
 )
 from app.db_auth import (
@@ -74,6 +75,7 @@ __all__ = [
     "update_item",
     "update_objective",
     "update_progress",
+    "update_project_house",
     "update_questions",
     "update_summary",
     "add_public_key",

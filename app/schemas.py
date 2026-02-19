@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
+from app.house import ALLOWED_HOUSES
+
 
 class ItemCreate(BaseModel):
     section: str = Field(..., description="Section key, e.g. summary or challenges.")
@@ -24,10 +26,23 @@ class ItemOrderUpdate(BaseModel):
 
 class ProjectCreate(BaseModel):
     name: str = Field(..., min_length=1)
+    house: str = Field(
+        ...,
+        min_length=1,
+        description=f"Resident house; one of: {', '.join(ALLOWED_HOUSES)}.",
+    )
 
 
 class ProjectArchiveUpdate(BaseModel):
     archived: bool = Field(False)
+
+
+class ProjectHouseUpdate(BaseModel):
+    house: str = Field(
+        ...,
+        min_length=1,
+        description=f"Resident house; one of: {', '.join(ALLOWED_HOUSES)}.",
+    )
 
 
 class QuestionsUpdate(BaseModel):

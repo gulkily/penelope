@@ -14,6 +14,7 @@ from app.schemas import (
     ProgressHistoryResponse,
     ProjectArchiveUpdate,
     ProjectCreate,
+    ProjectHouseUpdate,
     QuestionsUpdate,
     SummaryUpdate,
 )
@@ -85,7 +86,13 @@ def get_project(project_id: int) -> dict:
 
 @router.post("/projects")
 def create_project(payload: ProjectCreate) -> dict:
-    project = db.create_project(payload.name.strip())
+    try:
+        project = db.create_project(
+            payload.name.strip(),
+            payload.house.strip(),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
     return {"project": project}
 
 
@@ -95,6 +102,17 @@ def update_project_archive(project_id: int, payload: ProjectArchiveUpdate) -> di
     if not updated:
         raise HTTPException(status_code=404, detail="Resident not found")
     return {"archived": payload.archived}
+
+
+@router.put("/projects/{project_id}/house")
+def update_project_house(project_id: int, payload: ProjectHouseUpdate) -> dict:
+    try:
+        project = db.update_project_house(project_id, payload.house.strip())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not project:
+        raise HTTPException(status_code=404, detail="Resident not found")
+    return {"project": project}
 
 
 @router.post("/projects/{project_id}/items")

@@ -17,3 +17,13 @@
   - Ran `python -m py_compile app/db_projects.py app/api.py`.
 - Notes:
   - Existing list sort/pagination behavior was preserved while adding optional `house` filtering.
+
+## Stage 3 - Add create/update house API contracts
+- Changes:
+  - Updated project creation contracts to require `house` (`ProjectCreate`) and normalized the value in `db.create_project`.
+  - Added `ProjectHouseUpdate` schema and new endpoint `PUT /api/projects/{project_id}/house`.
+  - Added `db.update_project_house` and exported it via `app/db.py`.
+- Verification:
+  - Ran `python -m py_compile app/db_projects.py app/db.py app/schemas.py app/api.py`.
+- Notes:
+  - Invalid or missing house values now return HTTP 400 from API contracts.

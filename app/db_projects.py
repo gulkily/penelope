@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 from app.db_connection import connect
 from app.db_constants import SECTIONS
-from app.house import normalize_house_filter
+from app.house import normalize_house, normalize_house_filter
 from app.db_items import list_items_for_project
 from app.db_progress_history import log_progress_history
 
@@ -111,23 +111,29 @@ def get_project(project_id: int) -> dict | None:
     }
 
 
-def create_project(name: str) -> dict:
+def create_project(name: str, house: str) -> dict:
+    normalized_house = normalize_house(house)
     with connect() as conn:
         cursor = conn.execute(
             """
-            INSERT INTO projects (name, progress, goal, questions, summary, objective, archived)
-            VALUES (?, 0, 100, '', '', '', 0)
+            INSERT INTO projects (name, house, progress, goal, questions, summary, objective, archived)
+            VALUES (?, ?, 0, 100, '', '', '', 0)
             """,
-            (name,),
+            (name, normalized_house),
         )
         conn.commit()
         project_id = cursor.lastrowid
         row = conn.execute(
-            "SELECT id, name, archived FROM projects WHERE id = ?",
+            "SELECT id, name, house, archived FROM projects WHERE id = ?",
             (project_id,),
         ).fetchone()
 
-    return {"id": row["id"], "name": row["name"], "archived": bool(row["archived"])}
+    return {
+        "id": row["id"],
+        "name": row["name"],
+        "house": row["house"],
+        "archived": bool(row["archived"]),
+    }
 
 
 def set_project_archived(project_id: int, archived: bool) -> bool:
@@ -138,6 +144,23 @@ def set_project_archived(project_id: int, archived: bool) -> bool:
         )
         conn.commit()
     return cursor.rowcount > 0
+
+
+def update_project_house(project_id: int, house: str) -> dict | None:
+    normalized_house = normalize_house(house)
+    with connect() as conn:
+        cursor = conn.execute(
+            "UPDATE projects SET house = ? WHERE id = ?",
+            (normalized_house, project_id),
+        )
+        conn.commit()
+        if cursor.rowcount <= 0:
+            return None
+        row = conn.execute(
+            "SELECT id, house FROM projects WHERE id = ?",
+            (project_id,),
+        ).fetchone()
+    return {"id": row["id"], "house": row["house"]}
 
 
 def update_questions(project_id: int, questions: str) -> None:
