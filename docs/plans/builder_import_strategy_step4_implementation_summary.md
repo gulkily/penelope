@@ -85,3 +85,18 @@
   - Ran `python scripts/import_builder_snapshot.py --sample 1`.
 - Notes:
   - Dry-run output now distinguishes check-in mapping creation vs update vs skip, improving rerun auditability.
+
+## Stage 7 - End-to-end validation + rollout checklist
+- Changes:
+  - Added operator runbook `docs/plans/builder_import_strategy_runbook.md` with dry-run/write/rerun commands, optional LLM command, and validation checklist.
+- Verification:
+  - Executed full idempotency flow against isolated DB:
+    - dry-run
+    - write run
+    - second write run
+  - Verified second write run produced no new imports (`Builders imported: 0`, check-ins created/updated: `0`).
+  - Verified mapping table counts on isolated DB after rerun:
+    - `import_builder_map`: 21
+    - `import_checkin_map`: 18
+- Notes:
+  - Validation was performed on `/tmp` SQLite target to avoid modifying primary app data.
