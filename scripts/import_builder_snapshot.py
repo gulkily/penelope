@@ -9,7 +9,9 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from app.builder_import_pipeline import ImportConfig, run_import
 from app.builder_import_source import load_source_snapshot
+from app.db_init import init_db
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -26,6 +28,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=5,
         help="How many builders to print in sample output.",
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Apply writes to target app DB (default is dry-run).",
     )
     return parser
 
@@ -63,9 +70,36 @@ def render_snapshot_preview(source_db: str, sample: int) -> str:
     return "\n".join(lines)
 
 
+def render_import_report(config: ImportConfig) -> str:
+    report = run_import(config)
+    lines = [
+        f"Mode: {'WRITE' if not config.dry_run else 'DRY-RUN'}",
+        f"Builders scanned: {report.builders_scanned}",
+        f"Builders imported: {report.builders_imported}",
+        f"Builders updated: {report.builders_updated}",
+        f"Builders skipped: {report.builders_skipped}",
+        f"Builders without check-ins: {report.builders_without_checkins}",
+        f"Latest check-ins imported: {report.latest_checkins_imported}",
+        f"Latest check-ins skipped: {report.latest_checkins_skipped}",
+        f"Latest check-ins missing north_star_value: {report.missing_progress_latest}",
+        f"House normalization warnings: {len(report.house_warnings)}",
+        f"Errors: {len(report.errors)}",
+    ]
+    if report.house_warnings:
+        lines.extend(["", "House warnings:"])
+        lines.extend([f"- {warning}" for warning in report.house_warnings])
+    if report.errors:
+        lines.extend(["", "Errors:"])
+        lines.extend([f"- {error}" for error in report.errors])
+    return "\n".join(lines)
+
+
 def main() -> int:
     args = build_parser().parse_args()
+    init_db()
     print(render_snapshot_preview(args.source_db, args.sample))
+    print("")
+    print(render_import_report(ImportConfig(source_db=args.source_db, dry_run=not args.write)))
     return 0
 
 

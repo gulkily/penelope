@@ -23,3 +23,17 @@
   - Ran `python scripts/import_builder_snapshot.py --sample 3`.
 - Notes:
   - Source extraction now provides normalized in-memory records for later deterministic write stages.
+
+## Stage 3 - Implement deterministic write pass for projects + mapping tables
+- Changes:
+  - Added `app/builder_import_pipeline.py` with:
+    - deterministic project upsert flow based on source builder mappings,
+    - mapping-table updates for builders and latest check-ins,
+    - objective seeding from north-star metric metadata,
+    - dry-run aware import report counters.
+  - Extended `scripts/import_builder_snapshot.py` to initialize DB, run the deterministic import pipeline, and print import report metrics.
+- Verification:
+  - Ran `python -m py_compile app/builder_import_pipeline.py scripts/import_builder_snapshot.py`.
+  - Ran `python scripts/import_builder_snapshot.py --sample 2` (dry-run).
+- Notes:
+  - Deterministic rerun behavior is now scaffolded before section-item and LLM enrichment stages.
