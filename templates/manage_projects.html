@@ -23,15 +23,25 @@
       <section class="card card-compact manage-card">
         <h2>Add resident</h2>
         <form id="add-project-form" class="manage-form">
-          <label class="field-label" for="project-name">Resident name</label>
-          <div class="manage-form-row">
-            <input
-              id="project-name"
-              class="field-input"
-              type="text"
-              placeholder="e.g. Jordan Lee"
-              required
-            />
+          <div class="manage-form-row manage-form-row-create">
+            <div>
+              <label class="field-label" for="project-name">Resident name</label>
+              <input
+                id="project-name"
+                class="field-input"
+                type="text"
+                placeholder="e.g. Jordan Lee"
+                required
+              />
+            </div>
+            <div>
+              <label class="field-label" for="project-house">House</label>
+              <select id="project-house" class="field-input" required>
+                <option value="Unassigned">Unassigned</option>
+                <option value="Actioners">Actioners</option>
+                <option value="SF2">SF2</option>
+              </select>
+            </div>
             <button type="submit" class="action-button">Add resident</button>
           </div>
         </form>
@@ -39,10 +49,21 @@
 
       <section class="card manage-card">
         <div class="manage-table-header">
-          <h2>Residents</h2>
-          <span class="hint"
-            >Archived residents are hidden from the main selector.</span
-          >
+          <div>
+            <h2>Residents</h2>
+            <span class="hint"
+              >Archived residents are hidden from the main selector.</span
+            >
+          </div>
+          <div class="manage-filter-group">
+            <label class="field-label" for="manage-house-filter">House filter</label>
+            <select id="manage-house-filter" class="field-input">
+              <option value="All houses">All houses</option>
+              <option value="Unassigned">Unassigned</option>
+              <option value="Actioners">Actioners</option>
+              <option value="SF2">SF2</option>
+            </select>
+          </div>
         </div>
         <div class="table-wrapper">
           <table class="project-table">
@@ -60,6 +81,7 @@
                     <span class="table-sort-indicator" aria-hidden="true"></span>
                   </button>
                 </th>
+                <th class="column-house">House</th>
                 <th>
                   <button type="button" class="table-sort" data-sort="archived">
                     <span class="table-sort-label">Archived</span>

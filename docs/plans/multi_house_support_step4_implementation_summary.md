@@ -27,3 +27,17 @@
   - Ran `python -m py_compile app/db_projects.py app/db.py app/schemas.py app/api.py`.
 - Notes:
   - Invalid or missing house values now return HTTP 400 from API contracts.
+
+## Stage 4 - Extend resident management page for house assignment and filtering
+- Changes:
+  - Updated `templates/manage_projects.html` to add required house selection in the create form, house filter control, and a house column in the resident table.
+  - Extended `static/js/manage-projects.js` to:
+    - send required `house` on resident creation,
+    - support inline house editing via `PUT /api/projects/{project_id}/house`,
+    - apply house filtering through `/api/projects?house=...`,
+    - persist house filter in URL and local storage (`houseFilter` key).
+  - Added management-page styling for new form/filter/table controls in `static/css/main.css`.
+- Verification:
+  - Ran `node --check static/js/manage-projects.js`.
+- Notes:
+  - Existing pagination/sort behavior is retained while filtering by house.

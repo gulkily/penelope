@@ -1,5 +1,7 @@
 const form = document.getElementById("add-project-form");
 const nameInput = document.getElementById("project-name");
+const houseInput = document.getElementById("project-house");
+const houseFilterInput = document.getElementById("manage-house-filter");
 const tableBody = document.getElementById("project-table-body");
 const sortButtons = document.querySelectorAll(".table-sort");
 const paginationPrev = document.getElementById("pagination-prev");
@@ -11,6 +13,10 @@ const DEFAULT_SORT_KEY = "id";
 const DEFAULT_SORT_DIRECTION = "asc";
 const SORT_KEYS = new Set(["id", "name", "archived"]);
 const SORT_DIRECTIONS = new Set(["asc", "desc"]);
+const HOUSE_FILTER_STORAGE_KEY = "houseFilter";
+const ALL_HOUSES_FILTER = "All houses";
+const HOUSE_OPTIONS = ["Unassigned", "Actioners", "SF2"];
+const HOUSE_FILTER_OPTIONS = [ALL_HOUSES_FILTER, ...HOUSE_OPTIONS];
 
 const state = {
   projects: [],
@@ -20,6 +26,7 @@ const state = {
   pageSize: PAGE_SIZE,
   total: 0,
   sortMode: "client",
+  houseFilter: ALL_HOUSES_FILTER,
 };
 
 async function requestJSON(url, options) {
@@ -28,6 +35,53 @@ async function requestJSON(url, options) {
     throw new Error(`Request failed: ${response.status}`);
   }
   return response.json();
+}
+
+function normalizeHouse(value) {
+  const candidate = String(value || "").trim().toLowerCase();
+  const match = HOUSE_OPTIONS.find((option) => option.toLowerCase() === candidate);
+  return match || HOUSE_OPTIONS[0];
+}
+
+function normalizeHouseFilter(value) {
+  const candidate = String(value || "").trim().toLowerCase();
+  const match = HOUSE_FILTER_OPTIONS.find(
+    (option) => option.toLowerCase() === candidate
+  );
+  return match || ALL_HOUSES_FILTER;
+}
+
+function readStoredHouseFilter() {
+  try {
+    return normalizeHouseFilter(localStorage.getItem(HOUSE_FILTER_STORAGE_KEY));
+  } catch (error) {
+    console.warn("Unable to read house filter from storage", error);
+    return ALL_HOUSES_FILTER;
+  }
+}
+
+function writeStoredHouseFilter(value) {
+  try {
+    localStorage.setItem(HOUSE_FILTER_STORAGE_KEY, value);
+  } catch (error) {
+    console.warn("Unable to persist house filter", error);
+  }
+}
+
+function buildHouseSelect(currentHouse, projectId) {
+  const select = document.createElement("select");
+  select.className = "field-input table-house-select";
+  select.dataset.projectId = String(projectId);
+  HOUSE_OPTIONS.forEach((house) => {
+    const option = document.createElement("option");
+    option.value = house;
+    option.textContent = house;
+    select.append(option);
+  });
+  select.value = normalizeHouse(currentHouse);
+  select.dataset.previousHouse = select.value;
+  select.addEventListener("change", handleHouseUpdate);
+  return select;
 }
 
 function renderProjects(projects) {
@@ -48,6 +102,10 @@ function renderProjects(projects) {
     link.className = "project-link";
     nameCell.append(link);
 
+    const houseCell = document.createElement("td");
+    const houseSelect = buildHouseSelect(project.house, project.id);
+    houseCell.append(houseSelect);
+
     const archiveCell = document.createElement("td");
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
@@ -56,7 +114,7 @@ function renderProjects(projects) {
     checkbox.addEventListener("change", handleArchiveToggle);
     archiveCell.append(checkbox);
 
-    row.append(idCell, nameCell, archiveCell);
+    row.append(idCell, nameCell, houseCell, archiveCell);
     tableBody.append(row);
   });
 }
@@ -136,6 +194,12 @@ function readStateFromUrl() {
   state.sortDirection = SORT_DIRECTIONS.has(sortDir)
     ? sortDir
     : DEFAULT_SORT_DIRECTION;
+
+  const urlHouseFilter = normalizeHouseFilter(params.get("house"));
+  state.houseFilter = params.has("house") ? urlHouseFilter : readStoredHouseFilter();
+  if (houseFilterInput) {
+    houseFilterInput.value = state.houseFilter;
+  }
 }
 
 function syncUrl(replace = true) {
@@ -143,16 +207,19 @@ function syncUrl(replace = true) {
   url.searchParams.set("page", String(state.page));
   url.searchParams.set("sort_key", state.sortKey);
   url.searchParams.set("sort_dir", state.sortDirection);
+  url.searchParams.set("house", state.houseFilter);
   if (replace) {
     window.history.replaceState({}, "", url);
   } else {
     window.history.pushState({}, "", url);
   }
+  writeStoredHouseFilter(state.houseFilter);
 }
 
 async function loadProjects() {
   const params = new URLSearchParams({ include_archived: "1" });
   params.set("page", String(state.page));
+  params.set("house", state.houseFilter);
   if (state.sortMode === "server") {
     params.set("sort_key", state.sortKey);
     params.set("sort_dir", state.sortDirection);
@@ -208,10 +275,40 @@ async function handleArchiveToggle(event) {
   }
 }
 
+async function handleHouseUpdate(event) {
+  const select = event.target;
+  const projectId = select.dataset.projectId;
+  if (!projectId) {
+    return;
+  }
+  const previousHouse = normalizeHouse(select.dataset.previousHouse);
+  const nextHouse = normalizeHouse(select.value);
+  if (nextHouse === previousHouse) {
+    select.value = previousHouse;
+    return;
+  }
+  select.disabled = true;
+  try {
+    await requestJSON(`/api/projects/${projectId}/house`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ house: nextHouse }),
+    });
+    select.dataset.previousHouse = nextHouse;
+    await loadProjects();
+  } catch (error) {
+    console.error(error);
+    select.value = previousHouse;
+  } finally {
+    select.disabled = false;
+  }
+}
+
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
   const name = nameInput.value.trim();
-  if (!name) {
+  const house = normalizeHouse(houseInput.value);
+  if (!name || !house) {
     return;
   }
   form.querySelector("button").disabled = true;
@@ -219,9 +316,10 @@ form.addEventListener("submit", async (event) => {
     await requestJSON("/api/projects", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, house }),
     });
     nameInput.value = "";
+    houseInput.value = house;
     await loadProjects();
   } catch (error) {
     console.error(error);
@@ -279,6 +377,18 @@ if (paginationNext) {
         console.error(error);
       });
     }
+  });
+}
+
+if (houseFilterInput) {
+  houseFilterInput.addEventListener("change", () => {
+    state.houseFilter = normalizeHouseFilter(houseFilterInput.value);
+    houseFilterInput.value = state.houseFilter;
+    state.page = 1;
+    syncUrl(false);
+    loadProjects().catch((error) => {
+      console.error(error);
+    });
   });
 }
 

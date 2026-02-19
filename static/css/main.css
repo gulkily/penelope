@@ -999,12 +999,23 @@ html {
   gap: 10px;
 }
 
+.manage-form-row-create {
+  grid-template-columns: minmax(220px, 1fr) minmax(140px, 200px) auto;
+  align-items: end;
+}
+
 .manage-table-header {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 16px;
   align-items: baseline;
   justify-content: space-between;
+}
+
+.manage-filter-group {
+  display: grid;
+  gap: 6px;
+  min-width: 180px;
 }
 
 .table-wrapper {
@@ -1033,6 +1044,15 @@ html {
 .project-table .column-id {
   width: 60px;
   white-space: nowrap;
+}
+
+.project-table .column-house {
+  min-width: 160px;
+}
+
+.table-house-select {
+  min-width: 140px;
+  max-width: 220px;
 }
 
 .project-table tbody tr:nth-child(even) {
@@ -1115,6 +1135,20 @@ html {
 .pagination-button {
   padding: 6px 12px;
   font-size: 12px;
+}
+
+@media (max-width: 760px) {
+  .manage-form-row-create {
+    grid-template-columns: 1fr;
+  }
+
+  .manage-form-row-create .action-button {
+    width: fit-content;
+  }
+
+  .manage-filter-group {
+    width: 100%;
+  }
 }
 
 .toast {
