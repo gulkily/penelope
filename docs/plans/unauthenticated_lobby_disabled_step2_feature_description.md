@@ -12,26 +12,28 @@ When an unauthenticated user reaches a protected page, the current recovery flow
 ## Core Requirements
 - Keep `/session/reset` as the unauthenticated landing surface for protected routes.
 - Attempt session restore automatically when `/session/reset` loads.
-- If restore fails, show a persistent “not logged in” state with guidance to use a magic link or request one from admins.
+- If restore fails, show a persistent “not logged in” state with text-only guidance to use a magic link or request one from admins.
 - Do not redirect to `/lobby` as the fallback path when lobby auth is disabled.
-- Preserve successful restore behavior (redirect into the app when restore succeeds).
+- Keep magic-link login usable when `LOBBY_AUTH_ENABLED=false` by decoupling magic-link flows from lobby-auth gating.
+- On successful restore, redirect to the original requested path when available, except route `/lobby` must redirect to `/`.
 
 ## Shared Component Inventory
 - `app/main.py` auth middleware + `/session/reset` route: reuse as canonical unauthenticated entry.
 - `templates/session_reset.html`: extend/reuse as canonical UI for post-restore failure messaging.
-- `static/js/session_reset.js`: extend/reuse to remove dead-end redirect behavior and present guidance state.
-- `app/api_auth.py` session restore endpoints (`/api/auth/session/challenge`, `/api/auth/session/restore`): reuse as existing restore mechanism.
-- Lobby/magic-link surfaces (`/lobby`, `/settings/magic-links`): no new canonical page required; only referenced in user guidance copy.
+- `static/js/session_reset.js`: extend/reuse to remove dead-end redirect behavior, present guidance state, and handle post-restore redirect target.
+- `app/api_auth.py` session restore and magic-link endpoints: reuse, but decouple magic-link usability from lobby-auth gating.
+- Lobby/magic-link surfaces (`/lobby`, `/settings/magic-links`): no new canonical page required; only referenced in user guidance text.
 
 ## Simple User Flow
 1. User accesses a protected route without an active session.
 2. App redirects user to `/session/reset`.
 3. Page automatically attempts key-based session restore.
-4. If restore succeeds, user is returned to the app.
-5. If restore fails, page shows “not logged in” guidance: use a magic link or request one from admins.
+4. If restore succeeds, user is redirected to the original requested path (except `/lobby`, which redirects to `/`).
+5. If restore fails, page shows text guidance: user is not logged in and should use a magic link or request one from admins.
 
 ## Success Criteria
 - Unauthenticated users continue to land on `/session/reset` for protected routes.
-- Restore success path still redirects users into the app.
+- Restore success path redirects users to their original target, with `/lobby` normalized to `/`.
 - Restore failure path no longer sends users into a disabled-lobby dead end.
-- Failure UI clearly states the user is not logged in and provides magic-link/request guidance.
+- Failure UI clearly states the user is not logged in and provides text-only magic-link/request guidance.
+- Magic-link login remains usable even when lobby auth is disabled.
