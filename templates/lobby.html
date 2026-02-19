@@ -8,14 +8,15 @@
     <link rel="stylesheet" href="/static/css/main.css" />
     <script src="/static/js/theme.js" defer></script>
     <script src="/static/js/lobby-indicator.js" defer></script>
-    {% if lobby_auth_enabled %}
+    {% set lobby_access_enabled = lobby_auth_enabled or lobby_token_present %}
+    {% if lobby_access_enabled %}
     <script src="/static/js/lobby.js" defer></script>
     {% endif %}
   </head>
   <body>
     <main class="page">
       {% include "partials/top_nav.html" with context %}
-      {% if lobby_auth_enabled %}
+      {% if lobby_access_enabled %}
       <section class="card card-compact" id="request-panel">
         <header class="page-header">
           <div>

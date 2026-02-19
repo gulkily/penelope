@@ -30,3 +30,19 @@
   - Render-checked `templates/session_reset.html` to confirm required guidance/target attributes are present for JS.
 - Notes:
   - Failure state now uses text guidance only, consistent with product decision for this beta.
+
+## Stage 3 - Decouple Magic-Link Login from Lobby-Auth Gating
+- Changes:
+  - Updated `app/api_auth.py` so magic-link management/bootstrap endpoints are no longer blocked by `LOBBY_AUTH_ENABLED=false`.
+  - Updated register/verify/status gating to preserve disabled-lobby behavior for non-magic requests while allowing magic-token-backed login flows.
+  - Updated lobby page rendering to allow token-entry mode when lobby auth is disabled:
+    - `app/main.py` now passes `lobby_token_present` context for `/lobby`.
+    - `templates/lobby.html` now enables lobby JS/UI when either lobby auth is enabled or token is present.
+- Verification:
+  - Ran `python -m compileall app/api_auth.py app/main.py`.
+  - Render-checked `templates/lobby.html` for:
+    - disabled mode with no token (disabled message, no lobby script),
+    - disabled mode with token (request UI + lobby script enabled).
+  - Confirmed non-magic lobby approval endpoints remain lobby-gated.
+- Notes:
+  - This preserves your requirement: magic-link login remains usable when lobby auth is disabled, without reopening general lobby request flows.

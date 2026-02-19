@@ -51,6 +51,16 @@ def _require_lobby_auth_enabled() -> None:
         raise HTTPException(status_code=503, detail="Lobby authentication is disabled")
 
 
+def _is_magic_link_request(request_row: dict | None) -> bool:
+    return bool(request_row and request_row.get("magic_token_id"))
+
+
+def _require_lobby_auth_for_request(request_row: dict | None) -> None:
+    if get_feature_flags().lobby_auth_enabled or _is_magic_link_request(request_row):
+        return
+    raise HTTPException(status_code=503, detail="Lobby authentication is disabled")
+
+
 def _build_magic_link(request: Request, token: str) -> str:
     base = str(request.base_url).rstrip("/")
     return f"{base}/lobby?token={quote(token)}"
@@ -66,7 +76,6 @@ def _classify_magic_token(token_row: dict) -> str:
 
 @router.post("/auth/magic-links", response_model=MagicLinkCreateResponse)
 def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
-    _require_lobby_auth_enabled()
     session = _require_admin(request)
     configured_username = payload.configured_username.strip()
     if not configured_username:
@@ -100,7 +109,6 @@ def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
 
 @router.get("/auth/magic-links", response_model=MagicLinkListResponse)
 def list_magic_links(request: Request, limit: int = 200) -> dict:
-    _require_lobby_auth_enabled()
     _require_admin(request)
     entries = db.list_active_magic_login_tokens(limit=limit)
     return {
@@ -119,7 +127,6 @@ def list_magic_links(request: Request, limit: int = 200) -> dict:
 
 @router.post("/auth/magic-links/{token_id}/revoke", response_model=MagicLinkRevokeResponse)
 def revoke_magic_link(token_id: str, request: Request) -> dict:
-    _require_lobby_auth_enabled()
     session = _require_admin(request)
     try:
         token_row = db.mark_magic_login_token_revoked(token_id, session.account_id)
@@ -140,7 +147,6 @@ def revoke_magic_link(token_id: str, request: Request) -> dict:
 
 @router.get("/auth/magic-links/bootstrap", response_model=MagicLinkBootstrapResponse)
 def bootstrap_magic_link(token: str = "") -> dict:
-    _require_lobby_auth_enabled()
     candidate = token.strip()
     if not candidate:
         return {"status": "invalid", "configured_username": None}
@@ -165,16 +171,18 @@ def bootstrap_magic_link(token: str = "") -> dict:
 
 @router.post("/auth/register", response_model=AuthRegisterResponse)
 def register(payload: AuthRegisterRequest) -> dict:
-    _require_lobby_auth_enabled()
     public_key = payload.public_key.strip()
     if not public_key:
         raise HTTPException(status_code=400, detail="Public key required")
     username = payload.username.strip()
     if not username:
         raise HTTPException(status_code=400, detail="Username required")
+    token = (payload.token or "").strip()
+    if not token and not get_feature_flags().lobby_auth_enabled:
+        raise HTTPException(status_code=503, detail="Lobby authentication is disabled")
     magic_token_id = None
-    if payload.token:
-        token_hash = auth.hash_magic_login_token(payload.token.strip())
+    if token:
+        token_hash = auth.hash_magic_login_token(token)
         token_row = db.get_magic_login_token_by_hash(token_hash)
         token_status = _classify_magic_token(token_row)
         if token_status != "usable":
@@ -224,10 +232,10 @@ def register(payload: AuthRegisterRequest) -> dict:
 
 @router.post("/auth/verify")
 def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
-    _require_lobby_auth_enabled()
     request_row = db.get_lobby_request(payload.request_id)
     if not request_row:
         raise HTTPException(status_code=404, detail="Request not found")
+    _require_lobby_auth_for_request(request_row)
     if request_row["status"] != "verifying":
         raise HTTPException(status_code=400, detail="Request not in verifying state")
     if not auth.verify_stateless_challenge(request_row["challenge"]):
@@ -304,10 +312,10 @@ def verify_request(payload: AuthVerifyRequest) -> AuthStatusResponse:
 
 @router.get("/auth/status/{request_id}", response_model=AuthStatusResponse)
 def get_status(request_id: str) -> dict:
-    _require_lobby_auth_enabled()
     request_row = db.get_lobby_request(request_id)
     if not request_row:
         raise HTTPException(status_code=404, detail="Request not found")
+    _require_lobby_auth_for_request(request_row)
     public_key_row = db.get_public_key(request_row["public_key_id"])
     fingerprint = public_key_row.get("fingerprint") if public_key_row else ""
     code = request_row["code"] if request_row["status"] in ("pending", "verifying") else None

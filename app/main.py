@@ -150,9 +150,11 @@ def index(request: Request) -> HTMLResponse:
 
 @app.get("/lobby", response_class=HTMLResponse)
 def lobby(request: Request) -> HTMLResponse:
+    context = _build_template_context(request, "lobby")
+    context["lobby_token_present"] = bool((request.query_params.get("token") or "").strip())
     return templates.TemplateResponse(
         "lobby.html",
-        _build_template_context(request, "lobby"),
+        context,
     )
 
 
