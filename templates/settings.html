@@ -20,6 +20,22 @@
           <p class="hint">Backup data and adjust system preferences.</p>
         </div>
       </header>
+      {% set lobby_nav_enabled = navbar_items | selectattr("key", "equalto", "lobby") | list | length > 0 %}
+
+      <section class="card card-compact">
+        <div class="settings-row">
+          <div>
+            <h2>Resident management</h2>
+            <p class="hint">Add, archive, and review residents.</p>
+          </div>
+          <div class="link-button-group">
+            <a class="action-button" href="/projects">Manage residents</a>
+            {% if lobby_nav_enabled %}
+            <a class="action-button" href="/lobby">Lobby</a>
+            {% endif %}
+          </div>
+        </div>
+      </section>
 
       <section class="card card-compact">
         <div class="settings-row">
