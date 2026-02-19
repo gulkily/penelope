@@ -46,3 +46,15 @@
   - Confirmed non-magic lobby approval endpoints remain lobby-gated.
 - Notes:
   - This preserves your requirement: magic-link login remains usable when lobby auth is disabled, without reopening general lobby request flows.
+
+## Stage 4 - Documentation and Regression Notes
+- Changes:
+  - Updated `README.md` unauthenticated/auth notes to document:
+    - restore-first `/session/reset` behavior,
+    - text-only guidance after failed restore,
+    - decoupled magic-link login when lobby auth is disabled.
+  - Updated `.env.example` comments for `LOBBY_AUTH_ENABLED` to reflect the new decoupled behavior.
+- Verification:
+  - Reviewed updated docs to ensure they match implemented behavior in session reset and auth API flows.
+- Notes:
+  - No new automated tests were added in this stage; validation remains manual/browser-based.

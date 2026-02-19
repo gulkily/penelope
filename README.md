@@ -69,6 +69,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Configure magic-link admins with `MAGIC_LINK_ADMIN_USERNAMES` (comma-separated usernames); when unset, any signed-in account can issue/revoke links.
 - Magic links remain valid until revoked by an admin.
 - Configure optional navbar links with `NAVBAR_ENABLED_ITEMS` (valid keys: `lobby,projects,settings`; Dashboard remains visible).
-- Set `LOBBY_AUTH_ENABLED=false` to disable lobby authentication and magic-link APIs while keeping `/lobby` reachable.
+- Set `LOBBY_AUTH_ENABLED=false` to disable general lobby request/approval flows while keeping magic-link login usable.
 - Set `RECORDER_ENABLED=false` to hide the "Record audio" section in the Add update dialog.
 - Startup now only warns when `.env` is missing keys from `.env.example`; run `./pnl env-sync` to append missing defaults.
+- Unauthenticated users are redirected to `/session/reset`, which attempts automatic restore and then shows text guidance to use/request a magic link if still not logged in.

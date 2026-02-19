@@ -35,6 +35,7 @@ Each folder groups Step 1-4 planning artifacts for a single feature.
 - `test_matrix_gaps/`
 - `transcription_backend_forwarding/`
 - `transcription_recording_ui/`
+- `unauthenticated_lobby_disabled/`
 
 ## Loose files
 These features are still in-progress (fewer than four artifacts) or are
