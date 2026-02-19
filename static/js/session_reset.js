@@ -4,6 +4,7 @@ const STORAGE_KEYS = {
 };
 
 const messageEl = document.getElementById("reset-message");
+const guidanceEl = document.getElementById("reset-guidance");
 const retryButton = document.getElementById("reset-retry");
 const encoder = new TextEncoder();
 const WEB_CRYPTO_ERROR =
@@ -36,6 +37,40 @@ function showMessage(text, isError = false) {
   }
   messageEl.textContent = text;
   messageEl.classList.toggle("helper-error", isError);
+}
+
+function showLoggedOutGuidance() {
+  if (!guidanceEl) {
+    return;
+  }
+  guidanceEl.hidden = false;
+}
+
+function hideLoggedOutGuidance() {
+  if (!guidanceEl) {
+    return;
+  }
+  guidanceEl.hidden = true;
+}
+
+function showNotLoggedInState(details = "") {
+  const message = details
+    ? `You are not logged in. ${details}`
+    : "You are not logged in.";
+  showMessage(message, true);
+  showLoggedOutGuidance();
+}
+
+function resolveNextPath() {
+  const nextSource = document.querySelector("[data-reset-next]");
+  const candidate = (nextSource?.dataset?.resetNext || "").trim();
+  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) {
+    return "/";
+  }
+  if (candidate === "/lobby" || candidate.startsWith("/lobby?")) {
+    return "/";
+  }
+  return candidate;
 }
 
 function bufferToBase64(buffer) {
@@ -78,17 +113,19 @@ async function signChallenge(challenge) {
 }
 
 async function restoreSession() {
+  hideLoggedOutGuidance();
   try {
+    const nextPath = resolveNextPath();
     const publicKey = localStorage.getItem(STORAGE_KEYS.publicKey);
     if (!publicKey) {
-      window.location.href = "/lobby";
+      showNotLoggedInState("Use your magic link to log in.");
       return;
     }
 
     showMessage("Restoring session...");
     const challengeResponse = await fetch("/api/auth/session/challenge");
     if (!challengeResponse.ok) {
-      showMessage("Unable to request a challenge. Try again.", true);
+      showNotLoggedInState("Use your magic link to log in.");
       return;
     }
     const { challenge } = await challengeResponse.json();
@@ -106,15 +143,12 @@ async function restoreSession() {
     });
 
     if (response.ok) {
-      window.location.href = "/";
+      window.location.href = nextPath;
     } else {
-      showMessage("Session restore failed. Redirecting to lobby...", true);
-      setTimeout(() => {
-        window.location.href = "/lobby";
-      }, 1500);
+      showNotLoggedInState("Use your magic link to log in.");
     }
   } catch (error) {
-    showMessage(error.message || "Session restore failed.", true);
+    showNotLoggedInState(error.message || "Use your magic link to log in.");
   }
 }
 
