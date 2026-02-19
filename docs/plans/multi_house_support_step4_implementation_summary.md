@@ -55,3 +55,15 @@
   - Ran `node --check static/js/manage-projects.js`.
 - Notes:
   - Existing `?project=` deep-link behavior is preserved while applying house-filter scoping.
+
+## Stage 6 - Regression coverage and rollout checks
+- Changes:
+  - Updated `tests/http/test_projects_api.py` to:
+    - send required `house` in project creation flows,
+    - validate `/api/projects?house=...` filtering,
+    - validate `PUT /api/projects/{project_id}/house`,
+    - validate invalid/missing house create behavior.
+- Verification:
+  - Ran `python -m py_compile app/house.py app/db_init.py app/db_projects.py app/db.py app/schemas.py app/api.py tests/http/test_projects_api.py`.
+- Notes:
+  - Did not run `pytest tests/http` because these tests require a separately running app server in this environment.
