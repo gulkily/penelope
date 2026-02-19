@@ -1899,6 +1899,7 @@ async function loadProjects() {
     projectSelect.value = String(selectedProjectId);
   }
   if (selectedProjectId !== null && !projectSelect.value) {
+    selectProjectPlaceholder();
     resetEmptyState();
     clearProjectInUrl();
     return;
@@ -1910,7 +1911,7 @@ async function loadProjects() {
     setInteractivity(false);
     const projectData = await loadProject(state.projectId);
     if (!projectData) {
-      projectSelect.value = "";
+      selectProjectPlaceholder();
       resetEmptyState();
       clearProjectInUrl();
       return;
@@ -2016,6 +2017,7 @@ function renderSections(sections) {
 function resetEmptyState() {
   state.projectId = null;
   state.projectData = null;
+  selectProjectPlaceholder();
   emptyState.hidden = false;
   setInteractivity(false);
   goalInput.value = String(DEFAULT_GOAL);
@@ -2134,6 +2136,13 @@ function clearProjectInUrl() {
   window.history.replaceState({}, "", url);
 }
 
+function selectProjectPlaceholder() {
+  projectSelect.value = "";
+  if (projectSelect.options.length > 0) {
+    projectSelect.selectedIndex = 0;
+  }
+}
+
 function setHouseFilterInUrl(houseFilter) {
   const params = new URLSearchParams(window.location.search);
   params.set("house", normalizeHouseFilter(houseFilter));
@@ -2147,6 +2156,7 @@ function clearProjectOptions() {
   placeholder.value = "";
   placeholder.textContent = "Select a resident";
   projectSelect.append(placeholder);
+  selectProjectPlaceholder();
 }
 
 function autoGrow(input) {
