@@ -171,6 +171,7 @@ html {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 24px;
   width: 100%;
 }

@@ -41,3 +41,17 @@
   - Ran `node --check static/js/manage-projects.js`.
 - Notes:
   - Existing pagination/sort behavior is retained while filtering by house.
+
+## Stage 5 - Extend dashboard resident selector with house filter and persistence
+- Changes:
+  - Added house filter control to the dashboard header in `templates/index.html`.
+  - Extended `static/js/app.js` to:
+    - read/write house filter from URL query param (`house`) and local storage (`houseFilter`),
+    - request `/api/projects` with the active house filter,
+    - repopulate resident selector options to only show residents matching the active house filter.
+  - Updated dashboard header layout in `static/css/main.css` to wrap cleanly with the extra filter control.
+- Verification:
+  - Ran `node --check static/js/app.js`.
+  - Ran `node --check static/js/manage-projects.js`.
+- Notes:
+  - Existing `?project=` deep-link behavior is preserved while applying house-filter scoping.

@@ -10,6 +10,10 @@ const TRANSCRIPTION_CHUNK_SIZE_FALLBACK = 5 * 1024 * 1024;
 const TRANSCRIPTION_CHUNK_THRESHOLD_BYTES = 5 * 1024 * 1024;
 const TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS = 3;
 const TRANSCRIPTION_UPLOAD_RETRY_DELAY_MS = 800;
+const HOUSE_FILTER_STORAGE_KEY = "houseFilter";
+const ALL_HOUSES_FILTER = "All houses";
+const HOUSE_OPTIONS = ["Unassigned", "Actioners", "SF2"];
+const HOUSE_FILTER_OPTIONS = [ALL_HOUSES_FILTER, ...HOUSE_OPTIONS];
 
 const state = {
   projectId: null,
@@ -25,8 +29,10 @@ const state = {
   residencyEndDate: DEFAULT_RESIDENCY_END,
   graphExpanded: false,
   projectData: null,
+  houseFilter: ALL_HOUSES_FILTER,
 };
 
+const houseFilterSelect = document.getElementById("house-filter");
 const projectSelect = document.getElementById("project-select");
 const progressSlider = document.getElementById("progress-slider");
 const progressPercent = document.getElementById("progress-percent");
@@ -1869,10 +1875,14 @@ function handleDragMove(event) {
 async function loadProjects() {
   const urlProjectId = readProjectFromUrl();
   const includeArchived = urlProjectId !== null;
-  const listUrl = includeArchived
-    ? "/api/projects?include_archived=1"
-    : "/api/projects";
+  const params = new URLSearchParams();
+  if (includeArchived) {
+    params.set("include_archived", "1");
+  }
+  params.set("house", state.houseFilter);
+  const listUrl = `/api/projects?${params.toString()}`;
   const data = await requestJSON(listUrl);
+  clearProjectOptions();
   data.projects.forEach((project) => {
     const option = document.createElement("option");
     option.value = project.id;
@@ -1881,11 +1891,14 @@ async function loadProjects() {
   });
   state.projectsLoaded = true;
 
-  if (includeArchived) {
-    projectSelect.value = String(urlProjectId);
+  let selectedProjectId = urlProjectId;
+  if (selectedProjectId === null && state.projectId) {
+    selectedProjectId = state.projectId;
   }
-
-  if (includeArchived && !projectSelect.value) {
+  if (selectedProjectId !== null) {
+    projectSelect.value = String(selectedProjectId);
+  }
+  if (selectedProjectId !== null && !projectSelect.value) {
     resetEmptyState();
     clearProjectInUrl();
     return;
@@ -1896,7 +1909,7 @@ async function loadProjects() {
     emptyState.hidden = true;
     setInteractivity(false);
     const projectData = await loadProject(state.projectId);
-    if (!projectData && includeArchived) {
+    if (!projectData) {
       projectSelect.value = "";
       resetEmptyState();
       clearProjectInUrl();
@@ -2060,6 +2073,31 @@ function updateProgressDisplay(progressValue, goalValue) {
   progressSlider.style.setProperty("--progress", `${safePercent}%`);
 }
 
+function normalizeHouseFilter(value) {
+  const candidate = String(value || "").trim().toLowerCase();
+  const match = HOUSE_FILTER_OPTIONS.find(
+    (option) => option.toLowerCase() === candidate,
+  );
+  return match || ALL_HOUSES_FILTER;
+}
+
+function readStoredHouseFilter() {
+  try {
+    return normalizeHouseFilter(localStorage.getItem(HOUSE_FILTER_STORAGE_KEY));
+  } catch (error) {
+    console.warn("Unable to read house filter from storage", error);
+    return ALL_HOUSES_FILTER;
+  }
+}
+
+function writeStoredHouseFilter(value) {
+  try {
+    localStorage.setItem(HOUSE_FILTER_STORAGE_KEY, value);
+  } catch (error) {
+    console.warn("Unable to save house filter", error);
+  }
+}
+
 function readProjectFromUrl() {
   const params = new URLSearchParams(window.location.search);
   const raw = params.get("project");
@@ -2071,6 +2109,14 @@ function readProjectFromUrl() {
     return null;
   }
   return parsed;
+}
+
+function readHouseFilterFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  if (!params.has("house")) {
+    return null;
+  }
+  return normalizeHouseFilter(params.get("house"));
 }
 
 function setProjectInUrl(projectId) {
@@ -2086,6 +2132,21 @@ function clearProjectInUrl() {
   const query = params.toString();
   const url = query ? `${window.location.pathname}?${query}` : window.location.pathname;
   window.history.replaceState({}, "", url);
+}
+
+function setHouseFilterInUrl(houseFilter) {
+  const params = new URLSearchParams(window.location.search);
+  params.set("house", normalizeHouseFilter(houseFilter));
+  const url = `${window.location.pathname}?${params.toString()}`;
+  window.history.replaceState({}, "", url);
+}
+
+function clearProjectOptions() {
+  projectSelect.innerHTML = "";
+  const placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "Select a resident";
+  projectSelect.append(placeholder);
 }
 
 function autoGrow(input) {
@@ -2533,6 +2594,18 @@ projectSelect.addEventListener("change", async (event) => {
   }
 });
 
+if (houseFilterSelect) {
+  houseFilterSelect.addEventListener("change", () => {
+    state.houseFilter = normalizeHouseFilter(houseFilterSelect.value);
+    houseFilterSelect.value = state.houseFilter;
+    writeStoredHouseFilter(state.houseFilter);
+    setHouseFilterInUrl(state.houseFilter);
+    loadProjects().catch((error) => {
+      console.error(error);
+    });
+  });
+}
+
 if (transcriptOpen) {
   transcriptOpen.addEventListener("click", openTranscriptDialog);
 }
@@ -2932,6 +3005,14 @@ summaryInput.addEventListener("input", scheduleSummarySave);
 
 setInteractivity(false);
 resetEmptyState();
+state.houseFilter = normalizeHouseFilter(
+  readHouseFilterFromUrl() || readStoredHouseFilter(),
+);
+if (houseFilterSelect) {
+  houseFilterSelect.value = state.houseFilter;
+}
+writeStoredHouseFilter(state.houseFilter);
+setHouseFilterInUrl(state.houseFilter);
 loadProjects().catch((error) => {
   console.error(error);
 });
