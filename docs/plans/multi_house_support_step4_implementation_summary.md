@@ -58,6 +58,7 @@
 
 ## Stage 6 - Regression coverage and rollout checks
 - Changes:
+  - Adjusted `init_db` ordering in `app/db_init.py` so project house backfill runs after seed insertion, ensuring seeded residents are normalized to canonical house values.
   - Updated `tests/http/test_projects_api.py` to:
     - send required `house` in project creation flows,
     - validate `/api/projects?house=...` filtering,

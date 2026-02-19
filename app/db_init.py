@@ -233,8 +233,8 @@ def init_db() -> None:
         _ensure_column(conn, "ledger_events", "subject_account_id", "INTEGER")
         _ensure_column(conn, "ledger_events", "metadata", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "ledger_events", "created_at", "TEXT NOT NULL DEFAULT ''")
-        _backfill_project_houses(conn)
         _seed_if_empty(conn)
+        _backfill_project_houses(conn)
         _backfill_item_order(conn)
 
 
