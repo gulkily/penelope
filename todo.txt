@@ -76,3 +76,11 @@ MVP beta
 	- No residents manager x
 	- Paste or upload, no recorder x
 	- Test with long transcript
+
+Env defaults sync follow-up
+	- Problem statement: launch-time `.env` syncing currently imports commented `.env.example` example lines as real values (for example `DATABASE_URL=sqlite:///data/north_star.db`), which can create invalid/unintended runtime config and startup failures (like PermissionError on `/data`).
+
+- Import data in sqlite file
+
+Roadmap:
+	- Pitch to Penelope, and it gives you feedback
