@@ -1,6 +1,7 @@
 import logging
 import os
 from pathlib import Path
+from urllib.parse import urlencode
 
 from dotenv import load_dotenv
 
@@ -56,6 +57,15 @@ def _parse_csv_env(name: str) -> list[str]:
 
 def _build_navbar_items(enabled_keys: set[str]) -> list[dict]:
     return [item for item in NAVBAR_ITEM_DEFINITIONS if item["key"] in enabled_keys]
+
+
+def _normalize_session_reset_next(raw_value: str) -> str:
+    candidate = (raw_value or "").strip()
+    if not candidate or not candidate.startswith("/") or candidate.startswith("//"):
+        return "/"
+    if candidate == "/lobby" or candidate.startswith("/lobby?"):
+        return "/"
+    return candidate
 
 
 app = FastAPI()
@@ -117,7 +127,12 @@ async def require_auth(request: Request, call_next):
 
     if path.startswith("/api/"):
         return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
-    return RedirectResponse(url="/session/reset", status_code=302)
+    target = request.url.path
+    if request.url.query:
+        target = f"{target}?{request.url.query}"
+    target = _normalize_session_reset_next(target)
+    reset_url = f"/session/reset?{urlencode({'next': target})}"
+    return RedirectResponse(url=reset_url, status_code=302)
 
 
 @app.on_event("startup")
@@ -151,9 +166,13 @@ def ledger(request: Request) -> HTMLResponse:
 
 @app.get("/session/reset", response_class=HTMLResponse)
 def session_reset(request: Request) -> HTMLResponse:
+    context = _build_template_context(request, "session_reset")
+    context["session_reset_next"] = _normalize_session_reset_next(
+        request.query_params.get("next", "")
+    )
     return templates.TemplateResponse(
         "session_reset.html",
-        _build_template_context(request, "session_reset"),
+        context,
     )
 
 

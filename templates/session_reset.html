@@ -20,14 +20,18 @@
         </div>
       </header>
       <section class="card card-compact">
+        <div data-reset-next="{{ session_reset_next }}">
         <p class="helper-text" id="reset-message">
           We lost your session cookie. We’ll attempt to restore it using your local keypair.
         </p>
+        <p class="helper-text" id="reset-guidance" hidden>
+          You are not logged in. Use your magic link to log in, or request one from the admins.
+        </p>
+        </div>
         <div class="link-button-group">
           <button class="link-button" type="button" id="reset-retry">
             Retry now
           </button>
-          <a class="link-button" href="/lobby">Go to lobby</a>
         </div>
       </section>
     </main>
