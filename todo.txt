@@ -84,3 +84,6 @@ Env defaults sync follow-up
 
 Roadmap:
 	- Pitch to Penelope, and it gives you feedback
+
+lobby_badge_realtime_step1_solution_assessment.md
+
