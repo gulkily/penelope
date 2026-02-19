@@ -42,11 +42,13 @@ def list_projects(
     page: int | None = None,
     sort_key: str = "id",
     sort_dir: str = "asc",
+    house: str | None = None,
 ) -> dict:
     try:
         if page is None:
             projects, total = db.list_projects(
                 include_archived=include_archived,
+                house=house,
                 sort_key=sort_key,
                 sort_direction=sort_dir,
             )
@@ -56,6 +58,7 @@ def list_projects(
         offset = (page - 1) * PROJECTS_PAGE_SIZE
         projects, total = db.list_projects(
             include_archived=include_archived,
+            house=house,
             limit=PROJECTS_PAGE_SIZE,
             offset=offset,
             sort_key=sort_key,

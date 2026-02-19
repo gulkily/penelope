@@ -2,12 +2,14 @@ from datetime import datetime, timezone
 
 from app.db_connection import connect
 from app.db_constants import SECTIONS
+from app.house import normalize_house_filter
 from app.db_items import list_items_for_project
 from app.db_progress_history import log_progress_history
 
 
 def list_projects(
     include_archived: bool = False,
+    house: str | None = None,
     limit: int | None = None,
     offset: int = 0,
     sort_key: str = "id",
@@ -24,27 +26,45 @@ def list_projects(
         raise ValueError("sort_dir must be asc or desc")
     if offset < 0:
         raise ValueError("offset must be >= 0")
+    normalized_house = normalize_house_filter(house)
 
     direction = "ASC" if sort_direction == "asc" else "DESC"
     order_clause = f"{order_map[sort_key]} {direction}"
     if sort_key != "id":
         order_clause += ", id ASC"
 
-    query = "SELECT id, name, archived FROM projects"
+    query = "SELECT id, name, house, archived FROM projects"
     count_query = "SELECT COUNT(*) FROM projects"
-    params: list[int] = []
+    where_clauses: list[str] = []
+    params: list[str | int] = []
     if not include_archived:
-        query += " WHERE archived = 0"
-        count_query += " WHERE archived = 0"
+        where_clauses.append("archived = 0")
+    if normalized_house:
+        where_clauses.append("house = ?")
+        params.append(normalized_house)
+    if where_clauses:
+        where_clause = " AND ".join(where_clauses)
+        query += f" WHERE {where_clause}"
+        count_query += f" WHERE {where_clause}"
     query += f" ORDER BY {order_clause}"
     if limit is not None:
         query += " LIMIT ? OFFSET ?"
         params.extend([limit, offset])
     with connect() as conn:
         rows = conn.execute(query, tuple(params)).fetchall()
-        total = conn.execute(count_query).fetchone()[0]
+        count_params: tuple[str | int, ...]
+        if limit is not None:
+            count_params = tuple(params[:-2])
+        else:
+            count_params = tuple(params)
+        total = conn.execute(count_query, count_params).fetchone()[0]
     projects = [
-        {"id": row["id"], "name": row["name"], "archived": bool(row["archived"])}
+        {
+            "id": row["id"],
+            "name": row["name"],
+            "house": row["house"],
+            "archived": bool(row["archived"]),
+        }
         for row in rows
     ]
     return projects, total
@@ -55,7 +75,7 @@ def get_project(project_id: int) -> dict | None:
         project_row = conn.execute(
             """
             SELECT id, name, progress, goal, residency_start_date, residency_end_date,
-                   questions, summary, objective, archived
+                   questions, summary, objective, archived, house
             FROM projects
             WHERE id = ?
             """,
@@ -83,6 +103,7 @@ def get_project(project_id: int) -> dict | None:
         "residency_start_date": project_row["residency_start_date"],
         "residency_end_date": project_row["residency_end_date"],
         "objective": project_row["objective"],
+        "house": project_row["house"],
         "archived": bool(project_row["archived"]),
         "sections": sections,
         "questions": project_row["questions"],
