@@ -58,3 +58,18 @@
   - Reviewed updated docs to ensure they match implemented behavior in session reset and auth API flows.
 - Notes:
   - No new automated tests were added in this stage; validation remains manual/browser-based.
+
+## Post-Implementation Adjustment - Welcome Redirect Flow
+- Changes:
+  - Updated `/session/reset` behavior to always redirect away:
+    - restore success -> original target (with `/lobby` normalized to `/`),
+    - restore failure -> `/welcome`.
+  - Added new public page `templates/welcome.html` with message:
+    - `Please log in with your magic link or request one.`
+  - Added `/welcome` route in `app/main.py`:
+    - unauthenticated users can view,
+    - authenticated users are redirected to `/`.
+  - Simplified `templates/session_reset.html` into a transient no-message page.
+  - Updated `static/js/session_reset.js` to perform restore attempt and redirect-only outcomes (no on-page messaging).
+- Verification:
+  - Ran compile checks and route/template sanity checks for `/session/reset` + `/welcome` behavior.

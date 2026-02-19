@@ -3,12 +3,8 @@ const STORAGE_KEYS = {
   privateKey: "auth_private_key_jwk",
 };
 
-const messageEl = document.getElementById("reset-message");
-const guidanceEl = document.getElementById("reset-guidance");
-const retryButton = document.getElementById("reset-retry");
 const encoder = new TextEncoder();
-const WEB_CRYPTO_ERROR =
-  "Secure cryptography is unavailable. Use HTTPS (not HTTP) and a modern browser.";
+const RESET_FALLBACK_REDIRECT_MS = 8000;
 
 function resolveSubtleCrypto() {
   if (window.crypto && window.crypto.subtle) {
@@ -26,39 +22,9 @@ function resolveSubtleCrypto() {
 function requireSubtleCrypto() {
   const subtleCrypto = resolveSubtleCrypto();
   if (!subtleCrypto) {
-    throw new Error(WEB_CRYPTO_ERROR);
+    throw new Error("Secure cryptography unavailable");
   }
   return subtleCrypto;
-}
-
-function showMessage(text, isError = false) {
-  if (!messageEl) {
-    return;
-  }
-  messageEl.textContent = text;
-  messageEl.classList.toggle("helper-error", isError);
-}
-
-function showLoggedOutGuidance() {
-  if (!guidanceEl) {
-    return;
-  }
-  guidanceEl.hidden = false;
-}
-
-function hideLoggedOutGuidance() {
-  if (!guidanceEl) {
-    return;
-  }
-  guidanceEl.hidden = true;
-}
-
-function showNotLoggedInState(details = "") {
-  const message = details
-    ? `You are not logged in. ${details}`
-    : "You are not logged in.";
-  showMessage(message, true);
-  showLoggedOutGuidance();
 }
 
 function resolveNextPath() {
@@ -71,6 +37,10 @@ function resolveNextPath() {
     return "/";
   }
   return candidate;
+}
+
+function redirectToWelcome() {
+  window.location.replace("/welcome");
 }
 
 function bufferToBase64(buffer) {
@@ -113,19 +83,32 @@ async function signChallenge(challenge) {
 }
 
 async function restoreSession() {
-  hideLoggedOutGuidance();
+  let completed = false;
+  const fallbackTimer = window.setTimeout(() => {
+    if (!completed) {
+      redirectToWelcome();
+    }
+  }, RESET_FALLBACK_REDIRECT_MS);
+  const finish = (action) => {
+    if (completed) {
+      return;
+    }
+    completed = true;
+    window.clearTimeout(fallbackTimer);
+    action();
+  };
+
   try {
     const nextPath = resolveNextPath();
     const publicKey = localStorage.getItem(STORAGE_KEYS.publicKey);
     if (!publicKey) {
-      showNotLoggedInState("Use your magic link to log in.");
+      finish(redirectToWelcome);
       return;
     }
 
-    showMessage("Restoring session...");
     const challengeResponse = await fetch("/api/auth/session/challenge");
     if (!challengeResponse.ok) {
-      showNotLoggedInState("Use your magic link to log in.");
+      finish(redirectToWelcome);
       return;
     }
     const { challenge } = await challengeResponse.json();
@@ -143,20 +126,15 @@ async function restoreSession() {
     });
 
     if (response.ok) {
-      window.location.href = nextPath;
-    } else {
-      showNotLoggedInState("Use your magic link to log in.");
+      finish(() => {
+        window.location.replace(nextPath);
+      });
+      return;
     }
-  } catch (error) {
-    showNotLoggedInState(error.message || "Use your magic link to log in.");
+    finish(redirectToWelcome);
+  } catch (_error) {
+    finish(redirectToWelcome);
   }
-}
-
-if (retryButton) {
-  if (!resolveSubtleCrypto()) {
-    retryButton.disabled = true;
-  }
-  retryButton.addEventListener("click", restoreSession);
 }
 
 restoreSession();

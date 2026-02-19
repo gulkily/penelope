@@ -72,4 +72,4 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Set `LOBBY_AUTH_ENABLED=false` to disable general lobby request/approval flows while keeping magic-link login usable.
 - Set `RECORDER_ENABLED=false` to hide the "Record audio" section in the Add update dialog.
 - Startup now only warns when `.env` is missing keys from `.env.example`; run `./pnl env-sync` to append missing defaults.
-- Unauthenticated users are redirected to `/session/reset`, which attempts automatic restore and then shows text guidance to use/request a magic link if still not logged in.
+- Unauthenticated users are redirected to `/session/reset` as a transient restore attempt page; if restore fails they are redirected to `/welcome` with login guidance.

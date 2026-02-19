@@ -117,6 +117,7 @@ async def require_auth(request: Request, call_next):
         or path == "/favicon.ico"
         or path.startswith("/api/auth")
         or path == "/lobby"
+        or path == "/welcome"
         or path == "/session/reset"
     ):
         return await call_next(request)
@@ -131,7 +132,10 @@ async def require_auth(request: Request, call_next):
     if request.url.query:
         target = f"{target}?{request.url.query}"
     target = _normalize_session_reset_next(target)
-    reset_url = f"/session/reset?{urlencode({'next': target})}"
+    if target == "/":
+        reset_url = "/session/reset"
+    else:
+        reset_url = f"/session/reset?{urlencode({'next': target})}"
     return RedirectResponse(url=reset_url, status_code=302)
 
 
@@ -168,13 +172,26 @@ def ledger(request: Request) -> HTMLResponse:
 
 @app.get("/session/reset", response_class=HTMLResponse)
 def session_reset(request: Request) -> HTMLResponse:
+    next_path = _normalize_session_reset_next(request.query_params.get("next", ""))
+    session = getattr(request.state, "session_account", None)
+    if session:
+        return RedirectResponse(url=next_path, status_code=302)
     context = _build_template_context(request, "session_reset")
-    context["session_reset_next"] = _normalize_session_reset_next(
-        request.query_params.get("next", "")
-    )
+    context["session_reset_next"] = next_path
     return templates.TemplateResponse(
         "session_reset.html",
         context,
+    )
+
+
+@app.get("/welcome", response_class=HTMLResponse)
+def welcome(request: Request) -> HTMLResponse:
+    session = getattr(request.state, "session_account", None)
+    if session:
+        return RedirectResponse(url="/", status_code=302)
+    return templates.TemplateResponse(
+        "welcome.html",
+        _build_template_context(request, "welcome"),
     )
 
 
