@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 
 from app.db_connection import connect
+from app.house import DEFAULT_HOUSE, normalize_house
 
 DEFAULT_RESIDENCY_YEAR = datetime.now(timezone.utc).year
 DEFAULT_RESIDENCY_START = f"{DEFAULT_RESIDENCY_YEAR}-01-01"
@@ -14,6 +15,7 @@ def init_db() -> None:
             CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
+                house TEXT NOT NULL DEFAULT '{DEFAULT_HOUSE}',
                 progress INTEGER NOT NULL,
                 goal INTEGER NOT NULL DEFAULT 100,
                 residency_start_date TEXT NOT NULL DEFAULT '{DEFAULT_RESIDENCY_START}',
@@ -173,6 +175,12 @@ def init_db() -> None:
         _ensure_column(
             conn,
             "projects",
+            "house",
+            f"TEXT NOT NULL DEFAULT '{DEFAULT_HOUSE}'",
+        )
+        _ensure_column(
+            conn,
+            "projects",
             "residency_start_date",
             f"TEXT NOT NULL DEFAULT '{DEFAULT_RESIDENCY_START}'",
         )
@@ -225,6 +233,7 @@ def init_db() -> None:
         _ensure_column(conn, "ledger_events", "subject_account_id", "INTEGER")
         _ensure_column(conn, "ledger_events", "metadata", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "ledger_events", "created_at", "TEXT NOT NULL DEFAULT ''")
+        _backfill_project_houses(conn)
         _seed_if_empty(conn)
         _backfill_item_order(conn)
 
@@ -280,6 +289,22 @@ def _seed_if_empty(conn) -> None:
         ],
     )
     conn.commit()
+
+
+def _backfill_project_houses(conn) -> None:
+    rows = conn.execute("SELECT id, house FROM projects ORDER BY id").fetchall()
+    updates: list[tuple[str, int]] = []
+    for row in rows:
+        raw_house = (row["house"] or "").strip()
+        try:
+            normalized = normalize_house(raw_house)
+        except ValueError:
+            normalized = DEFAULT_HOUSE
+        if normalized != raw_house:
+            updates.append((normalized, row["id"]))
+    if updates:
+        conn.executemany("UPDATE projects SET house = ? WHERE id = ?", updates)
+        conn.commit()
 
 
 def _backfill_item_order(conn) -> None:
