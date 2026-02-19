@@ -34,6 +34,22 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Apply writes to target app DB (default is dry-run).",
     )
+    parser.add_argument(
+        "--enable-llm",
+        action="store_true",
+        help="Enable optional LLM enrichment for section text.",
+    )
+    parser.add_argument(
+        "--llm-model",
+        default="openai/gpt-5.2",
+        help="Dedalus model ID for enrichment (default: openai/gpt-5.2).",
+    )
+    parser.add_argument(
+        "--llm-confidence-threshold",
+        type=float,
+        default=0.7,
+        help="Confidence threshold for accepting LLM output (default: 0.7).",
+    )
     return parser
 
 
@@ -83,6 +99,10 @@ def render_import_report(config: ImportConfig) -> str:
         f"Latest check-ins skipped: {report.latest_checkins_skipped}",
         f"Latest check-ins missing north_star_value: {report.missing_progress_latest}",
         f"House normalization warnings: {len(report.house_warnings)}",
+        f"LLM attempted: {report.llm_attempted}",
+        f"LLM enriched: {report.llm_enriched}",
+        f"LLM low-confidence fallback: {report.llm_low_confidence}",
+        f"LLM errors fallback: {report.llm_errors}",
         f"Errors: {len(report.errors)}",
     ]
     if report.house_warnings:
@@ -99,7 +119,17 @@ def main() -> int:
     init_db()
     print(render_snapshot_preview(args.source_db, args.sample))
     print("")
-    print(render_import_report(ImportConfig(source_db=args.source_db, dry_run=not args.write)))
+    print(
+        render_import_report(
+            ImportConfig(
+                source_db=args.source_db,
+                dry_run=not args.write,
+                enable_llm=args.enable_llm,
+                llm_model=args.llm_model,
+                llm_confidence_threshold=args.llm_confidence_threshold,
+            )
+        )
+    )
     return 0
 
 

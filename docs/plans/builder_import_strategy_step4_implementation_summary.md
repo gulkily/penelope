@@ -51,3 +51,18 @@
   - Queried `/tmp/builder_import_stage4.sqlite` and confirmed imported snapshot items + import notes were present.
 - Notes:
   - Imported section entries are tagged with `[Import Snapshot] {week_of}: ...` to support rerun-safe replacement.
+
+## Stage 5 - Add LLM enrichment step using `openai/gpt-5.2`
+- Changes:
+  - Added `app/builder_import_llm.py` with structured-output enrichment flow using Dedalus `chat.completions.parse`.
+  - Default enrichment model is `openai/gpt-5.2`, with confidence-based acceptance and deterministic fallback.
+  - Updated `ImportConfig` / `ImportReport` in `app/builder_import_pipeline.py` to support optional enrichment and report LLM attempt/outcome counters.
+  - Extended CLI options in `scripts/import_builder_snapshot.py`:
+    - `--enable-llm`
+    - `--llm-model` (default `openai/gpt-5.2`)
+    - `--llm-confidence-threshold`
+- Verification:
+  - Ran `python -m py_compile app/builder_import_llm.py app/builder_import_pipeline.py scripts/import_builder_snapshot.py`.
+  - Ran `python scripts/import_builder_snapshot.py --sample 1` (LLM disabled path).
+- Notes:
+  - LLM-enabled runtime was not executed in this environment because external API credentials/network are not guaranteed here.

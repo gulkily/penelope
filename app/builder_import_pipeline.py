@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
+from app.builder_import_llm import DEFAULT_IMPORT_LLM_MODEL, enrich_payload_with_llm
 from app.builder_import_source import SourceBuilderRecord, load_source_snapshot
 from app.db_connection import connect
 from app.db_import_content import replace_import_notes, replace_import_snapshot_items
@@ -24,6 +25,10 @@ class ImportReport:
     latest_checkins_skipped: int = 0
     missing_progress_latest: int = 0
     house_warnings: list[str] = field(default_factory=list)
+    llm_attempted: int = 0
+    llm_enriched: int = 0
+    llm_low_confidence: int = 0
+    llm_errors: int = 0
     errors: list[str] = field(default_factory=list)
 
 
@@ -31,6 +36,9 @@ class ImportReport:
 class ImportConfig:
     source_db: str
     dry_run: bool = True
+    enable_llm: bool = False
+    llm_model: str = DEFAULT_IMPORT_LLM_MODEL
+    llm_confidence_threshold: float = 0.7
 
 
 def build_objective_seed(builder: SourceBuilderRecord) -> str:
@@ -53,6 +61,20 @@ def run_import(config: ImportConfig) -> ImportReport:
         elif builder.latest_checkin.north_star_value is None:
             report.missing_progress_latest += 1
         payload = build_section_payloads(builder, builder.latest_checkin)
+        if config.enable_llm and builder.latest_checkin is not None:
+            report.llm_attempted += 1
+            payload, llm_status = enrich_payload_with_llm(
+                payload=payload,
+                checkin=builder.latest_checkin,
+                model=config.llm_model,
+                confidence_threshold=config.llm_confidence_threshold,
+            )
+            if llm_status == "enriched":
+                report.llm_enriched += 1
+            elif llm_status == "low_confidence":
+                report.llm_low_confidence += 1
+            else:
+                report.llm_errors += 1
 
         try:
             action, project_id = _upsert_builder_project(builder, config.dry_run)
