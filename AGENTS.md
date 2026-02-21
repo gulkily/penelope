@@ -28,6 +28,7 @@ If a different layout is introduced, update this guide and keep directory names 
   - `./pnl test --duration 60 --workers 2` for load-style loops.
   - `./pnl test --help` for loop/parallel options.
   - `./pnl seed-demo` to add demo data.
+  - `./pnl magic-link --admin-username <issuer> --username <target>` to issue a magic login link.
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, type hints where practical, `snake_case` for functions/modules, `PascalCase` for classes.

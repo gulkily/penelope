@@ -1,13 +1,13 @@
 import json
 import secrets
 from datetime import datetime, timedelta, timezone
-from urllib.parse import quote
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
 from app import db
 from app import auth
 from app.feature_flags import get_feature_flags
+from app.magic_link_service import issue_magic_link as issue_magic_link_service
 from app.schemas import (
     AuthRegisterRequest,
     AuthRegisterResponse,
@@ -61,11 +61,6 @@ def _require_lobby_auth_for_request(request_row: dict | None) -> None:
     raise HTTPException(status_code=503, detail="Lobby authentication is disabled")
 
 
-def _build_magic_link(request: Request, token: str) -> str:
-    base = str(request.base_url).rstrip("/")
-    return f"{base}/lobby?token={quote(token)}"
-
-
 def _classify_magic_token(token_row: dict) -> str:
     if not token_row:
         return "invalid"
@@ -77,34 +72,14 @@ def _classify_magic_token(token_row: dict) -> str:
 @router.post("/auth/magic-links", response_model=MagicLinkCreateResponse)
 def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
     session = _require_admin(request)
-    configured_username = payload.configured_username.strip()
-    if not configured_username:
-        raise HTTPException(status_code=400, detail="Configured username required")
-
-    token = secrets.token_urlsafe(32)
-    token_hash = auth.hash_magic_login_token(token)
-
-    token_row = db.create_magic_login_token(
-        configured_username=configured_username,
-        created_by_account_id=session.account_id,
-        expires_at="",
-        token_hash=token_hash,
-    )
-    db.append_ledger_event(
-        "magic_link_issued",
-        actor_account_id=session.account_id,
-        subject_account_id=None,
-        metadata={
-            "token_id": token_row["id"],
-            "configured_username": configured_username,
-        },
-    )
-    return {
-        "token_id": token_row["id"],
-        "configured_username": configured_username,
-        "magic_link": _build_magic_link(request, token),
-        "expires_at": None,
-    }
+    try:
+        return issue_magic_link_service(
+            configured_username=payload.configured_username,
+            issuer_account_id=session.account_id,
+            base_url=str(request.base_url),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 @router.get("/auth/magic-links", response_model=MagicLinkListResponse)

@@ -179,6 +179,58 @@ def run_env_sync() -> int:
     return 0
 
 
+def run_magic_link_command(
+    admin_username: str,
+    target_username: str,
+    base_url: str,
+) -> int:
+    from app import auth
+    from app import db
+    from app.magic_link_service import issue_magic_link
+
+    admin_candidate = admin_username.strip()
+    target_candidate = target_username.strip()
+    if not admin_candidate:
+        print("--admin-username is required.", file=sys.stderr)
+        return 2
+    if not target_candidate:
+        print("--username is required.", file=sys.stderr)
+        return 2
+
+    db.init_db()
+    admin_account = db.get_account_by_username_case_insensitive(admin_candidate)
+    if not admin_account:
+        print(
+            f"Admin account not found for username: {admin_candidate}",
+            file=sys.stderr,
+        )
+        return 2
+    account_id = int(admin_account["id"])
+    if not auth.is_admin_account(account_id):
+        print(
+            f"Account '{admin_account['username']}' is not authorized to issue magic links.",
+            file=sys.stderr,
+        )
+        return 2
+
+    try:
+        issued = issue_magic_link(
+            configured_username=target_candidate,
+            issuer_account_id=account_id,
+            base_url=base_url,
+        )
+    except ValueError as exc:
+        print(f"Failed to issue magic link: {exc}", file=sys.stderr)
+        return 2
+
+    print("Magic link issued")
+    print(f"issuer_username: {admin_account['username']}")
+    print(f"target_username: {issued['configured_username']}")
+    print(f"token_id: {issued['token_id']}")
+    print(f"magic_link: {issued['magic_link']}")
+    return 0
+
+
 def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     parser = argparse.ArgumentParser(
         prog="pnl",
@@ -272,6 +324,26 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         help="Append missing .env settings from .env.example.",
     )
 
+    magic_link_parser = subparsers.add_parser(
+        "magic-link",
+        help="Generate an admin-issued magic login link for a username.",
+    )
+    magic_link_parser.add_argument(
+        "--admin-username",
+        required=True,
+        help="Issuer username that must be admin-authorized.",
+    )
+    magic_link_parser.add_argument(
+        "--username",
+        required=True,
+        help="Target username embedded in the generated magic link.",
+    )
+    magic_link_parser.add_argument(
+        "--base-url",
+        default="http://127.0.0.1:8000",
+        help="Base app URL used to compose the output link.",
+    )
+
     return parser, parser.parse_args()
 
 
@@ -304,6 +376,12 @@ def main() -> int:
         return run_seed_demo(args.allow_duplicates)
     if args.command == "env-sync":
         return run_env_sync()
+    if args.command == "magic-link":
+        return run_magic_link_command(
+            admin_username=args.admin_username,
+            target_username=args.username,
+            base_url=args.base_url,
+        )
 
     return 1
 

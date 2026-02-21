@@ -23,6 +23,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl test --help` for test-specific options (looping, delay, parallelism, etc).
 - `./pnl seed-demo` to add demo data (use `--allow-duplicates` if needed).
 - `./pnl env-sync` to append missing `.env` settings from `.env.example`.
+- `./pnl magic-link --admin-username <issuer> --username <target>` to generate an admin-issued magic login link.
 
 ## Public hosting
 - Server setup guide: `docs/production_install.md`
