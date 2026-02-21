@@ -32,6 +32,7 @@ class ImportReport:
     llm_enriched: int = 0
     llm_low_confidence: int = 0
     llm_errors: int = 0
+    llm_error_types: dict[str, int] = field(default_factory=dict)
     llm_error_samples: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
@@ -146,6 +147,12 @@ def run_import(config: ImportConfig, progress_callback: ProgressCallback | None 
                 report.llm_low_confidence += 1
             else:
                 report.llm_errors += 1
+                error_type = (
+                    (llm_error.split(":", 1)[0].strip() or "UnknownError")
+                    if llm_error
+                    else "UnknownError"
+                )
+                report.llm_error_types[error_type] = report.llm_error_types.get(error_type, 0) + 1
                 if llm_error and len(report.llm_error_samples) < 5:
                     report.llm_error_samples.append(
                         f"{builder.source_builder_id} week {builder.latest_checkin.week_of}: {llm_error}"

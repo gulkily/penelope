@@ -63,10 +63,14 @@ def _get_dedalus_client():
 def get_llm_debug_info() -> dict[str, str]:
     dotenv_loaded = _maybe_load_dotenv()
     dedalus_sdk_available = True
+    dedalus_sdk_version = "unknown"
     try:
-        import dedalus_labs  # noqa: F401
+        import dedalus_labs  # type: ignore
+
+        dedalus_sdk_version = str(getattr(dedalus_labs, "__version__", "unknown"))
     except ImportError:
         dedalus_sdk_available = False
+        dedalus_sdk_version = "missing"
 
     api_key = os.getenv("DEDALUS_API_KEY", "").strip()
     return {
@@ -75,7 +79,9 @@ def get_llm_debug_info() -> dict[str, str]:
         "dotenv_file_exists": "yes" if (BASE_DIR / ".env").exists() else "no",
         "dotenv_loaded": "yes" if dotenv_loaded else "no",
         "dedalus_sdk_available": "yes" if dedalus_sdk_available else "no",
+        "dedalus_sdk_version": dedalus_sdk_version,
         "dedalus_api_key_present": "yes" if bool(api_key) else "no",
+        "dedalus_api_key_length": str(len(api_key)),
     }
 
 
@@ -123,13 +129,19 @@ def _run_enrichment(
         },
     ]
     try:
-        completion = client.chat.completions.parse(
-            model=model,
-            messages=messages,
-            response_format=CheckinEnrichment,
-            temperature=0,
-            timeout=max(0.1, timeout_seconds),
-        )
+        try:
+            completion = client.chat.completions.parse(
+                model=model,
+                messages=messages,
+                response_format=CheckinEnrichment,
+                temperature=0,
+                timeout=max(0.1, timeout_seconds),
+            )
+        except Exception as exc:
+            raise ImportLLMError(
+                "Dedalus parse call failed "
+                f"(model={model}, timeout_seconds={max(0.1, timeout_seconds):.1f}): {exc}"
+            ) from exc
     finally:
         client.close()
     try:

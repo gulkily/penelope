@@ -2,7 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 from pathlib import Path
+import shlex
+import subprocess
 import sys
 import time
 
@@ -99,6 +102,60 @@ def render_snapshot_preview(source_db: str, sample: int) -> str:
     return "\n".join(lines)
 
 
+def _sha256_head(path: Path, length: int = 12) -> str:
+    try:
+        digest = hashlib.sha256(path.read_bytes()).hexdigest()
+        return digest[:length]
+    except OSError:
+        return "unavailable"
+
+
+def _read_git_value(args: list[str]) -> str:
+    try:
+        result = subprocess.run(
+            args,
+            cwd=str(REPO_ROOT),
+            check=False,
+            capture_output=True,
+            text=True,
+        )
+    except OSError:
+        return "unavailable"
+    if result.returncode != 0:
+        return "unavailable"
+    return result.stdout.strip()
+
+
+def render_runtime_fingerprint(llm_debug: dict[str, str]) -> str:
+    fingerprint_targets = [
+        ("scripts/import_builder_snapshot.py", Path(__file__).resolve()),
+        ("app/builder_import_llm.py", REPO_ROOT / "app" / "builder_import_llm.py"),
+        (
+            "app/builder_import_pipeline.py",
+            REPO_ROOT / "app" / "builder_import_pipeline.py",
+        ),
+    ]
+    git_commit = _read_git_value(["git", "rev-parse", "--short", "HEAD"])
+    git_status = _read_git_value(["git", "status", "--porcelain"])
+    git_dirty = (
+        "unavailable" if git_status == "unavailable" else ("yes" if git_status else "no")
+    )
+    lines = [
+        "Runtime fingerprint:",
+        f"- argv: {shlex.join(sys.argv)}",
+        f"- cwd: {Path.cwd()}",
+        f"- repo_root: {REPO_ROOT}",
+        f"- script_path: {Path(__file__).resolve()}",
+        f"- git_commit: {git_commit}",
+        f"- git_dirty: {git_dirty}",
+        f"- python_executable: {llm_debug['python_executable']}",
+        f"- dedalus_sdk_version: {llm_debug['dedalus_sdk_version']}",
+    ]
+    for label, path in fingerprint_targets:
+        lines.append(f"- sha256[{label}]: {_sha256_head(path)}")
+    return "\n".join(lines)
+
+
 def _build_progress_callback(enabled: bool):
     if not enabled:
         return None
@@ -141,7 +198,9 @@ def render_import_report(
         f"LLM debug - .env file exists: {llm_debug['dotenv_file_exists']}",
         f"LLM debug - .env loaded: {llm_debug['dotenv_loaded']}",
         f"LLM debug - dedalus SDK available: {llm_debug['dedalus_sdk_available']}",
+        f"LLM debug - dedalus SDK version: {llm_debug['dedalus_sdk_version']}",
         f"LLM debug - DEDALUS_API_KEY present: {llm_debug['dedalus_api_key_present']}",
+        f"LLM debug - DEDALUS_API_KEY length: {llm_debug['dedalus_api_key_length']}",
         f"Builders scanned: {report.builders_scanned}",
         f"Builders imported: {report.builders_imported}",
         f"Builders updated: {report.builders_updated}",
@@ -164,6 +223,10 @@ def render_import_report(
     if report.errors:
         lines.extend(["", "Errors:"])
         lines.extend([f"- {error}" for error in report.errors])
+    if report.llm_error_types:
+        lines.extend(["", "LLM error type counts:"])
+        for error_type in sorted(report.llm_error_types):
+            lines.append(f"- {error_type}: {report.llm_error_types[error_type]}")
     if report.llm_error_samples:
         lines.extend(["", "LLM error samples:"])
         lines.extend([f"- {error}" for error in report.llm_error_samples])
@@ -179,11 +242,15 @@ def main() -> int:
         llm_debug, llm_preflight_issues = get_llm_preflight_issues()
     print(render_snapshot_preview(args.source_db, args.sample))
     print("")
+    print(render_runtime_fingerprint(llm_debug))
+    print("")
     if llm_preflight_issues:
         print("LLM preflight failed. Skipping import run.")
         print(f"- python executable: {llm_debug['python_executable']}")
         print(f"- dedalus SDK available: {llm_debug['dedalus_sdk_available']}")
+        print(f"- dedalus SDK version: {llm_debug['dedalus_sdk_version']}")
         print(f"- DEDALUS_API_KEY present: {llm_debug['dedalus_api_key_present']}")
+        print(f"- DEDALUS_API_KEY length: {llm_debug['dedalus_api_key_length']}")
         print("")
         print("Fixes:")
         for issue in llm_preflight_issues:
