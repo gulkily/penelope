@@ -198,13 +198,28 @@ def run_magic_link_command(
         return 2
 
     db.init_db()
+    raw_admin_usernames = os.getenv("MAGIC_LINK_ADMIN_USERNAMES", "")
+    admin_allowlist = [
+        entry.strip().lower()
+        for entry in raw_admin_usernames.split(",")
+        if entry.strip()
+    ]
     admin_account = db.get_account_by_username_case_insensitive(admin_candidate)
     if not admin_account:
+        if admin_allowlist:
+            print(
+                (
+                    f"Admin account not found for username: {admin_candidate}. "
+                    "Create/sign in this account first when MAGIC_LINK_ADMIN_USERNAMES is set."
+                ),
+                file=sys.stderr,
+            )
+            return 2
+        admin_account = db.create_account(admin_candidate)
         print(
-            f"Admin account not found for username: {admin_candidate}",
+            f"Bootstrapped issuer account: {admin_account['username']}",
             file=sys.stderr,
         )
-        return 2
     account_id = int(admin_account["id"])
     if not auth.is_admin_account(account_id):
         print(

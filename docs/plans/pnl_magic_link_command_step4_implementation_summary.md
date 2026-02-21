@@ -11,6 +11,7 @@
 ## Stage 3 - Implement CLI admin authorization + issuance flow
 - Changes: Implemented `run_magic_link_command(...)` in `scripts/pnl.py`:
   - resolves issuer account by username,
+  - bootstraps issuer account when missing and no admin allowlist is configured,
   - enforces admin authorization via existing `auth.is_admin_account(...)`,
   - issues links through the shared service,
   - prints copy-friendly output (`issuer_username`, `target_username`, `token_id`, `magic_link`).

@@ -24,6 +24,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl seed-demo` to add demo data (use `--allow-duplicates` if needed).
 - `./pnl env-sync` to append missing `.env` settings from `.env.example`.
 - `./pnl magic-link --admin-username <issuer> --username <target>` to generate an admin-issued magic login link.
+  - If `MAGIC_LINK_ADMIN_USERNAMES` is unset and the issuer account does not exist yet, the command bootstraps that account locally.
 
 ## Public hosting
 - Server setup guide: `docs/production_install.md`
