@@ -5,6 +5,7 @@ import argparse
 import hashlib
 from pathlib import Path
 import shlex
+import sqlite3
 import subprocess
 import sys
 import time
@@ -16,6 +17,7 @@ if str(REPO_ROOT) not in sys.path:
 from app.builder_import_llm import get_llm_debug_info, get_llm_preflight_issues
 from app.builder_import_pipeline import ImportConfig, ImportProgressEvent, run_import
 from app.builder_import_source import load_source_snapshot
+from app.db_connection import get_db_path
 from app.db_init import init_db
 
 
@@ -102,6 +104,93 @@ def render_snapshot_preview(source_db: str, sample: int) -> str:
     return "\n".join(lines)
 
 
+def _read_import_map_schema_status() -> dict[str, str]:
+    target_tables = (
+        "import_builder_map",
+        "import_checkin_map",
+        "import_item_map",
+    )
+    db_path = get_db_path()
+    if not db_path.exists():
+        return {table: "no" for table in target_tables}
+
+    conn = sqlite3.connect(db_path)
+    try:
+        rows = conn.execute(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name IN ('import_builder_map', 'import_checkin_map', 'import_item_map')
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+
+    existing = {str(row[0]) for row in rows}
+    return {table: ("yes" if table in existing else "no") for table in target_tables}
+
+
+def ensure_import_map_tables() -> None:
+    db_path = get_db_path()
+    db_path.parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(db_path)
+    try:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS import_builder_map (
+                source_builder_id TEXT PRIMARY KEY,
+                project_id INTEGER UNIQUE NOT NULL,
+                imported_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS import_checkin_map (
+                source_checkin_id TEXT PRIMARY KEY,
+                source_builder_id TEXT NOT NULL,
+                week_of TEXT NOT NULL,
+                project_id INTEGER NOT NULL,
+                imported_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(source_builder_id, week_of)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS import_item_map (
+                project_id INTEGER NOT NULL,
+                item_id INTEGER PRIMARY KEY,
+                imported_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_import_builder_project
+            ON import_builder_map (project_id)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_import_checkin_builder_week
+            ON import_checkin_map (source_builder_id, week_of)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_import_item_project
+            ON import_item_map (project_id)
+            """
+        )
+        conn.commit()
+    finally:
+        conn.close()
+
+
 def _sha256_head(path: Path, length: int = 12) -> str:
     try:
         digest = hashlib.sha256(path.read_bytes()).hexdigest()
@@ -126,7 +215,11 @@ def _read_git_value(args: list[str]) -> str:
     return result.stdout.strip()
 
 
-def render_runtime_fingerprint(llm_debug: dict[str, str]) -> str:
+def render_runtime_fingerprint(
+    llm_debug: dict[str, str],
+    import_schema_before: dict[str, str] | None = None,
+    import_schema_after: dict[str, str] | None = None,
+) -> str:
     fingerprint_targets = [
         ("scripts/import_builder_snapshot.py", Path(__file__).resolve()),
         ("app/builder_import_llm.py", REPO_ROOT / "app" / "builder_import_llm.py"),
@@ -148,9 +241,24 @@ def render_runtime_fingerprint(llm_debug: dict[str, str]) -> str:
         f"- script_path: {Path(__file__).resolve()}",
         f"- git_commit: {git_commit}",
         f"- git_dirty: {git_dirty}",
+        f"- target_db_path: {get_db_path()}",
         f"- python_executable: {llm_debug['python_executable']}",
         f"- dedalus_sdk_version: {llm_debug['dedalus_sdk_version']}",
     ]
+    if import_schema_before is not None:
+        lines.append(
+            "- import_map_schema_before: "
+            f"builder={import_schema_before['import_builder_map']}, "
+            f"checkin={import_schema_before['import_checkin_map']}, "
+            f"item={import_schema_before['import_item_map']}"
+        )
+    if import_schema_after is not None:
+        lines.append(
+            "- import_map_schema_after: "
+            f"builder={import_schema_after['import_builder_map']}, "
+            f"checkin={import_schema_after['import_checkin_map']}, "
+            f"item={import_schema_after['import_item_map']}"
+        )
     for label, path in fingerprint_targets:
         lines.append(f"- sha256[{label}]: {_sha256_head(path)}")
     return "\n".join(lines)
@@ -236,13 +344,22 @@ def render_import_report(
 def main() -> int:
     args = build_parser().parse_args()
     init_db()
+    import_schema_before = _read_import_map_schema_status()
+    ensure_import_map_tables()
+    import_schema_after = _read_import_map_schema_status()
     llm_debug = get_llm_debug_info()
     llm_preflight_issues: list[str] = []
     if args.enable_llm:
         llm_debug, llm_preflight_issues = get_llm_preflight_issues()
     print(render_snapshot_preview(args.source_db, args.sample))
     print("")
-    print(render_runtime_fingerprint(llm_debug))
+    print(
+        render_runtime_fingerprint(
+            llm_debug,
+            import_schema_before=import_schema_before,
+            import_schema_after=import_schema_after,
+        )
+    )
     print("")
     if llm_preflight_issues:
         print("LLM preflight failed. Skipping import run.")
