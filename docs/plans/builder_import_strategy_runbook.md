@@ -48,6 +48,7 @@ export IMPORT_SOURCE_DB=data/builder_import_source.db
 ```bash
 python scripts/import_builder_snapshot.py --source-db "$IMPORT_SOURCE_DB" --sample 5
 ```
+By default, the script prints live progress for each builder. Add `--no-progress` to suppress per-builder logs.
 
 ### 2) Write run (deterministic only)
 ```bash
@@ -65,6 +66,8 @@ python scripts/import_builder_snapshot.py \
   --llm-model openai/gpt-5.2 \
   --llm-confidence-threshold 0.7
 ```
+
+If `--enable-llm` is set, the script now runs a strict preflight and exits early when the runtime is not ready (missing `dedalus_labs` in the active interpreter or missing `DEDALUS_API_KEY`).
 
 ### 4) Rerun idempotency check
 Run the same write command again and confirm:
@@ -94,3 +97,14 @@ Run the same write command again and confirm:
 - Preferred rollback: restore target DB from backup/snapshot.
 - For test runs, use isolated DB path via `DATABASE_URL` to avoid touching production data.
 - Keep LLM optional; deterministic mode remains the baseline fallback.
+
+## Troubleshooting
+- Symptom: import finishes in ~1 second with LLM enabled and no enrichment activity.
+- Cause: running with an interpreter that does not have `dedalus-labs` installed.
+- Check:
+  - `python -c "import sys; print(sys.executable)"`
+  - `python -c "import dedalus_labs; print('ok')"`
+- Fix in the same interpreter used to run the script:
+  - `python -m pip install -r requirements.txt`
+- Then rerun:
+  - `python scripts/import_builder_snapshot.py --source-db "$IMPORT_SOURCE_DB" --write --enable-llm --llm-model openai/gpt-5.2 --llm-confidence-threshold 0.7`

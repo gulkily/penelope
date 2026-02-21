@@ -84,3 +84,38 @@ def upsert_checkin_map(
             (source_checkin_id, project_id, now, source_builder_id, week_of, source_checkin_id),
         )
         conn.commit()
+
+
+def list_import_item_ids_for_project(project_id: int) -> list[int]:
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT item_id
+            FROM import_item_map
+            WHERE project_id = ?
+            ORDER BY item_id
+            """,
+            (project_id,),
+        ).fetchall()
+    return [int(row["item_id"]) for row in rows]
+
+
+def replace_import_item_ids_for_project(project_id: int, item_ids: list[int]) -> None:
+    now = _utc_now()
+    with connect() as conn:
+        conn.execute(
+            """
+            DELETE FROM import_item_map
+            WHERE project_id = ?
+            """,
+            (project_id,),
+        )
+        if item_ids:
+            conn.executemany(
+                """
+                INSERT INTO import_item_map (project_id, item_id, imported_at)
+                VALUES (?, ?, ?)
+                """,
+                [(project_id, item_id, now) for item_id in item_ids],
+            )
+        conn.commit()

@@ -1,15 +1,22 @@
 from __future__ import annotations
 
-import asyncio
 import os
+from pathlib import Path
+import sys
 from typing import Literal
 
 from pydantic import BaseModel, Field
 
 from app.builder_import_source import SourceCheckinRecord
-from app.builder_import_transform import IMPORT_SNAPSHOT_PREFIX, SectionPayloads
+from app.builder_import_transform import SectionPayloads
 
 DEFAULT_IMPORT_LLM_MODEL = "openai/gpt-5.2"
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional dependency guard
+    load_dotenv = None
 
 
 class ImportLLMError(RuntimeError):
@@ -24,16 +31,24 @@ class CheckinEnrichment(BaseModel):
     confidence: float = Field(..., ge=0, le=1)
 
 
+def _maybe_load_dotenv() -> bool:
+    if load_dotenv is None:
+        return False
+    return bool(load_dotenv(dotenv_path=BASE_DIR / ".env"))
+
+
 def _format_section_text(week_of: str, text: str) -> str:
+    _ = week_of
     candidate = (text or "").strip()
     if not candidate:
         return ""
-    return f"{IMPORT_SNAPSHOT_PREFIX} {week_of}: {candidate}"
+    return candidate
 
 
 def _get_dedalus_client():
+    _maybe_load_dotenv()
     try:
-        from dedalus_labs import AsyncDedalus  # type: ignore
+        from dedalus_labs import Dedalus  # type: ignore
     except ImportError as exc:  # pragma: no cover - import guard
         raise ImportLLMError(
             "Dedalus SDK not installed. Add 'dedalus-labs' to requirements."
@@ -41,13 +56,49 @@ def _get_dedalus_client():
 
     api_key = os.getenv("DEDALUS_API_KEY", "").strip()
     if api_key:
-        return AsyncDedalus(api_key=api_key)
-    return AsyncDedalus()
+        return Dedalus(api_key=api_key)
+    return Dedalus()
 
 
-async def _run_enrichment(
+def get_llm_debug_info() -> dict[str, str]:
+    dotenv_loaded = _maybe_load_dotenv()
+    dedalus_sdk_available = True
+    try:
+        import dedalus_labs  # noqa: F401
+    except ImportError:
+        dedalus_sdk_available = False
+
+    api_key = os.getenv("DEDALUS_API_KEY", "").strip()
+    return {
+        "python_executable": sys.executable,
+        "dotenv_available": "yes" if load_dotenv is not None else "no",
+        "dotenv_file_exists": "yes" if (BASE_DIR / ".env").exists() else "no",
+        "dotenv_loaded": "yes" if dotenv_loaded else "no",
+        "dedalus_sdk_available": "yes" if dedalus_sdk_available else "no",
+        "dedalus_api_key_present": "yes" if bool(api_key) else "no",
+    }
+
+
+def get_llm_preflight_issues() -> tuple[dict[str, str], list[str]]:
+    debug = get_llm_debug_info()
+    issues: list[str] = []
+    if debug["dedalus_sdk_available"] != "yes":
+        issues.append(
+            "Dedalus SDK missing in current interpreter "
+            f"({debug['python_executable']}). Install deps in this env with: "
+            f"{debug['python_executable']} -m pip install -r requirements.txt"
+        )
+    if debug["dedalus_api_key_present"] != "yes":
+        issues.append(
+            "DEDALUS_API_KEY not found in process environment or .env."
+        )
+    return debug, issues
+
+
+def _run_enrichment(
     checkin: SourceCheckinRecord,
     model: str,
+    timeout_seconds: float,
 ) -> CheckinEnrichment:
     client = _get_dedalus_client()
     messages = [
@@ -71,12 +122,16 @@ async def _run_enrichment(
             ),
         },
     ]
-    completion = await client.chat.completions.parse(
-        model=model,
-        messages=messages,
-        response_format=CheckinEnrichment,
-        temperature=0,
-    )
+    try:
+        completion = client.chat.completions.parse(
+            model=model,
+            messages=messages,
+            response_format=CheckinEnrichment,
+            temperature=0,
+            timeout=max(0.1, timeout_seconds),
+        )
+    finally:
+        client.close()
     try:
         parsed = completion.choices[0].message.parsed
     except (AttributeError, IndexError) as exc:
@@ -91,12 +146,17 @@ def enrich_payload_with_llm(
     checkin: SourceCheckinRecord,
     model: str = DEFAULT_IMPORT_LLM_MODEL,
     confidence_threshold: float = 0.7,
-) -> tuple[SectionPayloads, Literal["enriched", "low_confidence", "error"]]:
+    timeout_seconds: float = 20.0,
+) -> tuple[SectionPayloads, Literal["enriched", "low_confidence", "error"], str]:
     selected_model = model.strip() or DEFAULT_IMPORT_LLM_MODEL
     try:
-        parsed = asyncio.run(_run_enrichment(checkin, selected_model))
-    except Exception:
-        return payload, "error"
+        parsed = _run_enrichment(
+            checkin=checkin,
+            model=selected_model,
+            timeout_seconds=timeout_seconds,
+        )
+    except Exception as exc:
+        return payload, "error", f"{type(exc).__name__}: {exc}"
 
     if parsed.confidence < confidence_threshold:
         notes = list(payload.question_notes)
@@ -114,6 +174,7 @@ def enrich_payload_with_llm(
                 created_at=payload.created_at,
             ),
             "low_confidence",
+            "",
         )
 
     enriched = SectionPayloads(
@@ -127,4 +188,4 @@ def enrich_payload_with_llm(
         question_notes=list(payload.question_notes),
         created_at=payload.created_at,
     )
-    return enriched, "enriched"
+    return enriched, "enriched", ""

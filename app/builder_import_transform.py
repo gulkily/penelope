@@ -4,8 +4,6 @@ from dataclasses import dataclass
 
 from app.builder_import_source import SourceBuilderRecord, SourceCheckinRecord
 
-IMPORT_SNAPSHOT_PREFIX = "[Import Snapshot]"
-
 
 @dataclass(frozen=True)
 class SectionPayloads:
@@ -61,10 +59,11 @@ def build_section_payloads(
 
 
 def _format_import_text(week_of: str, text: str) -> str:
+    _ = week_of
     candidate = (text or "").strip()
     if not candidate:
         return ""
-    return f"{IMPORT_SNAPSHOT_PREFIX} {week_of}: {candidate}"
+    return candidate
 
 
 def _resolve_checkin_timestamp(checkin: SourceCheckinRecord) -> str:

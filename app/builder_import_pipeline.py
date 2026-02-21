@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Callable
 
 from app.builder_import_llm import DEFAULT_IMPORT_LLM_MODEL, enrich_payload_with_llm
 from app.builder_import_source import SourceBuilderRecord, load_source_snapshot
@@ -31,6 +32,7 @@ class ImportReport:
     llm_enriched: int = 0
     llm_low_confidence: int = 0
     llm_errors: int = 0
+    llm_error_samples: list[str] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
 
 
@@ -41,6 +43,20 @@ class ImportConfig:
     enable_llm: bool = False
     llm_model: str = DEFAULT_IMPORT_LLM_MODEL
     llm_confidence_threshold: float = 0.7
+    llm_timeout_seconds: float = 20.0
+
+
+@dataclass(frozen=True)
+class ImportProgressEvent:
+    current: int
+    total: int
+    source_builder_id: str
+    full_name: str
+    phase: str
+    detail: str = ""
+
+
+ProgressCallback = Callable[[ImportProgressEvent], None]
 
 
 def build_objective_seed(builder: SourceBuilderRecord) -> str:
@@ -53,18 +69,51 @@ def build_objective_seed(builder: SourceBuilderRecord) -> str:
     return ""
 
 
-def run_import(config: ImportConfig) -> ImportReport:
+def run_import(config: ImportConfig, progress_callback: ProgressCallback | None = None) -> ImportReport:
     snapshot = load_source_snapshot(config.source_db)
     report = ImportReport(house_warnings=list(snapshot.house_warnings))
-    for builder in snapshot.builders:
+    total_builders = len(snapshot.builders)
+    for idx, builder in enumerate(snapshot.builders, start=1):
+        if progress_callback:
+            progress_callback(
+                ImportProgressEvent(
+                    current=idx,
+                    total=total_builders,
+                    source_builder_id=builder.source_builder_id,
+                    full_name=builder.full_name,
+                    phase="builder_start",
+                )
+            )
         report.builders_scanned += 1
         if not builder.source_builder_id.strip():
             report.errors.append("Encountered builder with empty source_builder_id.")
+            if progress_callback:
+                progress_callback(
+                    ImportProgressEvent(
+                        current=idx,
+                        total=total_builders,
+                        source_builder_id=builder.source_builder_id,
+                        full_name=builder.full_name,
+                        phase="builder_done",
+                        detail="error: missing source_builder_id",
+                    )
+                )
             continue
         if not builder.full_name.strip():
             report.errors.append(
                 f"{builder.source_builder_id}: missing full_name; skipped builder."
             )
+            if progress_callback:
+                progress_callback(
+                    ImportProgressEvent(
+                        current=idx,
+                        total=total_builders,
+                        source_builder_id=builder.source_builder_id,
+                        full_name=builder.full_name,
+                        phase="builder_done",
+                        detail="error: missing full_name",
+                    )
+                )
             continue
         if builder.latest_checkin is None:
             report.builders_without_checkins += 1
@@ -72,12 +121,24 @@ def run_import(config: ImportConfig) -> ImportReport:
             report.missing_progress_latest += 1
         payload = build_section_payloads(builder, builder.latest_checkin)
         if config.enable_llm and builder.latest_checkin is not None:
+            if progress_callback:
+                progress_callback(
+                    ImportProgressEvent(
+                        current=idx,
+                        total=total_builders,
+                        source_builder_id=builder.source_builder_id,
+                        full_name=builder.full_name,
+                        phase="llm_start",
+                        detail=f"week {builder.latest_checkin.week_of}",
+                    )
+                )
             report.llm_attempted += 1
-            payload, llm_status = enrich_payload_with_llm(
+            payload, llm_status, llm_error = enrich_payload_with_llm(
                 payload=payload,
                 checkin=builder.latest_checkin,
                 model=config.llm_model,
                 confidence_threshold=config.llm_confidence_threshold,
+                timeout_seconds=config.llm_timeout_seconds,
             )
             if llm_status == "enriched":
                 report.llm_enriched += 1
@@ -85,11 +146,37 @@ def run_import(config: ImportConfig) -> ImportReport:
                 report.llm_low_confidence += 1
             else:
                 report.llm_errors += 1
+                if llm_error and len(report.llm_error_samples) < 5:
+                    report.llm_error_samples.append(
+                        f"{builder.source_builder_id} week {builder.latest_checkin.week_of}: {llm_error}"
+                    )
+            if progress_callback:
+                progress_callback(
+                    ImportProgressEvent(
+                        current=idx,
+                        total=total_builders,
+                        source_builder_id=builder.source_builder_id,
+                        full_name=builder.full_name,
+                        phase="llm_done",
+                        detail=llm_status,
+                    )
+                )
 
         try:
             action, project_id = _upsert_builder_project(builder, config.dry_run)
         except Exception as exc:  # pragma: no cover - defensive logging path
             report.errors.append(f"{builder.source_builder_id}: {exc}")
+            if progress_callback:
+                progress_callback(
+                    ImportProgressEvent(
+                        current=idx,
+                        total=total_builders,
+                        source_builder_id=builder.source_builder_id,
+                        full_name=builder.full_name,
+                        phase="builder_done",
+                        detail=f"error: {exc}",
+                    )
+                )
             continue
 
         if action == "created":
@@ -126,6 +213,17 @@ def run_import(config: ImportConfig) -> ImportReport:
         if not config.dry_run:
             replace_import_snapshot_items(project_id, payload)
             replace_import_notes(project_id, payload.question_notes)
+        if progress_callback:
+            progress_callback(
+                ImportProgressEvent(
+                    current=idx,
+                    total=total_builders,
+                    source_builder_id=builder.source_builder_id,
+                    full_name=builder.full_name,
+                    phase="builder_done",
+                    detail=action,
+                )
+            )
     return report
 
 

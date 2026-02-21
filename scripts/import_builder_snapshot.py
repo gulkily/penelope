@@ -4,12 +4,14 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 import sys
+import time
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from app.builder_import_pipeline import ImportConfig, run_import
+from app.builder_import_llm import get_llm_debug_info, get_llm_preflight_issues
+from app.builder_import_pipeline import ImportConfig, ImportProgressEvent, run_import
 from app.builder_import_source import load_source_snapshot
 from app.db_init import init_db
 
@@ -50,6 +52,17 @@ def build_parser() -> argparse.ArgumentParser:
         default=0.7,
         help="Confidence threshold for accepting LLM output (default: 0.7).",
     )
+    parser.add_argument(
+        "--llm-timeout-seconds",
+        type=float,
+        default=20.0,
+        help="Per-checkin LLM timeout in seconds (default: 20.0).",
+    )
+    parser.add_argument(
+        "--no-progress",
+        action="store_true",
+        help="Disable real-time progress output while import is running.",
+    )
     return parser
 
 
@@ -86,10 +99,49 @@ def render_snapshot_preview(source_db: str, sample: int) -> str:
     return "\n".join(lines)
 
 
-def render_import_report(config: ImportConfig) -> str:
-    report = run_import(config)
+def _build_progress_callback(enabled: bool):
+    if not enabled:
+        return None
+
+    started = time.perf_counter()
+
+    def _callback(event: ImportProgressEvent) -> None:
+        elapsed = time.perf_counter() - started
+        progress = f"[{event.current}/{event.total}]"
+        if event.phase == "builder_start":
+            print(
+                f"{progress} {event.full_name} ({event.source_builder_id}) started | +{elapsed:.1f}s",
+                flush=True,
+            )
+        elif event.phase == "llm_start":
+            print(f"{progress} LLM started ({event.detail}) | +{elapsed:.1f}s", flush=True)
+        elif event.phase == "llm_done":
+            print(f"{progress} LLM result={event.detail} | +{elapsed:.1f}s", flush=True)
+        elif event.phase == "builder_done":
+            print(f"{progress} builder result={event.detail or 'done'} | +{elapsed:.1f}s", flush=True)
+
+    return _callback
+
+
+def render_import_report(
+    config: ImportConfig,
+    llm_debug: dict[str, str] | None = None,
+    progress_enabled: bool = True,
+) -> str:
+    report = run_import(config, progress_callback=_build_progress_callback(progress_enabled))
+    llm_debug = llm_debug or get_llm_debug_info()
     lines = [
         f"Mode: {'WRITE' if not config.dry_run else 'DRY-RUN'}",
+        f"LLM enabled: {'yes' if config.enable_llm else 'no'}",
+        f"LLM model: {config.llm_model}",
+        f"LLM confidence threshold: {config.llm_confidence_threshold:.2f}",
+        f"LLM timeout seconds: {config.llm_timeout_seconds:.2f}",
+        f"LLM debug - python executable: {llm_debug['python_executable']}",
+        f"LLM debug - dotenv available: {llm_debug['dotenv_available']}",
+        f"LLM debug - .env file exists: {llm_debug['dotenv_file_exists']}",
+        f"LLM debug - .env loaded: {llm_debug['dotenv_loaded']}",
+        f"LLM debug - dedalus SDK available: {llm_debug['dedalus_sdk_available']}",
+        f"LLM debug - DEDALUS_API_KEY present: {llm_debug['dedalus_api_key_present']}",
         f"Builders scanned: {report.builders_scanned}",
         f"Builders imported: {report.builders_imported}",
         f"Builders updated: {report.builders_updated}",
@@ -112,25 +164,50 @@ def render_import_report(config: ImportConfig) -> str:
     if report.errors:
         lines.extend(["", "Errors:"])
         lines.extend([f"- {error}" for error in report.errors])
+    if report.llm_error_samples:
+        lines.extend(["", "LLM error samples:"])
+        lines.extend([f"- {error}" for error in report.llm_error_samples])
     return "\n".join(lines)
 
 
 def main() -> int:
     args = build_parser().parse_args()
     init_db()
+    llm_debug = get_llm_debug_info()
+    llm_preflight_issues: list[str] = []
+    if args.enable_llm:
+        llm_debug, llm_preflight_issues = get_llm_preflight_issues()
     print(render_snapshot_preview(args.source_db, args.sample))
     print("")
-    print(
-        render_import_report(
-            ImportConfig(
-                source_db=args.source_db,
-                dry_run=not args.write,
-                enable_llm=args.enable_llm,
-                llm_model=args.llm_model,
-                llm_confidence_threshold=args.llm_confidence_threshold,
+    if llm_preflight_issues:
+        print("LLM preflight failed. Skipping import run.")
+        print(f"- python executable: {llm_debug['python_executable']}")
+        print(f"- dedalus SDK available: {llm_debug['dedalus_sdk_available']}")
+        print(f"- DEDALUS_API_KEY present: {llm_debug['dedalus_api_key_present']}")
+        print("")
+        print("Fixes:")
+        for issue in llm_preflight_issues:
+            print(f"- {issue}")
+        return 2
+
+    try:
+        print(
+            render_import_report(
+                ImportConfig(
+                    source_db=args.source_db,
+                    dry_run=not args.write,
+                    enable_llm=args.enable_llm,
+                    llm_model=args.llm_model,
+                    llm_confidence_threshold=args.llm_confidence_threshold,
+                    llm_timeout_seconds=args.llm_timeout_seconds,
+                ),
+                llm_debug=llm_debug,
+                progress_enabled=not args.no_progress,
             )
         )
-    )
+    except KeyboardInterrupt:
+        print("\nImport interrupted by user.")
+        return 130
     return 0
 
 

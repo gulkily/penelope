@@ -168,6 +168,17 @@ def init_db() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS import_item_map (
+                project_id INTEGER NOT NULL,
+                item_id INTEGER PRIMARY KEY,
+                imported_at TEXT NOT NULL,
+                FOREIGN KEY(project_id) REFERENCES projects(id),
+                FOREIGN KEY(item_id) REFERENCES items(id)
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE INDEX IF NOT EXISTS idx_public_keys_fingerprint
             ON public_keys (fingerprint)
             """
@@ -206,6 +217,12 @@ def init_db() -> None:
             """
             CREATE INDEX IF NOT EXISTS idx_import_checkin_builder_week
             ON import_checkin_map (source_builder_id, week_of)
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_import_item_project
+            ON import_item_map (project_id)
             """
         )
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
