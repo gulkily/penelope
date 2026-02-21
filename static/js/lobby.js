@@ -255,6 +255,11 @@ async function startTokenFlow(token) {
   if (!elements.usernameInput || !elements.requestButton) {
     return;
   }
+  const meResponse = await fetch("/api/auth/me");
+  if (meResponse.ok) {
+    window.location.replace("/");
+    return;
+  }
   showMessage(elements.requestMessage, "Validating magic link...");
   const data = await bootstrapMagicLink(token);
   if (data.status !== "usable") {
@@ -308,15 +313,7 @@ async function fetchStatus() {
     if (meResponse.ok) {
       clearPendingRequest();
       stopStatusPolling();
-      if (elements.requestPanel) {
-        elements.requestPanel.hidden = true;
-      }
-      updateLobbyStatus(
-        "approved",
-        null,
-        data.fingerprint,
-        "You are approved and signed in."
-      );
+      window.location.replace("/");
       return;
     }
     await restoreSession();
