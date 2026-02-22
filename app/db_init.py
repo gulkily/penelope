@@ -6,6 +6,11 @@ from app.house import DEFAULT_HOUSE, normalize_house
 DEFAULT_RESIDENCY_YEAR = datetime.now(timezone.utc).year
 DEFAULT_RESIDENCY_START = f"{DEFAULT_RESIDENCY_YEAR}-01-01"
 DEFAULT_RESIDENCY_END = f"{DEFAULT_RESIDENCY_YEAR}-01-31"
+IMPORT_MAP_TABLES = (
+    "import_builder_map",
+    "import_checkin_map",
+    "import_item_map",
+)
 
 
 def init_db() -> None:
@@ -290,6 +295,20 @@ def init_db() -> None:
         _seed_if_empty(conn)
         _backfill_project_houses(conn)
         _backfill_item_order(conn)
+
+
+def get_missing_import_map_tables() -> list[str]:
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT name
+            FROM sqlite_master
+            WHERE type = 'table'
+              AND name IN ('import_builder_map', 'import_checkin_map', 'import_item_map')
+            """
+        ).fetchall()
+    existing = {str(row["name"]) for row in rows}
+    return [table for table in IMPORT_MAP_TABLES if table not in existing]
 
 
 def _ensure_column(conn, table: str, name: str, definition: str) -> None:

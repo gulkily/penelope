@@ -1,6 +1,6 @@
 from app.db_constants import SECTIONS
 from app.db_connection import get_db_path
-from app.db_init import init_db
+from app.db_init import get_missing_import_map_tables, init_db
 from app.db_items import add_item, delete_item, reorder_items, update_item
 from app.db_progress_history import list_progress_history, log_progress_history
 from app.db_projects import (
@@ -60,6 +60,7 @@ __all__ = [
     "get_magic_login_token",
     "get_magic_login_token_by_hash",
     "get_db_path",
+    "get_missing_import_map_tables",
     "init_db",
     "is_magic_login_token_usable",
     "list_projects",

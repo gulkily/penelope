@@ -17,7 +17,7 @@ from app.api import router as api_router
 from app.api_auth import router as auth_router
 from app.api_transcript import router as transcript_router
 from app.api_transcription import router as transcription_router
-from app.db import init_db
+from app.db import get_db_path, get_missing_import_map_tables, init_db
 from app.env_sync import get_missing_env_defaults
 from app.feature_flags import NAVBAR_ITEM_DEFINITIONS
 from app.feature_flags import get_feature_flags
@@ -142,6 +142,13 @@ async def require_auth(request: Request, call_next):
 @app.on_event("startup")
 def startup() -> None:
     init_db()
+    missing_import_tables = get_missing_import_map_tables()
+    if missing_import_tables:
+        logger.warning(
+            "Import map schema check failed after init_db for db=%s. Missing tables: %s",
+            get_db_path(),
+            ", ".join(missing_import_tables),
+        )
 
 
 @app.get("/", response_class=HTMLResponse)
