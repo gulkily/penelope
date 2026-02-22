@@ -11,7 +11,7 @@ def build_magic_link(base_url: str, token: str) -> str:
     base = (base_url or "").strip()
     if not base:
         raise ValueError("Base URL is required to build magic links.")
-    return f"{base.rstrip('/')}/lobby?token={quote(token)}"
+    return f"{base.rstrip('/')}/welcome?token={quote(token)}"
 
 
 def issue_magic_link(

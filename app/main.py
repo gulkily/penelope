@@ -196,6 +196,14 @@ def welcome(request: Request) -> HTMLResponse:
     session = getattr(request.state, "session_account", None)
     if session:
         return RedirectResponse(url="/", status_code=302)
+    token = (request.query_params.get("token") or "").strip()
+    if token:
+        context = _build_template_context(request, "lobby")
+        context["lobby_token_present"] = True
+        return templates.TemplateResponse(
+            "lobby.html",
+            context,
+        )
     return templates.TemplateResponse(
         "welcome.html",
         _build_template_context(request, "welcome"),

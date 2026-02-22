@@ -57,7 +57,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - Item additions use inline add rows; edit and delete are available per item with an undo toast.
 - Project Management lists are paginated at 100 items per page with next/previous controls.
 - Settings includes a database backup download for saving recovery copies.
-- Settings includes admin tools to generate one-click magic lobby links with preconfigured usernames.
+- Settings includes admin tools to generate one-click magic login links with preconfigured usernames.
 - The North Star objective can be updated per resident via the Save button.
 - The North Star goal value sets the progress slider range per resident.
 - Progress updates happen immediately via the integrated slider.

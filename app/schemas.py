@@ -237,7 +237,7 @@ class MagicLinkCreateRequest(BaseModel):
 class MagicLinkCreateResponse(BaseModel):
     token_id: str = Field(..., description="Magic token identifier.")
     configured_username: str = Field(..., description="Username bound to the token.")
-    magic_link: str = Field(..., description="One-click lobby link with token query param.")
+    magic_link: str = Field(..., description="One-click login link with token query param.")
     expires_at: str | None = Field(
         None,
         description="Magic links do not expire automatically; value is null.",
