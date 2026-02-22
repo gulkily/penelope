@@ -6,7 +6,11 @@ from typing import Callable
 from app.builder_import_llm import DEFAULT_IMPORT_LLM_MODEL, enrich_payload_with_llm
 from app.builder_import_source import SourceBuilderRecord, load_source_snapshot
 from app.db_connection import connect
-from app.db_import_content import replace_import_notes, replace_import_snapshot_items
+from app.db_import_content import (
+    replace_import_notes,
+    replace_import_snapshot_items,
+    seed_resident_summary_if_empty,
+)
 from app.db_import_map import (
     get_checkin_map_for_source_builder,
     get_project_id_for_source_builder,
@@ -220,6 +224,7 @@ def run_import(config: ImportConfig, progress_callback: ProgressCallback | None 
         if not config.dry_run:
             replace_import_snapshot_items(project_id, payload)
             replace_import_notes(project_id, payload.question_notes)
+            seed_resident_summary_if_empty(project_id, payload.summary)
         if progress_callback:
             progress_callback(
                 ImportProgressEvent(

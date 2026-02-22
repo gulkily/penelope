@@ -111,6 +111,27 @@ def replace_import_notes(project_id: int, notes: list[str]) -> None:
         conn.commit()
 
 
+def seed_resident_summary_if_empty(project_id: int, summary: str) -> None:
+    candidate = _normalize_space(summary)
+    if not candidate:
+        return
+    with connect() as conn:
+        row = conn.execute(
+            "SELECT summary FROM projects WHERE id = ?",
+            (project_id,),
+        ).fetchone()
+        if not row:
+            return
+        existing_summary = _normalize_space(row["summary"])
+        if existing_summary:
+            return
+        conn.execute(
+            "UPDATE projects SET summary = ? WHERE id = ?",
+            (candidate, project_id),
+        )
+        conn.commit()
+
+
 def _expand_import_section_items(
     text: str,
     max_item_chars: int = 220,
