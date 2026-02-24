@@ -109,6 +109,22 @@ def count_accounts() -> int:
         return int(row["count"]) if row else 0
 
 
+def list_accounts(limit: int = 500, offset: int = 0) -> list[dict]:
+    safe_limit = max(1, min(limit, 500))
+    safe_offset = max(0, offset)
+    with connect() as conn:
+        rows = conn.execute(
+            """
+            SELECT id, username, created_at
+            FROM accounts
+            ORDER BY LOWER(TRIM(username)) ASC, id ASC
+            LIMIT ? OFFSET ?
+            """,
+            (safe_limit, safe_offset),
+        ).fetchall()
+        return [dict(row) for row in rows]
+
+
 def add_public_key(
     account_id: int | None,
     public_key: str,

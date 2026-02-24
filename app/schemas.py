@@ -273,3 +273,17 @@ class MagicLinkBootstrapResponse(BaseModel):
 class MagicLinkRevokeResponse(BaseModel):
     token_id: str = Field(..., description="Magic token identifier.")
     status: Literal["revoked"] = Field(..., description="Updated token status.")
+
+
+class AdminUserListEntry(BaseModel):
+    id: int = Field(..., description="Account id.")
+    username: str = Field(..., description="Account username.")
+    created_at: str = Field(..., description="ISO timestamp when account was created.")
+    is_admin: bool = Field(..., description="Whether the account is treated as admin.")
+
+
+class AdminUserListResponse(BaseModel):
+    entries: list[AdminUserListEntry]
+    total: int = Field(..., ge=0, description="Total account count before pagination.")
+    limit: int = Field(..., ge=1, description="Page size used for this response.")
+    offset: int = Field(..., ge=0, description="Page offset used for this response.")
