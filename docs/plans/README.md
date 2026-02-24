@@ -11,6 +11,7 @@ Each folder groups Step 1-4 planning artifacts for a single feature.
 - `e2e_full_data_coverage/`
 - `e2e_tests/`
 - `env_defaults_sync/`
+- `git_log_timesheet/`
 - `item_add_experience/`
 - `item_edit_delete/`
 - `item_reordering/`
