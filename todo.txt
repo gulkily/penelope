@@ -87,3 +87,27 @@ Roadmap:
 
 lobby_badge_realtime_step1_solution_assessment.md
 
+bug
+	Unset=> all optional nav items enabled.
+	in .env still added by env-sync
+
+assign each community leader to a house, and remove house selector
+
+re-check the file upload
+
+show confetti after the upload is added
+	instead of when the north start status is updated
+
+are original values included in the prompting?
+
+get rid of [import] notes in questions
+
+keep the functionality of the questions
+
+generate the questions field
+	questions for follow-ups
+
+resident summary and questions should not be editable
+
+why do the boxes have all the same dates?
+
