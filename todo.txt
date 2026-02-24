@@ -91,7 +91,7 @@ bug
 	Unset=> all optional nav items enabled.
 	in .env still added by env-sync
 
-assign each community leader to a house, and remove house selector
+assign each community leader to a house, and remove house selector x
 
 re-check the file upload x
 
@@ -112,3 +112,4 @@ resident summary and questions should not be editable x
 
 why do the boxes have all the same dates? x
 
+when generating a magic link, create a placeholder user right away, so that we can assign to a house x
