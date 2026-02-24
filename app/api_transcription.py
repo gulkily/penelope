@@ -38,7 +38,7 @@ def _validate_payload(content_type: str, payload: bytes) -> None:
     if content_type and content_type not in ALLOWED_MIME_TYPES:
         raise HTTPException(status_code=400, detail="Unsupported audio type")
     if len(payload) > MAX_UPLOAD_BYTES:
-        raise HTTPException(status_code=400, detail="Audio file exceeds 25MB limit")
+        raise HTTPException(status_code=400, detail="Audio file exceeds 35MB limit")
 
 
 def _build_files(upload: UploadFile, payload: bytes) -> dict[str, tuple[str, bytes, str]]:

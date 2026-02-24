@@ -99,7 +99,7 @@ def _validate_content_type(content_type: str | None) -> str:
 
 def _validate_total_size(total_size: int | None) -> None:
     if total_size is not None and total_size > MAX_UPLOAD_BYTES:
-        raise UploadSessionError(status_code=400, detail="Audio file exceeds 25MB limit")
+        raise UploadSessionError(status_code=400, detail="Audio file exceeds 35MB limit")
 
 
 def _is_expired(meta: dict) -> bool:
@@ -201,7 +201,7 @@ def store_chunk(
     existing_size = chunk_path.stat().st_size if chunk_path.exists() else 0
     new_total_bytes = meta.get("received_bytes", 0) - existing_size + len(payload)
     if new_total_bytes > MAX_UPLOAD_BYTES:
-        raise UploadSessionError(status_code=400, detail="Audio file exceeds 25MB limit")
+        raise UploadSessionError(status_code=400, detail="Audio file exceeds 35MB limit")
 
     chunk_path.write_bytes(payload)
     meta["received_bytes"] = new_total_bytes
@@ -231,7 +231,7 @@ def assemble_upload(upload_id: str) -> tuple[bytes, str, str]:
         chunk_bytes = chunk_path.read_bytes()
         total_bytes += len(chunk_bytes)
         if total_bytes > MAX_UPLOAD_BYTES:
-            raise UploadSessionError(status_code=400, detail="Audio file exceeds 25MB limit")
+            raise UploadSessionError(status_code=400, detail="Audio file exceeds 35MB limit")
         payload.extend(chunk_bytes)
 
     filename = meta.get("filename") or "recording"
