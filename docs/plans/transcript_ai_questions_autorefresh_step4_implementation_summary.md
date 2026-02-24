@@ -14,3 +14,18 @@
   - Ran `python -m py_compile app/questions_prompts.py app/questions_ai.py app/llm_provider.py app/schemas.py`.
 - Notes:
   - Prompt assets are now stored as text files under `app/prompts/`, consistent with existing transcript prompt patterns.
+
+## Stage 2 - Add background regeneration orchestration + status contract
+- Changes:
+  - Added in-process job orchestration module `app/questions_regeneration_jobs.py` with:
+    - queued/running/completed/failed states
+    - per-resident active-job coalescing
+    - bounded in-memory job retention cleanup
+  - Added transcript-adjacent API endpoints in `app/api_transcript.py`:
+    - `POST /api/projects/{project_id}/questions/regenerate`
+    - `GET /api/projects/{project_id}/questions/regeneration/{job_id}`
+  - Reused the existing persisted Questions field update path once generation completes.
+- Verification:
+  - Pending full runtime verification in later stages; syntax and integration checks run after endpoint wiring.
+- Notes:
+  - Job state is process-local by design and intended for lightweight background execution.

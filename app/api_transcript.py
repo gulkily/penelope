@@ -1,10 +1,20 @@
 import re
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, BackgroundTasks, HTTPException
 
 from app import db
 from app.llm_provider import LLMProviderError, run_transcript_llm
-from app.schemas import TranscriptUpdateRequest, TranscriptUpdateResponse
+from app.questions_regeneration_jobs import (
+    get_questions_regeneration_job,
+    run_questions_regeneration_job,
+    start_questions_regeneration_job,
+)
+from app.schemas import (
+    QuestionsRegenerationStartResponse,
+    QuestionsRegenerationStatusResponse,
+    TranscriptUpdateRequest,
+    TranscriptUpdateResponse,
+)
 from app.transcript_prompts import build_transcript_messages
 
 router = APIRouter()
@@ -93,3 +103,45 @@ async def analyze_transcript(
     _apply_objective_goal_hint(proposal, project)
 
     return TranscriptUpdateResponse(proposal=proposal)
+
+
+@router.post(
+    "/projects/{project_id}/questions/regenerate",
+    response_model=QuestionsRegenerationStartResponse,
+)
+def start_questions_regeneration(
+    project_id: int,
+    background_tasks: BackgroundTasks,
+) -> QuestionsRegenerationStartResponse:
+    project = db.get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Resident not found")
+
+    job = start_questions_regeneration_job(project_id)
+    if job["status"] == "queued":
+        background_tasks.add_task(run_questions_regeneration_job, job["job_id"])
+
+    return QuestionsRegenerationStartResponse(
+        job_id=str(job["job_id"]),
+        status=job["status"],
+    )
+
+
+@router.get(
+    "/projects/{project_id}/questions/regeneration/{job_id}",
+    response_model=QuestionsRegenerationStatusResponse,
+)
+def get_questions_regeneration_status(
+    project_id: int,
+    job_id: str,
+) -> QuestionsRegenerationStatusResponse:
+    job = get_questions_regeneration_job(project_id, job_id)
+    if not job:
+        raise HTTPException(status_code=404, detail="Questions regeneration job not found")
+
+    return QuestionsRegenerationStatusResponse(
+        job_id=str(job["job_id"]),
+        status=job["status"],
+        questions=job.get("questions"),
+        error=job.get("error"),
+    )
