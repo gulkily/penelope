@@ -10,6 +10,8 @@ const TRANSCRIPTION_CHUNK_SIZE_FALLBACK = 5 * 1024 * 1024;
 const TRANSCRIPTION_CHUNK_THRESHOLD_BYTES = 5 * 1024 * 1024;
 const TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS = 3;
 const TRANSCRIPTION_UPLOAD_RETRY_DELAY_MS = 800;
+const QUESTIONS_REGEN_POLL_DELAY_MS = 1200;
+const QUESTIONS_REGEN_STATUS_CLEAR_DELAY_MS = 2500;
 const HOUSE_FILTER_STORAGE_KEY = "houseFilter";
 const ALL_HOUSES_FILTER = "All houses";
 const HOUSE_OPTIONS = ["Unassigned", "Actioners", "SF2"];
@@ -32,6 +34,10 @@ const state = {
   graphExpanded: false,
   projectData: null,
   houseFilter: ALL_HOUSES_FILTER,
+  questionsRegenerationJobId: null,
+  questionsRegenerationProjectId: null,
+  questionsRegenerationTimer: null,
+  questionsStatusTimer: null,
 };
 
 const houseFilterSelect = document.getElementById("house-filter");
@@ -45,6 +51,7 @@ const objectiveInput = document.getElementById("objective-input");
 const goalInput = document.getElementById("goal-input");
 const questionsInput = document.getElementById("questions-input");
 const questionsDisplay = document.getElementById("questions-display");
+const questionsStatus = document.getElementById("questions-status");
 const inlineAddButtons = document.querySelectorAll(".inline-add-button");
 const inlineAddInputs = document.querySelectorAll(".inline-add-input");
 const undoToast = document.getElementById("undo-toast");
@@ -238,6 +245,35 @@ function setTranscriptStatus(message, status = false) {
     transcriptStatus.dataset.status = "error";
   } else {
     delete transcriptStatus.dataset.status;
+  }
+}
+
+function clearQuestionsStatusTimer() {
+  if (!state.questionsStatusTimer) {
+    return;
+  }
+  window.clearTimeout(state.questionsStatusTimer);
+  state.questionsStatusTimer = null;
+}
+
+function setQuestionsRegenerationStatus(message, status = false) {
+  if (!questionsStatus) {
+    return;
+  }
+  clearQuestionsStatusTimer();
+  questionsStatus.textContent = message || "";
+  if (!message) {
+    delete questionsStatus.dataset.status;
+    return;
+  }
+  if (typeof status === "string") {
+    questionsStatus.dataset.status = status;
+    return;
+  }
+  if (status) {
+    questionsStatus.dataset.status = "error";
+  } else {
+    delete questionsStatus.dataset.status;
   }
 }
 
@@ -1362,25 +1398,6 @@ function renderTranscriptSuggestions(proposal) {
   }
 
   if (
-    CAN_EDIT_RESIDENT_NOTES &&
-    proposal.questions !== null &&
-    proposal.questions !== undefined &&
-    hasMeaningfulText(proposal.questions) &&
-    normalizeComparableText(proposal.questions) !==
-      normalizeComparableText(project.questions)
-  ) {
-    suggestions.push(
-      buildSuggestionField({
-        field: "questions",
-        label: "Questions",
-        value: proposal.questions,
-        currentValue: project.questions,
-        inputType: "textarea",
-      }),
-    );
-  }
-
-  if (
     proposal.objective !== null &&
     proposal.objective !== undefined &&
     hasMeaningfulText(proposal.objective) &&
@@ -1689,6 +1706,7 @@ async function applyTranscriptUpdates() {
   if (!state.projectId) {
     return;
   }
+  const appliedProjectId = state.projectId;
 
   let updates = null;
   try {
@@ -1708,23 +1726,15 @@ async function applyTranscriptUpdates() {
 
   try {
     if (updates.summary !== null) {
-      await requestJSON(`/api/projects/${state.projectId}/summary`, {
+      await requestJSON(`/api/projects/${appliedProjectId}/summary`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ summary: updates.summary }),
       });
     }
 
-    if (updates.questions !== null) {
-      await requestJSON(`/api/projects/${state.projectId}/questions`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questions: updates.questions }),
-      });
-    }
-
     if (updates.objective !== null) {
-      await requestJSON(`/api/projects/${state.projectId}/objective`, {
+      await requestJSON(`/api/projects/${appliedProjectId}/objective`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ objective: updates.objective }),
@@ -1732,7 +1742,7 @@ async function applyTranscriptUpdates() {
     }
 
     if (updates.goal !== null) {
-      await requestJSON(`/api/projects/${state.projectId}/goal`, {
+      await requestJSON(`/api/projects/${appliedProjectId}/goal`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ goal: updates.goal }),
@@ -1740,7 +1750,7 @@ async function applyTranscriptUpdates() {
     }
 
     if (updates.progress !== null) {
-      await requestJSON(`/api/projects/${state.projectId}/progress`, {
+      await requestJSON(`/api/projects/${appliedProjectId}/progress`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ progress: updates.progress }),
@@ -1749,14 +1759,14 @@ async function applyTranscriptUpdates() {
     }
 
     for (const item of updates.items_to_add) {
-      await requestJSON(`/api/projects/${state.projectId}/items`, {
+      await requestJSON(`/api/projects/${appliedProjectId}/items`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ section: item.section, text: item.text }),
       });
     }
 
-    await loadProject(state.projectId);
+    await loadProject(appliedProjectId);
     setTranscriptStatus("Updates applied.");
     clearTranscriptDraft();
     closeTranscriptDialog();
@@ -1764,6 +1774,13 @@ async function applyTranscriptUpdates() {
     if (confetti && typeof confetti.triggerConfetti === "function") {
       confetti.triggerConfetti();
     }
+    startQuestionsRegeneration(appliedProjectId).catch((error) => {
+      console.warn("Failed to start questions regeneration", error);
+      setQuestionsRegenerationStatus(
+        "Questions refresh failed. Previous questions kept.",
+        true,
+      );
+    });
   } catch (error) {
     console.warn("Failed to apply transcript updates", error);
     setTranscriptStatus("Failed to apply updates. Try again.", true);
@@ -2051,6 +2068,8 @@ function renderSections(sections) {
 }
 
 function resetEmptyState() {
+  clearQuestionsRegenerationPolling();
+  setQuestionsRegenerationStatus("");
   state.projectId = null;
   state.projectData = null;
   selectProjectPlaceholder();
@@ -2482,6 +2501,107 @@ function setQuestionsFieldValue(value) {
   }
 }
 
+function clearQuestionsRegenerationPolling() {
+  if (state.questionsRegenerationTimer) {
+    window.clearTimeout(state.questionsRegenerationTimer);
+    state.questionsRegenerationTimer = null;
+  }
+  state.questionsRegenerationJobId = null;
+  state.questionsRegenerationProjectId = null;
+}
+
+function scheduleQuestionsStatusClear() {
+  clearQuestionsStatusTimer();
+  state.questionsStatusTimer = window.setTimeout(() => {
+    if (state.questionsRegenerationJobId) {
+      return;
+    }
+    setQuestionsRegenerationStatus("");
+  }, QUESTIONS_REGEN_STATUS_CLEAR_DELAY_MS);
+}
+
+async function pollQuestionsRegeneration(projectId, jobId) {
+  if (
+    state.questionsRegenerationProjectId !== projectId ||
+    state.questionsRegenerationJobId !== jobId
+  ) {
+    return;
+  }
+
+  let data = null;
+  try {
+    data = await requestJSON(
+      `/api/projects/${projectId}/questions/regeneration/${jobId}`,
+    );
+  } catch (error) {
+    console.warn("Questions regeneration status check failed", error);
+    clearQuestionsRegenerationPolling();
+    setQuestionsRegenerationStatus(
+      "Questions refresh failed. Previous questions kept.",
+      true,
+    );
+    return;
+  }
+
+  if (
+    state.questionsRegenerationProjectId !== projectId ||
+    state.questionsRegenerationJobId !== jobId
+  ) {
+    return;
+  }
+
+  if (data.status === "queued" || data.status === "running") {
+    setQuestionsRegenerationStatus("Regenerating questions...", "busy");
+    state.questionsRegenerationTimer = window.setTimeout(() => {
+      pollQuestionsRegeneration(projectId, jobId).catch((error) => {
+        console.warn("Questions regeneration polling failed", error);
+      });
+    }, QUESTIONS_REGEN_POLL_DELAY_MS);
+    return;
+  }
+
+  clearQuestionsRegenerationPolling();
+
+  if (data.status === "completed") {
+    if (state.projectId === projectId) {
+      setQuestionsFieldValue(data.questions || "");
+      if (state.projectData) {
+        state.projectData.questions = data.questions || "";
+      }
+    }
+    setQuestionsRegenerationStatus("Questions refreshed.");
+    scheduleQuestionsStatusClear();
+    return;
+  }
+
+  const detail = data.error ? `Questions refresh failed: ${data.error}` : "";
+  setQuestionsRegenerationStatus(
+    detail || "Questions refresh failed. Previous questions kept.",
+    true,
+  );
+}
+
+async function startQuestionsRegeneration(projectId) {
+  if (!projectId) {
+    return;
+  }
+
+  clearQuestionsRegenerationPolling();
+  setQuestionsRegenerationStatus("Regenerating questions...", "busy");
+
+  const data = await requestJSON(`/api/projects/${projectId}/questions/regenerate`, {
+    method: "POST",
+  });
+  const jobId = String(data.job_id || "").trim();
+  if (!jobId) {
+    throw new Error("Missing regeneration job id");
+  }
+
+  state.questionsRegenerationProjectId = projectId;
+  state.questionsRegenerationJobId = jobId;
+  await pollQuestionsRegeneration(projectId, jobId);
+}
+
 function renderProject(project) {
   const goalValue = normalizeGoal(project.goal);
   goalInput.value = String(goalValue);
@@ -2652,6 +2772,8 @@ projectSelect.addEventListener("change", async (event) => {
     return;
   }
 
+  clearQuestionsRegenerationPolling();
+  setQuestionsRegenerationStatus("");
   state.projectId = Number(selected);
   emptyState.hidden = true;
   setInteractivity(false);

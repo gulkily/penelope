@@ -925,6 +925,14 @@ html {
   gap: 8px;
 }
 
+.questions-status[data-status="busy"] {
+  color: var(--accent-strong);
+}
+
+.questions-status[data-status="error"] {
+  color: var(--danger);
+}
+
 .manage-card {
   gap: 16px;
 }

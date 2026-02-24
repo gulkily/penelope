@@ -29,3 +29,28 @@
   - Pending full runtime verification in later stages; syntax and integration checks run after endpoint wiring.
 - Notes:
   - Job state is process-local by design and intended for lightweight background execution.
+
+## Stage 3 - Hook transcript apply to auto-start Questions regeneration
+- Changes:
+  - Updated transcript apply success flow in `static/js/app.js` to start Questions regeneration automatically after successful transcript-driven updates.
+  - Removed transcript suggestion-driven Questions persistence from apply flow so Questions refresh is no longer dependent on architect approval of a Questions suggestion card.
+  - Preserved existing apply behavior for summary/objective/goal/progress/items and retained post-apply confetti behavior.
+- Verification:
+  - Ran `node --check static/js/app.js`.
+- Notes:
+  - Apply flow still closes promptly; Questions regeneration is started asynchronously in the background.
+
+## Stage 4 - Add Questions field regeneration progress UX
+- Changes:
+  - Added a dedicated Questions status line in `templates/index.html` (`#questions-status`) for both admin and non-admin views.
+  - Added Questions status styling in `static/css/main.css` for busy/error states.
+  - Added frontend regeneration lifecycle in `static/js/app.js`:
+    - start call: `POST /api/projects/{project_id}/questions/regenerate`
+    - polling call: `GET /api/projects/{project_id}/questions/regeneration/{job_id}`
+    - visible in-progress/success/error status handling
+    - stale poll cancellation on resident switch/reset
+  - On completion, Questions field value is updated in place with AI-generated text; on failure, previous content is preserved with non-blocking status.
+- Verification:
+  - Ran `node --check static/js/app.js`.
+- Notes:
+  - Admin manual editing remains enabled; regeneration status is additive UI feedback, not a lockout.
