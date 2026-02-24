@@ -31,8 +31,14 @@ def _format_project_context(project: dict) -> str:
     summary = str(project.get("summary", "")).strip()
     questions = str(project.get("questions", "")).strip()
     objective = str(project.get("objective", "")).strip()
-    goal = int(project.get("goal") or 0)
-    progress = int(project.get("progress") or 0)
+    try:
+        goal = int(project.get("goal") or 0)
+    except (TypeError, ValueError):
+        goal = 0
+    try:
+        progress = int(project.get("progress") or 0)
+    except (TypeError, ValueError):
+        progress = 0
 
     progress_units = 0
     if goal > 0:
@@ -60,7 +66,10 @@ def _format_progress_history(history: list[dict]) -> str:
     lines: list[str] = []
     for entry in history:
         recorded_at = str(entry.get("recorded_at", "")).strip() or "(unknown)"
-        progress = int(entry.get("progress") or 0)
+        try:
+            progress = int(entry.get("progress") or 0)
+        except (TypeError, ValueError):
+            progress = 0
         lines.append(f"- {recorded_at}: {progress}%")
     return "\n".join(lines)
 

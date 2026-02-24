@@ -54,3 +54,14 @@
   - Ran `node --check static/js/app.js`.
 - Notes:
   - Admin manual editing remains enabled; regeneration status is additive UI feedback, not a lockout.
+
+## Stage 5 - Regression coverage and operator checks
+- Changes:
+  - Hardened prompt context formatting in `app/questions_prompts.py` to safely handle non-numeric goal/progress/history values without raising parsing errors.
+  - Finalized implementation notes and prepared manual operator smoke checks for transcript apply + Questions regeneration states.
+- Verification:
+  - Ran `python -m py_compile app/questions_prompts.py app/questions_ai.py app/questions_regeneration_jobs.py app/api_transcript.py app/llm_provider.py app/schemas.py`.
+  - Ran `node --check static/js/app.js`.
+  - Manual browser smoke test not executed in-agent (per repo workflow, user should run manual verification with the app server).
+- Notes:
+  - No new automated tests were added in this Step 4 implementation to stay aligned with the process constraint for this stage.
