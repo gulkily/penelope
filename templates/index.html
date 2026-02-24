@@ -13,21 +13,23 @@
     {% endif %}
     <script src="/static/js/app.js" defer></script>
   </head>
-  <body data-can-edit-resident-notes="{{ 'true' if session_is_admin else 'false' }}">
+  <body
+    data-can-edit-resident-notes="{{ 'true' if session_is_admin else 'false' }}"
+    data-can-filter-houses="{{ 'true' if session_is_admin else 'false' }}"
+  >
     <main class="page">
       {% include "partials/top_nav.html" with context %}
       <section class="card card-compact project-card">
         <header class="page-header dashboard-header">
           <div class="header-top">
+            {% if session_is_admin %}
             <div class="field">
               <label class="field-label" for="house-filter">House</label>
               <select id="house-filter" class="field-input">
-                <option value="All houses">All houses</option>
-                <option value="Unassigned">Unassigned</option>
-                <option value="Actioners">Actioners</option>
-                <option value="SF2">SF2</option>
+                <option value="">Loading houses...</option>
               </select>
             </div>
+            {% endif %}
             <div class="field">
               <label class="field-label" for="project-select">Resident</label>
               <select id="project-select" class="field-input">

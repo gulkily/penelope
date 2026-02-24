@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 
 from app.db_connection import connect
-from app.house import DEFAULT_HOUSE, normalize_house
+from app.house import DEFAULT_HOUSE, FALLBACK_HOUSES, normalize_house
 
 DEFAULT_RESIDENCY_YEAR = datetime.now(timezone.utc).year
 DEFAULT_RESIDENCY_START = f"{DEFAULT_RESIDENCY_YEAR}-01-01"
@@ -17,6 +17,15 @@ def init_db() -> None:
     with connect() as conn:
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS houses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            f"""
             CREATE TABLE IF NOT EXISTS projects (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT NOT NULL,
@@ -63,10 +72,11 @@ def init_db() -> None:
             """
         )
         conn.execute(
-            """
+            f"""
             CREATE TABLE IF NOT EXISTS accounts (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 username TEXT NOT NULL,
+                house TEXT NOT NULL DEFAULT '{DEFAULT_HOUSE}',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL
             )
@@ -230,6 +240,8 @@ def init_db() -> None:
             ON import_item_map (project_id)
             """
         )
+        _ensure_column(conn, "houses", "name", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(conn, "houses", "created_at", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "projects", "goal", "INTEGER NOT NULL DEFAULT 100")
         _ensure_column(
             conn,
@@ -255,6 +267,12 @@ def init_db() -> None:
         _ensure_column(conn, "items", "sort_order", "INTEGER NOT NULL DEFAULT 0")
         _ensure_column(conn, "items", "created_at", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "accounts", "username", "TEXT NOT NULL DEFAULT ''")
+        _ensure_column(
+            conn,
+            "accounts",
+            "house",
+            f"TEXT NOT NULL DEFAULT '{DEFAULT_HOUSE}'",
+        )
         _ensure_column(conn, "accounts", "created_at", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "accounts", "updated_at", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "public_keys", "public_key", "TEXT NOT NULL DEFAULT ''")
@@ -292,7 +310,9 @@ def init_db() -> None:
         _ensure_column(conn, "ledger_events", "subject_account_id", "INTEGER")
         _ensure_column(conn, "ledger_events", "metadata", "TEXT NOT NULL DEFAULT ''")
         _ensure_column(conn, "ledger_events", "created_at", "TEXT NOT NULL DEFAULT ''")
+        _seed_houses(conn)
         _seed_if_empty(conn)
+        _backfill_account_houses(conn)
         _backfill_project_houses(conn)
         _backfill_item_order(conn)
 
@@ -364,6 +384,21 @@ def _seed_if_empty(conn) -> None:
     conn.commit()
 
 
+def _seed_houses(conn) -> None:
+    row = conn.execute("SELECT COUNT(*) AS count FROM houses").fetchone()
+    if row and int(row["count"]) > 0:
+        return
+    now = datetime.now(timezone.utc).isoformat()
+    conn.executemany(
+        """
+        INSERT INTO houses (name, created_at)
+        VALUES (?, ?)
+        """,
+        [(name, now) for name in FALLBACK_HOUSES],
+    )
+    conn.commit()
+
+
 def _backfill_project_houses(conn) -> None:
     rows = conn.execute("SELECT id, house FROM projects ORDER BY id").fetchall()
     updates: list[tuple[str, int]] = []
@@ -377,6 +412,22 @@ def _backfill_project_houses(conn) -> None:
             updates.append((normalized, row["id"]))
     if updates:
         conn.executemany("UPDATE projects SET house = ? WHERE id = ?", updates)
+        conn.commit()
+
+
+def _backfill_account_houses(conn) -> None:
+    rows = conn.execute("SELECT id, house FROM accounts ORDER BY id").fetchall()
+    updates: list[tuple[str, int]] = []
+    for row in rows:
+        raw_house = (row["house"] or "").strip()
+        try:
+            normalized = normalize_house(raw_house)
+        except ValueError:
+            normalized = DEFAULT_HOUSE
+        if normalized != raw_house:
+            updates.append((normalized, row["id"]))
+    if updates:
+        conn.executemany("UPDATE accounts SET house = ? WHERE id = ?", updates)
         conn.commit()
 
 

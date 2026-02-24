@@ -1,5 +1,6 @@
 from app.db_constants import SECTIONS
 from app.db_connection import get_db_path
+from app.db_houses import list_houses
 from app.db_init import get_missing_import_map_tables, init_db
 from app.db_items import add_item, delete_item, reorder_items, update_item
 from app.db_progress_history import list_progress_history, log_progress_history
@@ -24,6 +25,7 @@ from app.db_auth import (
     count_ledger_events,
     count_accounts,
     create_account,
+    get_or_create_account_by_username,
     create_lobby_request,
     create_magic_login_token,
     consume_magic_login_token,
@@ -44,6 +46,7 @@ from app.db_auth import (
     mark_lobby_request_verified,
     reject_lobby_request,
     update_username,
+    update_account_house,
 )
 
 __all__ = [
@@ -51,6 +54,7 @@ __all__ = [
     "add_item",
     "create_project",
     "create_account",
+    "get_or_create_account_by_username",
     "create_lobby_request",
     "create_magic_login_token",
     "consume_magic_login_token",
@@ -61,6 +65,7 @@ __all__ = [
     "get_magic_login_token",
     "get_magic_login_token_by_hash",
     "get_db_path",
+    "list_houses",
     "get_missing_import_map_tables",
     "init_db",
     "is_magic_login_token_usable",
@@ -92,6 +97,7 @@ __all__ = [
     "reject_lobby_request",
     "link_key_to_account",
     "update_username",
+    "update_account_house",
     "append_ledger_event",
     "count_ledger_events",
     "count_accounts",

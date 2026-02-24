@@ -182,10 +182,12 @@ def run_env_sync() -> int:
 def run_magic_link_command(
     admin_username: str,
     target_username: str,
+    house: str,
     base_url: str,
 ) -> int:
     from app import auth
     from app import db
+    from app.house import list_houses, normalize_house
     from app.magic_link_service import issue_magic_link
 
     admin_candidate = admin_username.strip()
@@ -198,6 +200,13 @@ def run_magic_link_command(
         return 2
 
     db.init_db()
+    default_house = (list_houses() or [""])[0]
+    try:
+        normalized_house = normalize_house(house.strip() or default_house)
+    except ValueError as exc:
+        print(f"Invalid --house value: {exc}", file=sys.stderr)
+        return 2
+
     raw_admin_usernames = os.getenv("MAGIC_LINK_ADMIN_USERNAMES", "")
     admin_allowlist = [
         entry.strip().lower()
@@ -231,6 +240,7 @@ def run_magic_link_command(
     try:
         issued = issue_magic_link(
             configured_username=target_candidate,
+            house=normalized_house,
             issuer_account_id=account_id,
             base_url=base_url,
         )
@@ -241,6 +251,8 @@ def run_magic_link_command(
     print("Magic link issued")
     print(f"issuer_username: {admin_account['username']}")
     print(f"target_username: {issued['configured_username']}")
+    print(f"assigned_house: {issued['assigned_house']}")
+    print(f"account_created: {issued['account_created']}")
     print(f"token_id: {issued['token_id']}")
     print(f"magic_link: {issued['magic_link']}")
     return 0
@@ -354,6 +366,11 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
         help="Target username embedded in the generated magic link.",
     )
     magic_link_parser.add_argument(
+        "--house",
+        default="",
+        help="Assigned house for the target account (default: first house from database).",
+    )
+    magic_link_parser.add_argument(
         "--base-url",
         default="http://127.0.0.1:8000",
         help="Base app URL used to compose the output link.",
@@ -395,6 +412,7 @@ def main() -> int:
         return run_magic_link_command(
             admin_username=args.admin_username,
             target_username=args.username,
+            house=args.house,
             base_url=args.base_url,
         )
 

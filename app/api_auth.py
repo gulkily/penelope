@@ -9,6 +9,7 @@ from app import auth
 from app.feature_flags import get_feature_flags
 from app.magic_link_service import issue_magic_link as issue_magic_link_service
 from app.schemas import (
+    AdminUserHouseUpdateRequest,
     AdminUserListResponse,
     AuthRegisterRequest,
     AuthRegisterResponse,
@@ -76,6 +77,7 @@ def issue_magic_link(payload: MagicLinkCreateRequest, request: Request) -> dict:
     try:
         return issue_magic_link_service(
             configured_username=payload.configured_username,
+            house=payload.house,
             issuer_account_id=session.account_id,
             base_url=str(request.base_url),
         )
@@ -328,6 +330,7 @@ def list_users(request: Request, limit: int = 200, offset: int = 0) -> dict:
         {
             "id": row["id"],
             "username": row["username"],
+            "house": row.get("house") or "",
             "created_at": row["created_at"],
             "is_admin": auth.is_admin_account(row["id"]),
         }
@@ -338,6 +341,31 @@ def list_users(request: Request, limit: int = 200, offset: int = 0) -> dict:
         "total": db.count_accounts(),
         "limit": safe_limit,
         "offset": safe_offset,
+    }
+
+
+@router.put("/auth/users/{account_id}/house")
+def update_user_house(account_id: int, payload: AdminUserHouseUpdateRequest, request: Request) -> dict:
+    session = _require_admin(request)
+    try:
+        updated = db.update_account_house(account_id, payload.house.strip())
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    if not updated:
+        raise HTTPException(status_code=404, detail="Account not found")
+    db.append_ledger_event(
+        "user_house_updated",
+        actor_account_id=session.account_id,
+        subject_account_id=updated["id"],
+        metadata={
+            "house": updated["house"],
+            "username": updated["username"],
+        },
+    )
+    return {
+        "account_id": updated["id"],
+        "username": updated["username"],
+        "house": updated["house"],
     }
 
 

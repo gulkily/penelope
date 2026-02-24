@@ -23,7 +23,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl test --help` for test-specific options (looping, delay, parallelism, etc).
 - `./pnl seed-demo` to add demo data (use `--allow-duplicates` if needed).
 - `./pnl env-sync` to append missing `.env` settings from `.env.example`.
-- `./pnl magic-link --admin-username <issuer> --username <target>` to generate an admin-issued magic login link.
+- `./pnl magic-link --admin-username <issuer> --username <target> [--house <house>]` to generate an admin-issued magic login link and assign house immediately.
   - If `MAGIC_LINK_ADMIN_USERNAMES` is unset and the issuer account does not exist yet, the command bootstraps that account locally.
 
 ## Git log timesheet script
@@ -72,7 +72,7 @@ Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
 - Project Management lists are paginated at 100 items per page with next/previous controls.
 - Settings includes a database backup download for saving recovery copies.
 - Settings includes admin tools to generate one-click magic login links with preconfigured usernames.
-- Settings includes a read-only Users page that lists accounts and shows current admin status.
+- Settings includes a Users page that lists accounts, shows current admin status, and allows admin house assignment.
 - Resident Summary and Questions fields are read-only for non-admin users.
 - The North Star objective can be updated per resident via the Save button.
 - The North Star goal value sets the progress slider range per resident.
@@ -88,6 +88,8 @@ Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
 - The Users page admin badge follows the same `MAGIC_LINK_ADMIN_USERNAMES` runtime logic used by admin-only APIs.
 - Magic links remain valid until revoked by an admin.
 - Configure optional navbar links with `NAVBAR_ENABLED_ITEMS` (valid keys: `lobby,projects,settings`; Dashboard remains visible).
+- House selector options are loaded from the database (`houses` table) rather than hard-coded in the frontend.
+- Non-admin dashboard resident selection is scoped to the signed-in account's assigned house.
 - Set `LOBBY_AUTH_ENABLED=false` to disable general lobby request/approval flows while keeping magic-link login usable.
 - Set `RECORDER_ENABLED=false` to hide the "Record audio" section in the Add update dialog.
 - Startup now only warns when `.env` is missing keys from `.env.example`; run `./pnl env-sync` to append missing defaults.

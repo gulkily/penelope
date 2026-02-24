@@ -14,9 +14,11 @@ const DEFAULT_SORT_DIRECTION = "asc";
 const SORT_KEYS = new Set(["id", "name", "archived"]);
 const SORT_DIRECTIONS = new Set(["asc", "desc"]);
 const HOUSE_FILTER_STORAGE_KEY = "houseFilter";
-const ALL_HOUSES_FILTER = "All houses";
-const HOUSE_OPTIONS = ["Unassigned", "Actioners", "SF2"];
-const HOUSE_FILTER_OPTIONS = [ALL_HOUSES_FILTER, ...HOUSE_OPTIONS];
+const DEFAULT_HOUSE = "Unassigned";
+const DEFAULT_ALL_HOUSES_FILTER = "All houses";
+
+let houseOptions = [DEFAULT_HOUSE];
+let allHousesFilter = DEFAULT_ALL_HOUSES_FILTER;
 
 const state = {
   projects: [],
@@ -26,7 +28,7 @@ const state = {
   pageSize: PAGE_SIZE,
   total: 0,
   sortMode: "client",
-  houseFilter: ALL_HOUSES_FILTER,
+  houseFilter: DEFAULT_ALL_HOUSES_FILTER,
 };
 
 async function requestJSON(url, options) {
@@ -37,18 +39,78 @@ async function requestJSON(url, options) {
   return response.json();
 }
 
+function getHouseFilterOptions() {
+  return [allHousesFilter, ...houseOptions];
+}
+
 function normalizeHouse(value) {
   const candidate = String(value || "").trim().toLowerCase();
-  const match = HOUSE_OPTIONS.find((option) => option.toLowerCase() === candidate);
-  return match || HOUSE_OPTIONS[0];
+  const match = houseOptions.find((option) => option.toLowerCase() === candidate);
+  return match || houseOptions[0] || DEFAULT_HOUSE;
 }
 
 function normalizeHouseFilter(value) {
   const candidate = String(value || "").trim().toLowerCase();
-  const match = HOUSE_FILTER_OPTIONS.find(
-    (option) => option.toLowerCase() === candidate
+  const match = getHouseFilterOptions().find(
+    (option) => option.toLowerCase() === candidate,
   );
-  return match || ALL_HOUSES_FILTER;
+  return match || allHousesFilter;
+}
+
+function setHouseOptions(options, allFilterLabel) {
+  const unique = [];
+  const seen = new Set();
+  (options || []).forEach((option) => {
+    const candidate = String(option || "").trim();
+    if (!candidate) {
+      return;
+    }
+    const key = candidate.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    unique.push(candidate);
+  });
+  houseOptions = unique.length ? unique : [DEFAULT_HOUSE];
+  allHousesFilter = String(allFilterLabel || DEFAULT_ALL_HOUSES_FILTER).trim() || DEFAULT_ALL_HOUSES_FILTER;
+}
+
+function renderHouseControls() {
+  if (houseInput) {
+    const selectedHouse = normalizeHouse(houseInput.value);
+    houseInput.innerHTML = "";
+    houseOptions.forEach((house) => {
+      const option = document.createElement("option");
+      option.value = house;
+      option.textContent = house;
+      houseInput.append(option);
+    });
+    houseInput.value = selectedHouse;
+  }
+
+  if (houseFilterInput) {
+    const selectedFilter = normalizeHouseFilter(state.houseFilter || houseFilterInput.value);
+    houseFilterInput.innerHTML = "";
+    getHouseFilterOptions().forEach((house) => {
+      const option = document.createElement("option");
+      option.value = house;
+      option.textContent = house;
+      houseFilterInput.append(option);
+    });
+    houseFilterInput.value = selectedFilter;
+    state.houseFilter = selectedFilter;
+  }
+}
+
+async function loadHouseOptions() {
+  const response = await fetch("/api/houses");
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(payload.detail || "Failed to load house options.");
+  }
+  setHouseOptions(payload.houses, payload.all_houses_filter);
+  renderHouseControls();
 }
 
 function readStoredHouseFilter() {
@@ -56,7 +118,7 @@ function readStoredHouseFilter() {
     return normalizeHouseFilter(localStorage.getItem(HOUSE_FILTER_STORAGE_KEY));
   } catch (error) {
     console.warn("Unable to read house filter from storage", error);
-    return ALL_HOUSES_FILTER;
+    return allHousesFilter;
   }
 }
 
@@ -72,7 +134,7 @@ function buildHouseSelect(currentHouse, projectId) {
   const select = document.createElement("select");
   select.className = "field-input table-house-select";
   select.dataset.projectId = String(projectId);
-  HOUSE_OPTIONS.forEach((house) => {
+  houseOptions.forEach((house) => {
     const option = document.createElement("option");
     option.value = house;
     option.textContent = house;
@@ -168,7 +230,7 @@ function updateSortIndicators() {
       if (header) {
         header.setAttribute(
           "aria-sort",
-          state.sortDirection === "asc" ? "ascending" : "descending"
+          state.sortDirection === "asc" ? "ascending" : "descending",
         );
       }
     } else {
@@ -399,7 +461,12 @@ window.addEventListener("popstate", () => {
   });
 });
 
-readStateFromUrl();
-loadProjects().catch((error) => {
-  console.error(error);
-});
+(async () => {
+  try {
+    await loadHouseOptions();
+    readStateFromUrl();
+    await loadProjects();
+  } catch (error) {
+    console.error(error);
+  }
+})();

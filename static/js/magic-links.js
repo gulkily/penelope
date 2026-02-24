@@ -1,10 +1,15 @@
 const magicUsernameInput = document.getElementById("magic-link-username");
+const magicHouseSelect = document.getElementById("magic-link-house");
 const magicGenerateButton = document.getElementById("magic-link-generate");
 const magicCopyButton = document.getElementById("magic-link-copy");
 const magicLinkTableBody = document.getElementById("magic-link-table-body");
 const magicStatus = document.getElementById("magic-link-status");
 
+const DEFAULT_HOUSE = "Unassigned";
+let houseOptions = [DEFAULT_HOUSE];
+
 let latestMagicLink = "";
+let usersByUsername = new Map();
 
 function setMagicStatus(message, isError = false) {
   if (!magicStatus) {
@@ -34,6 +39,49 @@ function shortToken(tokenId) {
     return "";
   }
   return tokenId.slice(0, 8);
+}
+
+function normalizeUsername(value) {
+  return String(value || "").trim().toLowerCase();
+}
+
+function setHouseOptions(options) {
+  const unique = [];
+  const seen = new Set();
+  (options || []).forEach((option) => {
+    const candidate = String(option || "").trim();
+    if (!candidate) {
+      return;
+    }
+    const key = candidate.toLowerCase();
+    if (seen.has(key)) {
+      return;
+    }
+    seen.add(key);
+    unique.push(candidate);
+  });
+  houseOptions = unique.length ? unique : [DEFAULT_HOUSE];
+}
+
+function normalizeHouse(value) {
+  const candidate = String(value || "").trim().toLowerCase();
+  const match = houseOptions.find((option) => option.toLowerCase() === candidate);
+  return match || houseOptions[0] || DEFAULT_HOUSE;
+}
+
+function renderHouseSelectOptions(selectedValue) {
+  if (!magicHouseSelect) {
+    return;
+  }
+  const normalizedSelection = normalizeHouse(selectedValue);
+  magicHouseSelect.innerHTML = "";
+  houseOptions.forEach((option) => {
+    const optionNode = document.createElement("option");
+    optionNode.value = option;
+    optionNode.textContent = option;
+    magicHouseSelect.append(optionNode);
+  });
+  magicHouseSelect.value = normalizedSelection;
 }
 
 function syncMagicControls() {
@@ -109,8 +157,48 @@ async function loadActiveMagicLinks() {
   renderActiveMagicLinks(payload.entries || []);
 }
 
+async function loadHouseOptions() {
+  const response = await fetch("/api/houses");
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(parseError(payload, "Failed to load house options."));
+  }
+  setHouseOptions(payload.houses);
+  renderHouseSelectOptions(magicHouseSelect ? magicHouseSelect.value : undefined);
+}
+
+async function loadUserHouses() {
+  usersByUsername = new Map();
+  const response = await fetch("/api/auth/users?limit=500");
+  const payload = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw new Error(parseError(payload, "Failed to load users for house prefill."));
+  }
+  (payload.entries || []).forEach((entry) => {
+    const key = normalizeUsername(entry.username);
+    if (!key || usersByUsername.has(key)) {
+      return;
+    }
+    usersByUsername.set(key, normalizeHouse(entry.house));
+  });
+}
+
+function prefillHouseForExistingUser() {
+  if (!magicUsernameInput || !magicHouseSelect) {
+    return;
+  }
+  const key = normalizeUsername(magicUsernameInput.value);
+  if (!key) {
+    return;
+  }
+  const existingHouse = usersByUsername.get(key);
+  if (existingHouse) {
+    magicHouseSelect.value = normalizeHouse(existingHouse);
+  }
+}
+
 async function generateMagicLink() {
-  if (!magicUsernameInput || !magicGenerateButton) {
+  if (!magicUsernameInput || !magicGenerateButton || !magicHouseSelect) {
     return;
   }
   const configuredUsername = magicUsernameInput.value.trim();
@@ -119,13 +207,18 @@ async function generateMagicLink() {
     return;
   }
 
+  const assignedHouse = normalizeHouse(magicHouseSelect.value);
+
   magicGenerateButton.disabled = true;
   setMagicStatus("Generating magic link...");
   try {
     const response = await fetch("/api/auth/magic-links", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ configured_username: configuredUsername }),
+      body: JSON.stringify({
+        configured_username: configuredUsername,
+        house: assignedHouse,
+      }),
     });
     const payload = await response.json().catch(() => ({}));
     if (!response.ok) {
@@ -134,8 +227,17 @@ async function generateMagicLink() {
 
     latestMagicLink = payload.magic_link || "";
     syncMagicControls();
-    await loadActiveMagicLinks();
-    setMagicStatus(`Link created for ${payload.configured_username}.`);
+    await Promise.all([loadActiveMagicLinks(), loadUserHouses()]);
+
+    if (payload.account_created) {
+      setMagicStatus(
+        `Created account for ${payload.configured_username} in ${payload.assigned_house} and issued link.`,
+      );
+    } else {
+      setMagicStatus(
+        `Issued link for ${payload.configured_username} and set house to ${payload.assigned_house}.`,
+      );
+    }
   } catch (error) {
     setMagicStatus(error.message || "Failed to generate magic link.", true);
   } finally {
@@ -161,7 +263,7 @@ async function revokeMagicLink(tokenId) {
     `/api/auth/magic-links/${encodeURIComponent(tokenId)}/revoke`,
     {
       method: "POST",
-    }
+    },
   );
   const payload = await response.json().catch(() => ({}));
   if (!response.ok) {
@@ -190,6 +292,12 @@ if (magicCopyButton) {
 }
 
 if (magicUsernameInput) {
+  magicUsernameInput.addEventListener("change", () => {
+    prefillHouseForExistingUser();
+  });
+  magicUsernameInput.addEventListener("blur", () => {
+    prefillHouseForExistingUser();
+  });
   magicUsernameInput.addEventListener("keydown", (event) => {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -201,7 +309,12 @@ if (magicUsernameInput) {
 }
 
 syncMagicControls();
-loadActiveMagicLinks().catch((error) => {
-  console.error(error);
-  setMagicStatus(error.message || "Failed to load active magic links.", true);
-});
+(async () => {
+  try {
+    await loadHouseOptions();
+    await Promise.all([loadActiveMagicLinks(), loadUserHouses()]);
+  } catch (error) {
+    console.error(error);
+    setMagicStatus(error.message || "Failed to initialize magic links page.", true);
+  }
+})();

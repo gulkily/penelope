@@ -16,6 +16,7 @@ def build_magic_link(base_url: str, token: str) -> str:
 
 def issue_magic_link(
     configured_username: str,
+    house: str,
     issuer_account_id: int,
     base_url: str,
 ) -> dict:
@@ -24,6 +25,10 @@ def issue_magic_link(
         raise ValueError("Configured username required")
     if issuer_account_id <= 0:
         raise ValueError("Issuer account id must be a positive integer.")
+    target_account, account_created = db.get_or_create_account_by_username(
+        username=username,
+        house=house,
+    )
 
     token = secrets.token_urlsafe(32)
     token_hash = auth.hash_magic_login_token(token)
@@ -36,15 +41,19 @@ def issue_magic_link(
     db.append_ledger_event(
         "magic_link_issued",
         actor_account_id=issuer_account_id,
-        subject_account_id=None,
+        subject_account_id=target_account["id"],
         metadata={
             "token_id": token_row["id"],
             "configured_username": username,
+            "assigned_house": target_account["house"],
+            "account_created": account_created,
         },
     )
     return {
         "token_id": token_row["id"],
         "configured_username": username,
+        "assigned_house": target_account["house"],
+        "account_created": account_created,
         "magic_link": build_magic_link(base_url=base_url, token=token),
         "expires_at": None,
     }

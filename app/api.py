@@ -5,6 +5,7 @@ from fastapi.responses import FileResponse
 
 from app import auth
 from app import db
+from app.house import ALL_HOUSES_FILTER, list_houses
 from app.schemas import (
     GoalUpdate,
     ItemCreate,
@@ -32,6 +33,17 @@ def _require_admin(request: Request) -> None:
         raise HTTPException(status_code=403, detail="Admin access required")
 
 
+def _scope_house_for_session(request: Request, requested_house: str | None) -> str | None:
+    session = getattr(request.state, "session_account", None)
+    if not session:
+        return requested_house
+    if auth.is_admin_account(session.account_id):
+        return requested_house
+    account = db.get_account(session.account_id)
+    scoped_house = (account.get("house") or "").strip()
+    return scoped_house or requested_house
+
+
 @router.get("/backup")
 def backup_database() -> FileResponse:
     db_path = db.get_db_path()
@@ -46,19 +58,29 @@ def backup_database() -> FileResponse:
     )
 
 
+@router.get("/houses")
+def get_houses() -> dict:
+    return {
+        "houses": list_houses(),
+        "all_houses_filter": ALL_HOUSES_FILTER,
+    }
+
+
 @router.get("/projects")
 def list_projects(
+    request: Request,
     include_archived: bool = False,
     page: int | None = None,
     sort_key: str = "id",
     sort_dir: str = "asc",
     house: str | None = None,
 ) -> dict:
+    scoped_house = _scope_house_for_session(request, house)
     try:
         if page is None:
             projects, total = db.list_projects(
                 include_archived=include_archived,
-                house=house,
+                house=scoped_house,
                 sort_key=sort_key,
                 sort_direction=sort_dir,
             )
@@ -68,7 +90,7 @@ def list_projects(
         offset = (page - 1) * PROJECTS_PAGE_SIZE
         projects, total = db.list_projects(
             include_archived=include_archived,
-            house=house,
+            house=scoped_house,
             limit=PROJECTS_PAGE_SIZE,
             offset=offset,
             sort_key=sort_key,

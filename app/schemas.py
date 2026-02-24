@@ -3,9 +3,6 @@ from typing import Literal
 
 from pydantic import BaseModel, Field
 
-from app.house import ALLOWED_HOUSES
-
-
 class ItemCreate(BaseModel):
     section: str = Field(..., description="Section key, e.g. summary or challenges.")
     text: str = Field(..., min_length=1)
@@ -29,7 +26,7 @@ class ProjectCreate(BaseModel):
     house: str = Field(
         ...,
         min_length=1,
-        description=f"Resident house; one of: {', '.join(ALLOWED_HOUSES)}.",
+        description="Resident house name.",
     )
 
 
@@ -41,7 +38,7 @@ class ProjectHouseUpdate(BaseModel):
     house: str = Field(
         ...,
         min_length=1,
-        description=f"Resident house; one of: {', '.join(ALLOWED_HOUSES)}.",
+        description="Resident house name.",
     )
 
 
@@ -257,11 +254,21 @@ class MagicLinkCreateRequest(BaseModel):
         min_length=1,
         description="Username preconfigured into the generated magic link.",
     )
+    house: str = Field(
+        ...,
+        min_length=1,
+        description="Assigned house for the target account.",
+    )
 
 
 class MagicLinkCreateResponse(BaseModel):
     token_id: str = Field(..., description="Magic token identifier.")
     configured_username: str = Field(..., description="Username bound to the token.")
+    assigned_house: str = Field(..., description="House applied to the target account.")
+    account_created: bool = Field(
+        ...,
+        description="True when issuance created a new placeholder account.",
+    )
     magic_link: str = Field(..., description="One-click login link with token query param.")
     expires_at: str | None = Field(
         None,
@@ -303,8 +310,17 @@ class MagicLinkRevokeResponse(BaseModel):
 class AdminUserListEntry(BaseModel):
     id: int = Field(..., description="Account id.")
     username: str = Field(..., description="Account username.")
+    house: str = Field(..., description="Assigned house.")
     created_at: str = Field(..., description="ISO timestamp when account was created.")
     is_admin: bool = Field(..., description="Whether the account is treated as admin.")
+
+
+class AdminUserHouseUpdateRequest(BaseModel):
+    house: str = Field(
+        ...,
+        min_length=1,
+        description="Assigned house.",
+    )
 
 
 class AdminUserListResponse(BaseModel):

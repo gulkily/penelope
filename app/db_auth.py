@@ -5,6 +5,7 @@ import uuid
 from datetime import datetime, timezone
 
 from app.db_connection import connect
+from app.house import DEFAULT_HOUSE, normalize_house
 
 
 def _utc_now() -> str:
@@ -43,23 +44,24 @@ def _resolve_target_account_id(
     now = _utc_now()
     cursor = conn.execute(
         """
-        INSERT INTO accounts (username, created_at, updated_at)
-        VALUES (?, ?, ?)
+        INSERT INTO accounts (username, house, created_at, updated_at)
+        VALUES (?, ?, ?, ?)
         """,
-        (requested_username, now, now),
+        (requested_username, DEFAULT_HOUSE, now, now),
     )
     return int(cursor.lastrowid)
 
 
-def create_account(initial_username: str) -> dict:
+def create_account(initial_username: str, house: str = DEFAULT_HOUSE) -> dict:
+    normalized_house = normalize_house(house)
     now = _utc_now()
     with connect() as conn:
         cursor = conn.execute(
             """
-            INSERT INTO accounts (username, created_at, updated_at)
-            VALUES (?, ?, ?)
+            INSERT INTO accounts (username, house, created_at, updated_at)
+            VALUES (?, ?, ?, ?)
             """,
-            (initial_username, now, now),
+            (initial_username, normalized_house, now, now),
         )
         account_id = cursor.lastrowid
         row = conn.execute(
@@ -103,6 +105,36 @@ def update_username(account_id: int, new_username: str) -> dict:
         return get_account(account_id)
 
 
+def update_account_house(account_id: int, house: str) -> dict:
+    normalized_house = normalize_house(house)
+    now = _utc_now()
+    with connect() as conn:
+        cursor = conn.execute(
+            "UPDATE accounts SET house = ?, updated_at = ? WHERE id = ?",
+            (normalized_house, now, account_id),
+        )
+        if cursor.rowcount <= 0:
+            return {}
+        row = conn.execute(
+            "SELECT * FROM accounts WHERE id = ?",
+            (account_id,),
+        ).fetchone()
+        return _row_to_dict(row)
+
+
+def get_or_create_account_by_username(username: str, house: str) -> tuple[dict, bool]:
+    candidate = username.strip()
+    if not candidate:
+        raise ValueError("Username required")
+    existing = get_account_by_username_case_insensitive(candidate)
+    if existing:
+        updated = update_account_house(int(existing["id"]), house)
+        if not updated:
+            raise ValueError("Account not found")
+        return updated, False
+    return create_account(candidate, house), True
+
+
 def count_accounts() -> int:
     with connect() as conn:
         row = conn.execute("SELECT COUNT(*) AS count FROM accounts").fetchone()
@@ -115,7 +147,7 @@ def list_accounts(limit: int = 500, offset: int = 0) -> list[dict]:
     with connect() as conn:
         rows = conn.execute(
             """
-            SELECT id, username, created_at
+            SELECT id, username, house, created_at
             FROM accounts
             ORDER BY LOWER(TRIM(username)) ASC, id ASC
             LIMIT ? OFFSET ?
