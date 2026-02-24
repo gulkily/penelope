@@ -12,8 +12,23 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from app.transcription_constants import MAX_UPLOAD_BYTES
+
 TIMESTAMP_RE = re.compile(r"^\[\d{2}:\d{2}\]$")
 SENTENCE_SPLIT_RE = re.compile(r"(?<=[.!?])\s+")
+VOICE_PRESETS = [
+    "alloy",
+    "ash",
+    "ballad",
+    "coral",
+    "echo",
+    "fable",
+    "onyx",
+    "nova",
+    "sage",
+    "shimmer",
+    "verse",
+]
 
 try:
     from dotenv import load_dotenv
@@ -46,20 +61,22 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--voice",
         default="alloy",
-        choices=[
-            "alloy",
-            "ash",
-            "ballad",
-            "coral",
-            "echo",
-            "fable",
-            "onyx",
-            "nova",
-            "sage",
-            "shimmer",
-            "verse",
-        ],
-        help="Voice preset.",
+        choices=VOICE_PRESETS,
+        help="Default/fallback voice preset (or the only voice in --voice-mode single).",
+    )
+    parser.add_argument(
+        "--voice-mode",
+        choices=["multi", "single"],
+        default="multi",
+        help="Use one voice for all speakers or assign different voices per speaker.",
+    )
+    parser.add_argument(
+        "--voice-cycle",
+        default="alloy,nova",
+        help=(
+            "Comma-separated voices used to assign speakers in first-seen order "
+            "when --voice-mode is multi (for example: alloy,nova)."
+        ),
     )
     parser.add_argument(
         "--speed",
@@ -76,7 +93,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--speaker-mode",
         choices=["keep", "strip"],
-        default="keep",
+        default="strip",
         help="Keep or strip speaker labels (for example, 'Leah:').",
     )
     parser.add_argument(
@@ -87,8 +104,9 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _clean_script_to_speakable_text(raw_text: str, speaker_mode: str) -> str:
-    lines: list[str] = []
+def _extract_turns(raw_text: str) -> list[tuple[str, str]]:
+    turns: list[tuple[str, str]] = []
+    current_speaker = "Narrator"
     for raw_line in raw_text.splitlines():
         line = raw_line.strip()
         if not line:
@@ -109,14 +127,49 @@ def _clean_script_to_speakable_text(raw_text: str, speaker_mode: str) -> str:
             content = content.strip()
             if not content:
                 continue
-            if speaker_mode == "strip":
-                lines.append(content)
-            else:
-                lines.append(f"{speaker.strip()}: {content}")
+            speaker = speaker.strip() or current_speaker
+            current_speaker = speaker
+            turns.append((speaker, content))
             continue
-        lines.append(line)
+        if turns:
+            previous_speaker, previous_text = turns[-1]
+            turns[-1] = (previous_speaker, f"{previous_text} {line}".strip())
+        else:
+            turns.append((current_speaker, line))
+    return turns
 
-    return " ".join(lines).strip()
+
+def _render_turn_text(speaker: str, content: str, speaker_mode: str) -> str:
+    if speaker_mode == "keep":
+        return f"{speaker}: {content}"
+    return content
+
+
+def _parse_voice_cycle(voice_cycle: str) -> list[str]:
+    voices = [voice.strip() for voice in voice_cycle.split(",") if voice.strip()]
+    if not voices:
+        raise ValueError("--voice-cycle must include at least one voice.")
+    invalid = [voice for voice in voices if voice not in VOICE_PRESETS]
+    if invalid:
+        raise ValueError(
+            "Invalid voice(s) in --voice-cycle: "
+            + ", ".join(invalid)
+            + ". Valid voices: "
+            + ", ".join(VOICE_PRESETS)
+        )
+    return voices
+
+
+def _build_speaker_voice_map(
+    speakers: list[str], voice_mode: str, voice: str, voice_cycle: str
+) -> dict[str, str]:
+    if voice_mode == "single":
+        return {speaker: voice for speaker in speakers}
+    cycle = _parse_voice_cycle(voice_cycle)
+    speaker_voices: dict[str, str] = {}
+    for index, speaker in enumerate(speakers):
+        speaker_voices[speaker] = cycle[index % len(cycle)]
+    return speaker_voices
 
 
 def _chunk_text(text: str, max_chars: int) -> list[str]:
@@ -228,6 +281,8 @@ def generate_audio(
     output_path: Path,
     model: str,
     voice: str,
+    voice_mode: str,
+    voice_cycle: str,
     speed: float,
     max_chars: int,
     speaker_mode: str,
@@ -241,17 +296,44 @@ def generate_audio(
 
     _status("Loading script text")
     raw_text = script_path.read_text(encoding="utf-8")
-    _status("Cleaning script into speakable text")
-    speakable = _clean_script_to_speakable_text(raw_text, speaker_mode=speaker_mode)
-    if not speakable:
+    _status("Extracting speaker turns")
+    turns = _extract_turns(raw_text)
+    if not turns:
         raise ValueError("No speakable content found in script after cleanup.")
-    _status(f"Speakable text ready ({len(speakable)} chars)")
 
-    _status(f"Chunking text (max {max_chars} chars per request)")
-    chunks = _chunk_text(speakable, max_chars=max_chars)
+    speakers = list(dict.fromkeys(speaker for speaker, _ in turns))
+    _status(f"Detected {len(speakers)} speaker(s): {', '.join(speakers)}")
+    speaker_voice_map = _build_speaker_voice_map(
+        speakers=speakers,
+        voice_mode=voice_mode,
+        voice=voice,
+        voice_cycle=voice_cycle,
+    )
+    _status(
+        "Speaker voices: "
+        + ", ".join(
+            f"{speaker}={speaker_voice_map[speaker]}" for speaker in speakers
+        )
+    )
+
+    rendered_turns: list[tuple[str, str]] = []
+    for speaker, content in turns:
+        rendered = _render_turn_text(speaker, content, speaker_mode=speaker_mode).strip()
+        if rendered:
+            rendered_turns.append((speaker, rendered))
+    if not rendered_turns:
+        raise ValueError("No speakable content found after speaker formatting.")
+    speakable_char_count = sum(len(text) for _, text in rendered_turns)
+    _status(f"Speakable text ready ({speakable_char_count} chars across turns)")
+
+    _status(f"Chunking turns (max {max_chars} chars per request)")
+    chunks: list[tuple[str, str]] = []
+    for speaker, text in rendered_turns:
+        for piece in _chunk_text(text, max_chars=max_chars):
+            chunks.append((speaker, piece))
     if not chunks:
         raise ValueError("No text chunks generated.")
-    _status(f"Prepared {len(chunks)} chunk(s)")
+    _status(f"Prepared {len(chunks)} chunk(s) from {len(rendered_turns)} turn(s)")
 
     parts_dir = output_path.parent / f"{output_path.stem}_parts"
     _status(f"Preparing intermediate directory: {parts_dir}")
@@ -264,12 +346,16 @@ def generate_audio(
     client = _get_dedalus_client()
     try:
         total = len(chunks)
-        for index, chunk in enumerate(chunks, start=1):
-            _status(f"Synthesizing chunk {index}/{total} ({len(chunk)} chars)")
+        for index, (speaker, chunk) in enumerate(chunks, start=1):
+            selected_voice = speaker_voice_map.get(speaker, voice)
+            _status(
+                f"Synthesizing chunk {index}/{total} "
+                f"(speaker={speaker}, voice={selected_voice}, {len(chunk)} chars)"
+            )
             part_path = parts_dir / f"part_{index:03d}.wav"
             response = client.audio.speech.create(
                 model=model,
-                voice=voice,
+                voice=selected_voice,
                 input=chunk,
                 response_format="wav",
                 speed=speed,
@@ -284,6 +370,15 @@ def generate_audio(
     _status(f"Merging {len(part_paths)} part(s) into final WAV")
     _merge_wav_parts(part_paths, output_path)
     _status(f"Merged {len(part_paths)} part(s) -> {output_path}")
+    output_bytes = output_path.stat().st_size
+    output_mb = output_bytes / (1024 * 1024)
+    _status(f"Output size: {output_mb:.2f} MB ({output_bytes} bytes)")
+    if output_bytes > MAX_UPLOAD_BYTES:
+        limit_mb = MAX_UPLOAD_BYTES // (1024 * 1024)
+        _status(
+            "Warning: output exceeds upload limit "
+            f"({limit_mb} MB). Increase --speed or shorten the script."
+        )
 
     if not keep_parts:
         _status("Cleaning intermediate part files")
@@ -303,7 +398,7 @@ def generate_audio(
     elapsed = time.monotonic() - started_at
     _status(f"Audio generation complete in {elapsed:.1f}s")
 
-    return len(chunks), len(speakable)
+    return len(chunks), speakable_char_count
 
 
 def main() -> int:
@@ -316,6 +411,8 @@ def main() -> int:
             output_path=Path(args.output_path),
             model=args.model,
             voice=args.voice,
+            voice_mode=args.voice_mode,
+            voice_cycle=args.voice_cycle,
             speed=args.speed,
             max_chars=args.max_chars,
             speaker_mode=args.speaker_mode,
