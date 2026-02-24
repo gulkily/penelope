@@ -34,13 +34,19 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     )
     parser.add_argument(
         "--since",
-        required=True,
-        help="Start date/time for git log filtering (passed to git --since).",
+        default="14 days ago",
+        help=(
+            "Start date/time for git log filtering (passed to git --since). "
+            "Default: 14 days ago."
+        ),
     )
     parser.add_argument(
         "--until",
-        required=True,
-        help="End date/time for git log filtering (passed to git --until).",
+        default="now",
+        help=(
+            "End date/time for git log filtering (passed to git --until). "
+            "Default: now."
+        ),
     )
     parser.add_argument(
         "--author",

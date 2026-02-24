@@ -27,7 +27,8 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
   - If `MAGIC_LINK_ADMIN_USERNAMES` is unset and the issuer account does not exist yet, the command bootstraps that account locally.
 
 ## Git log timesheet script
-- `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24` to print a basic estimated-hours report.
+- `python3 scripts/git_timesheet.py` to print a basic estimated-hours report for the last 2 weeks (default range).
+- `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24` to run a specific date range.
 - `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24 --author \"Jane Doe\"` to filter by author.
 - `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24 --format csv --output timesheet.csv` to export CSV.
 - Estimation assumptions are deterministic: commits are grouped by UTC day, each active day has a 0.5h minimum, commit gaps are capped at 2.0h each, and daily totals are capped at 8.0h.

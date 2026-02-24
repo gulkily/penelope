@@ -3,12 +3,12 @@
 ## Stage 1 - Define script interface and estimation contract
 - Changes:
   - Added standalone script entrypoint at `scripts/git_timesheet.py`.
-  - Added required CLI flags: `--since`, `--until`.
+  - Added CLI date flags: `--since`, `--until` (later updated to default to last 2 weeks when omitted).
   - Added optional CLI flags: `--author`, `--format`, `--output`.
   - Documented deterministic estimation assumptions in the module docstring.
 - Verification:
   - Ran `python3 scripts/git_timesheet.py --help` and confirmed usage/options output.
-  - Ran `python3 scripts/git_timesheet.py` and confirmed required-argument validation error.
+  - Initially verified required-argument validation for missing dates; later updated behavior and verified `python3 scripts/git_timesheet.py` runs using default range (`14 days ago` to `now`).
 - Notes:
   - Stage 1 intentionally establishes contract and validation only; ingestion/estimation logic follows in later stages.
 

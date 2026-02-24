@@ -30,7 +30,7 @@ If a different layout is introduced, update this guide and keep directory names 
   - `./pnl seed-demo` to add demo data.
   - `./pnl magic-link --admin-username <issuer> --username <target>` to issue a magic login link.
 - Standalone scripts:
-  - `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24` to generate a basic git-log-based estimated-hours timesheet.
+  - `python3 scripts/git_timesheet.py` to generate a basic git-log-based estimated-hours timesheet for the last 2 weeks (default range).
 
 ## Coding Style & Naming Conventions
 - Python: 4-space indentation, type hints where practical, `snake_case` for functions/modules, `PascalCase` for classes.
