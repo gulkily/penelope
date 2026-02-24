@@ -944,7 +944,11 @@ async function createTranscriptionUploadSession(blob, filename) {
     }),
   });
   if (!response.ok) {
-    throw new Error(`Upload session failed: ${response.status}`);
+    const detail = await readErrorDetail(response);
+    const message = detail
+      ? `Upload session failed: ${detail}`
+      : `Upload session failed: ${response.status}`;
+    throw new Error(message);
   }
   return response.json();
 }
@@ -985,7 +989,11 @@ async function uploadChunkWithRetry({
         },
       );
       if (!response.ok) {
-        throw new Error(`Chunk upload failed: ${response.status}`);
+        const detail = await readErrorDetail(response);
+        const message = detail
+          ? `Chunk upload failed: ${detail}`
+          : `Chunk upload failed: ${response.status}`;
+        throw new Error(message);
       }
       return response.json();
     } catch (error) {
@@ -1010,7 +1018,11 @@ async function completeChunkedUpload(uploadId, controller) {
     signal: controller?.signal,
   });
   if (!response.ok) {
-    throw new Error(`Completion failed: ${response.status}`);
+    const detail = await readErrorDetail(response);
+    const message = detail
+      ? `Completion failed: ${detail}`
+      : `Completion failed: ${response.status}`;
+    throw new Error(message);
   }
   return response.json();
 }
@@ -1140,7 +1152,8 @@ async function uploadAudioBlob(blob, filename) {
       return;
     }
     console.warn("Upload failed", error);
-    setUploadProgressStatus("Upload failed. Try again.", true);
+    const detail = error?.message ? String(error.message) : "Upload failed. Try again.";
+    setUploadProgressStatus(detail, true);
     resetUploadState();
   } finally {
     setUploadBusy(false);
