@@ -11,6 +11,9 @@ Estimation contract (deterministic):
 from __future__ import annotations
 
 import argparse
+from dataclasses import dataclass
+from datetime import datetime, timezone
+import subprocess
 import sys
 
 MIN_DAY_HOURS = 0.5
@@ -57,10 +60,63 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+@dataclass(frozen=True)
+class CommitEvent:
+    timestamp: datetime
+    author_name: str
+    author_email: str
+
+
+def run_git_log(since: str, until: str, author: str | None) -> str:
+    command = [
+        "git",
+        "log",
+        "--since",
+        since,
+        "--until",
+        until,
+        "--pretty=format:%aI%x09%an%x09%ae",
+    ]
+    if author:
+        command.extend(["--author", author])
+    result = subprocess.run(command, check=False, capture_output=True, text=True)
+    if result.returncode != 0:
+        stderr = result.stderr.strip() or "git log failed."
+        raise RuntimeError(stderr)
+    return result.stdout
+
+
+def load_commit_events(since: str, until: str, author: str | None) -> list[CommitEvent]:
+    raw_log = run_git_log(since=since, until=until, author=author)
+    events: list[CommitEvent] = []
+    for line in raw_log.splitlines():
+        parts = line.split("\t")
+        if len(parts) != 3:
+            continue
+        try:
+            parsed_timestamp = datetime.fromisoformat(parts[0]).astimezone(timezone.utc)
+        except ValueError:
+            continue
+        events.append(
+            CommitEvent(
+                timestamp=parsed_timestamp,
+                author_name=parts[1],
+                author_email=parts[2],
+            )
+        )
+    events.sort(key=lambda event: event.timestamp)
+    return events
+
+
 def main(argv: list[str]) -> int:
-    _ = parse_args(argv)
+    args = parse_args(argv)
+    try:
+        events = load_commit_events(since=args.since, until=args.until, author=args.author)
+    except RuntimeError as exc:
+        print(f"Failed to load git history: {exc}", file=sys.stderr)
+        return 1
     print(
-        "Interface configured. Full git ingestion and estimation logic is implemented in subsequent stages."
+        f"Loaded {len(events)} commit event(s) from {args.since} to {args.until}."
     )
     return 0
 
