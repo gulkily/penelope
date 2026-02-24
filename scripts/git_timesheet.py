@@ -11,18 +11,13 @@ Estimation contract (deterministic):
 from __future__ import annotations
 
 import argparse
-from collections import defaultdict
-import csv
-from dataclasses import dataclass
-from datetime import datetime, timezone
-from io import StringIO
-from pathlib import Path
-import subprocess
 import sys
 
-MIN_DAY_HOURS = 0.5
-MAX_GAP_HOURS = 2.0
-MAX_DAY_HOURS = 8.0
+from git_timesheet_core import calculate_total_hours
+from git_timesheet_core import estimate_daily_hours
+from git_timesheet_core import load_commit_events
+from git_timesheet_core import render_report
+from git_timesheet_core import write_report
 
 
 def parse_args(argv: list[str]) -> argparse.Namespace:
@@ -64,161 +59,6 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-@dataclass(frozen=True)
-class CommitEvent:
-    timestamp: datetime
-    author_name: str
-    author_email: str
-
-
-@dataclass(frozen=True)
-class DailyEstimate:
-    day: str
-    commit_count: int
-    estimated_hours: float
-
-
-def run_git_log(since: str, until: str, author: str | None) -> str:
-    command = [
-        "git",
-        "log",
-        "--since",
-        since,
-        "--until",
-        until,
-        "--pretty=format:%aI%x09%an%x09%ae",
-    ]
-    if author:
-        command.extend(["--author", author])
-    result = subprocess.run(command, check=False, capture_output=True, text=True)
-    if result.returncode != 0:
-        stderr = result.stderr.strip() or "git log failed."
-        raise RuntimeError(stderr)
-    return result.stdout
-
-
-def load_commit_events(since: str, until: str, author: str | None) -> list[CommitEvent]:
-    raw_log = run_git_log(since=since, until=until, author=author)
-    events: list[CommitEvent] = []
-    for line in raw_log.splitlines():
-        parts = line.split("\t")
-        if len(parts) != 3:
-            continue
-        try:
-            parsed_timestamp = datetime.fromisoformat(parts[0]).astimezone(timezone.utc)
-        except ValueError:
-            continue
-        events.append(
-            CommitEvent(
-                timestamp=parsed_timestamp,
-                author_name=parts[1],
-                author_email=parts[2],
-            )
-        )
-    events.sort(key=lambda event: event.timestamp)
-    return events
-
-
-def estimate_day_hours(events_for_day: list[CommitEvent]) -> float:
-    if not events_for_day:
-        return 0.0
-
-    ordered = sorted(events_for_day, key=lambda event: event.timestamp)
-    estimated = MIN_DAY_HOURS
-    for previous, current in zip(ordered, ordered[1:]):
-        gap_hours = (current.timestamp - previous.timestamp).total_seconds() / 3600.0
-        if gap_hours <= 0:
-            continue
-        estimated += min(gap_hours, MAX_GAP_HOURS)
-    return min(estimated, MAX_DAY_HOURS)
-
-
-def estimate_daily_hours(events: list[CommitEvent]) -> list[DailyEstimate]:
-    grouped: dict[str, list[CommitEvent]] = defaultdict(list)
-    for event in events:
-        day_key = event.timestamp.date().isoformat()
-        grouped[day_key].append(event)
-
-    estimates: list[DailyEstimate] = []
-    for day_key in sorted(grouped.keys()):
-        day_events = grouped[day_key]
-        estimates.append(
-            DailyEstimate(
-                day=day_key,
-                commit_count=len(day_events),
-                estimated_hours=round(estimate_day_hours(day_events), 2),
-            )
-        )
-    return estimates
-
-
-def calculate_total_hours(days: list[DailyEstimate]) -> float:
-    return round(sum(day.estimated_hours for day in days), 2)
-
-
-def render_text_report(
-    days: list[DailyEstimate], total_hours: float, since: str, until: str, author: str | None
-) -> str:
-    lines = [f"Timesheet estimate for {since} to {until}"]
-    if author:
-        lines.append(f"Author filter: {author}")
-    lines.append("")
-    if not days:
-        lines.append("No commits found in the requested range.")
-        lines.append("TOTAL estimated_hours=0.00")
-        return "\n".join(lines)
-
-    lines.append("DATE         COMMITS  ESTIMATED_HOURS")
-    for day in days:
-        lines.append(f"{day.day}  {day.commit_count:>7}  {day.estimated_hours:>15.2f}")
-    lines.append("")
-    lines.append(f"TOTAL estimated_hours={total_hours:.2f}")
-    return "\n".join(lines)
-
-
-def render_csv_report(days: list[DailyEstimate], total_hours: float) -> str:
-    buffer = StringIO()
-    writer = csv.writer(buffer)
-    writer.writerow(["date", "commit_count", "estimated_hours"])
-    for day in days:
-        writer.writerow([day.day, day.commit_count, f"{day.estimated_hours:.2f}"])
-    writer.writerow(["TOTAL", "", f"{total_hours:.2f}"])
-    return buffer.getvalue().strip()
-
-
-def render_markdown_report(days: list[DailyEstimate], total_hours: float) -> str:
-    lines = [
-        "| Date | Commits | Estimated Hours |",
-        "| --- | ---: | ---: |",
-    ]
-    for day in days:
-        lines.append(f"| {day.day} | {day.commit_count} | {day.estimated_hours:.2f} |")
-    lines.append(f"| **TOTAL** |  | **{total_hours:.2f}** |")
-    return "\n".join(lines)
-
-
-def render_report(
-    days: list[DailyEstimate],
-    total_hours: float,
-    fmt: str,
-    since: str,
-    until: str,
-    author: str | None,
-) -> str:
-    if fmt == "text":
-        return render_text_report(days, total_hours, since, until, author)
-    if fmt == "csv":
-        return render_csv_report(days, total_hours)
-    if fmt == "markdown":
-        return render_markdown_report(days, total_hours)
-    raise ValueError(f"Unsupported format: {fmt}")
-
-
-def write_report(content: str, output_path: str) -> None:
-    path = Path(output_path)
-    path.write_text(f"{content}\n", encoding="utf-8")
-
-
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
@@ -226,6 +66,7 @@ def main(argv: list[str]) -> int:
     except RuntimeError as exc:
         print(f"Failed to load git history: {exc}", file=sys.stderr)
         return 1
+
     daily_estimates = estimate_daily_hours(events)
     total_hours = calculate_total_hours(daily_estimates)
     report = render_report(

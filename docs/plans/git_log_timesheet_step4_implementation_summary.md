@@ -39,6 +39,7 @@
   - Added text, CSV, and Markdown report renderers.
   - Added format router `render_report(...)` and file output helper `write_report(...)`.
   - Added optional `--output` file path support while preserving terminal output when no file is specified.
+  - Refactored report/estimation internals into `scripts/git_timesheet_core.py` to keep Python modules within project size guidelines.
 - Verification:
   - Ran text output: `python3 scripts/git_timesheet.py --since 2026-02-20 --until 2026-02-24`.
   - Ran CSV export: `python3 scripts/git_timesheet.py --since 2026-02-20 --until 2026-02-24 --format csv --output /tmp/timesheet.csv`.
