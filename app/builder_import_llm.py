@@ -12,6 +12,7 @@ from app.builder_import_transform import SectionPayloads
 
 DEFAULT_IMPORT_LLM_MODEL = "openai/gpt-5.2"
 BASE_DIR = Path(__file__).resolve().parent.parent
+PROMPT_DIR = Path(__file__).resolve().parent / "prompts"
 
 try:
     from dotenv import load_dotenv
@@ -43,6 +44,21 @@ def _format_section_text(week_of: str, text: str) -> str:
     if not candidate:
         return ""
     return candidate
+
+
+def _load_prompt(name: str) -> str:
+    return (PROMPT_DIR / name).read_text(encoding="utf-8").strip()
+
+
+def _build_user_prompt(checkin: SourceCheckinRecord) -> str:
+    return _load_prompt("builder_import_user.txt").format(
+        week_of=checkin.week_of,
+        positive_summary=checkin.positive_summary,
+        blockers_text=checkin.blockers_text,
+        traction_text=checkin.traction_text,
+        llm_summary=checkin.llm_summary,
+        textual_data=checkin.textual_data,
+    )
 
 
 def _get_dedalus_client():
@@ -107,25 +123,16 @@ def _run_enrichment(
     timeout_seconds: float,
 ) -> CheckinEnrichment:
     client = _get_dedalus_client()
+    system_prompt = _load_prompt("builder_import_system.txt")
+    user_prompt = _build_user_prompt(checkin)
     messages = [
         {
             "role": "system",
-            "content": (
-                "You are cleaning and restructuring weekly founder update text. "
-                "Return concise plain text for summary, challenges, milestones, and opportunities. "
-                "Do not fabricate facts. Use empty string when a section has no supported content."
-            ),
+            "content": system_prompt,
         },
         {
             "role": "user",
-            "content": (
-                f"Week of: {checkin.week_of}\n"
-                f"positive_summary:\n{checkin.positive_summary}\n\n"
-                f"blockers_text:\n{checkin.blockers_text}\n\n"
-                f"traction_text:\n{checkin.traction_text}\n\n"
-                f"llm_summary:\n{checkin.llm_summary}\n\n"
-                f"textual_data:\n{checkin.textual_data}\n"
-            ),
+            "content": user_prompt,
         },
     ]
     try:

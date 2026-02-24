@@ -1,0 +1,15 @@
+Week of: {week_of}
+positive_summary:
+{positive_summary}
+
+blockers_text:
+{blockers_text}
+
+traction_text:
+{traction_text}
+
+llm_summary:
+{llm_summary}
+
+textual_data:
+{textual_data}
