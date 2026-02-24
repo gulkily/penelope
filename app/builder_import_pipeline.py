@@ -68,9 +68,9 @@ def build_objective_seed(builder: SourceBuilderRecord) -> str:
     metric = builder.north_star_metric_name.strip()
     unit = builder.north_star_metric_unit.strip()
     if metric and unit:
-        return f"North Star: {metric} ({unit})."
+        return f"{metric} ({unit})"
     if metric:
-        return f"North Star: {metric}."
+        return f"{metric}"
     return ""
 
 
