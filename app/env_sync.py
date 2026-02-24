@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 _ACTIVE_ASSIGNMENT_RE = re.compile(r"^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$")
 _COMMENTED_ASSIGNMENT_RE = re.compile(
-    r"^\s*#\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=(.*)$"
+    r"^\s*#\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(?!>)(.*)$"
 )
 _SYNC_NOTE = "# Added automatically from .env.example via ./pnl env-sync."
 
