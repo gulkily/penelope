@@ -9,6 +9,7 @@ from app import auth
 from app.feature_flags import get_feature_flags
 from app.magic_link_service import issue_magic_link as issue_magic_link_service
 from app.schemas import (
+    AdminUserListResponse,
     AuthRegisterRequest,
     AuthRegisterResponse,
     AuthStatusResponse,
@@ -315,6 +316,29 @@ def auth_me(request: Request) -> dict:
     session = _require_session(request)
     account = db.get_account(session.account_id)
     return {"account": {"id": account["id"], "username": account["username"]}}
+
+
+@router.get("/auth/users", response_model=AdminUserListResponse)
+def list_users(request: Request, limit: int = 200, offset: int = 0) -> dict:
+    _require_admin(request)
+    safe_limit = max(1, min(limit, 500))
+    safe_offset = max(0, offset)
+    rows = db.list_accounts(limit=safe_limit, offset=safe_offset)
+    entries = [
+        {
+            "id": row["id"],
+            "username": row["username"],
+            "created_at": row["created_at"],
+            "is_admin": auth.is_admin_account(row["id"]),
+        }
+        for row in rows
+    ]
+    return {
+        "entries": entries,
+        "total": db.count_accounts(),
+        "limit": safe_limit,
+        "offset": safe_offset,
+    }
 
 
 @router.post("/auth/lobby/{request_id}/approve", response_model=LobbyDecisionResponse)
