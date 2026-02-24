@@ -14,6 +14,8 @@ const HOUSE_FILTER_STORAGE_KEY = "houseFilter";
 const ALL_HOUSES_FILTER = "All houses";
 const HOUSE_OPTIONS = ["Unassigned", "Actioners", "SF2"];
 const HOUSE_FILTER_OPTIONS = [ALL_HOUSES_FILTER, ...HOUSE_OPTIONS];
+const CAN_EDIT_RESIDENT_NOTES =
+  document.body.dataset.canEditResidentNotes === "true";
 
 const state = {
   projectId: null,
@@ -38,9 +40,11 @@ const progressSlider = document.getElementById("progress-slider");
 const progressPercent = document.getElementById("progress-percent");
 const emptyState = document.getElementById("empty-state");
 const summaryInput = document.getElementById("summary-input");
+const summaryDisplay = document.getElementById("summary-display");
 const objectiveInput = document.getElementById("objective-input");
 const goalInput = document.getElementById("goal-input");
 const questionsInput = document.getElementById("questions-input");
+const questionsDisplay = document.getElementById("questions-display");
 const inlineAddButtons = document.querySelectorAll(".inline-add-button");
 const inlineAddInputs = document.querySelectorAll(".inline-add-input");
 const undoToast = document.getElementById("undo-toast");
@@ -169,10 +173,16 @@ function toggleReorderControls(enabled) {
 function setInteractivity(enabled) {
   toggleInlineAdds(enabled);
   progressSlider.disabled = !enabled;
-  summaryInput.disabled = !enabled;
+  if (summaryInput) {
+    summaryInput.disabled = !enabled;
+    summaryInput.readOnly = !enabled || !CAN_EDIT_RESIDENT_NOTES;
+  }
   objectiveInput.disabled = !enabled;
   goalInput.disabled = !enabled;
-  questionsInput.disabled = !enabled;
+  if (questionsInput) {
+    questionsInput.disabled = !enabled;
+    questionsInput.readOnly = !enabled || !CAN_EDIT_RESIDENT_NOTES;
+  }
   progressGraphToggle.disabled = !enabled;
   toggleReorderControls(enabled);
   if (transcriptOpen) {
@@ -1333,6 +1343,7 @@ function renderTranscriptSuggestions(proposal) {
   });
 
   if (
+    CAN_EDIT_RESIDENT_NOTES &&
     proposal.summary !== null &&
     proposal.summary !== undefined &&
     hasMeaningfulText(proposal.summary) &&
@@ -1351,6 +1362,7 @@ function renderTranscriptSuggestions(proposal) {
   }
 
   if (
+    CAN_EDIT_RESIDENT_NOTES &&
     proposal.questions !== null &&
     proposal.questions !== undefined &&
     hasMeaningfulText(proposal.questions) &&
@@ -1549,6 +1561,13 @@ function collectTranscriptUpdates() {
         }
         updates.items_to_add.push({ section, text: rawValue });
         hasUpdates = true;
+        return;
+      }
+
+      if (
+        !CAN_EDIT_RESIDENT_NOTES &&
+        (field === "summary" || field === "questions")
+      ) {
         return;
       }
 
@@ -2042,9 +2061,9 @@ function resetEmptyState() {
   clearProgressGraph();
   setGraphExpanded(false);
   renderSections({});
-  summaryInput.value = "";
+  setSummaryFieldValue("");
   objectiveInput.value = "";
-  questionsInput.value = "";
+  setQuestionsFieldValue("");
   hideUndoToast();
   closeTranscriptDialog();
 }
@@ -2436,13 +2455,36 @@ function positionUndoToast(anchor) {
   undoToast.style.left = `${Math.round(left)}px`;
 }
 
+function formatReadonlyFieldText(value) {
+  const text = String(value || "").trim();
+  return text || "-";
+}
+
+function setSummaryFieldValue(value) {
+  if (summaryInput) {
+    summaryInput.value = value || "";
+  }
+  if (summaryDisplay) {
+    summaryDisplay.textContent = formatReadonlyFieldText(value);
+  }
+}
+
+function setQuestionsFieldValue(value) {
+  if (questionsInput) {
+    questionsInput.value = value || "";
+  }
+  if (questionsDisplay) {
+    questionsDisplay.textContent = formatReadonlyFieldText(value);
+  }
+}
+
 function renderProject(project) {
   const goalValue = normalizeGoal(project.goal);
   goalInput.value = String(goalValue);
   updateProgressDisplay(project.progress, goalValue);
   objectiveInput.value = project.objective || "";
-  summaryInput.value = project.summary || "";
-  questionsInput.value = project.questions || "";
+  setSummaryFieldValue(project.summary);
+  setQuestionsFieldValue(project.questions);
   updateGraphBounds(project);
   renderSections(project.sections || {});
 }
@@ -2550,7 +2592,7 @@ function scheduleGoalSave(goalValue) {
 }
 
 function scheduleQuestionsSave() {
-  if (!state.projectId) {
+  if (!state.projectId || !CAN_EDIT_RESIDENT_NOTES || !questionsInput) {
     return;
   }
   if (state.questionTimer) {
@@ -2566,7 +2608,7 @@ function scheduleQuestionsSave() {
 }
 
 function scheduleSummarySave() {
-  if (!state.projectId) {
+  if (!state.projectId || !CAN_EDIT_RESIDENT_NOTES || !summaryInput) {
     return;
   }
   if (state.summaryTimer) {
@@ -3023,8 +3065,12 @@ progressSlider.addEventListener("input", (event) => {
 
 objectiveInput.addEventListener("input", scheduleObjectiveSave);
 goalInput.addEventListener("input", handleGoalInput);
-questionsInput.addEventListener("input", scheduleQuestionsSave);
-summaryInput.addEventListener("input", scheduleSummarySave);
+if (questionsInput) {
+  questionsInput.addEventListener("input", scheduleQuestionsSave);
+}
+if (summaryInput) {
+  summaryInput.addEventListener("input", scheduleSummarySave);
+}
 
 setInteractivity(false);
 resetEmptyState();

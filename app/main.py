@@ -94,12 +94,16 @@ app.include_router(transcription_router, prefix="/api")
 
 def _build_template_context(request: Request, current_page: str) -> dict:
     session_account = getattr(request.state, "session_account", None)
+    session_is_admin = (
+        auth.is_admin_account(session_account.account_id) if session_account else False
+    )
     feature_flags = get_feature_flags()
     navbar_items = _build_navbar_items(set(feature_flags.navbar_enabled_items))
     return {
         "request": request,
         "current_page": current_page,
         "session_account": session_account,
+        "session_is_admin": session_is_admin,
         "navbar_items": navbar_items,
         "lobby_auth_enabled": feature_flags.lobby_auth_enabled,
         "recorder_enabled": feature_flags.recorder_enabled,

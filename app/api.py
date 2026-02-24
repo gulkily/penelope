@@ -1,8 +1,9 @@
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import FileResponse
 
+from app import auth
 from app import db
 from app.schemas import (
     GoalUpdate,
@@ -21,6 +22,14 @@ from app.schemas import (
 
 router = APIRouter()
 PROJECTS_PAGE_SIZE = 100
+
+
+def _require_admin(request: Request) -> None:
+    session = getattr(request.state, "session_account", None)
+    if not session:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    if not auth.is_admin_account(session.account_id):
+        raise HTTPException(status_code=403, detail="Admin access required")
 
 
 @router.get("/backup")
@@ -156,7 +165,8 @@ def delete_item(item_id: int) -> dict:
 
 
 @router.put("/projects/{project_id}/questions")
-def update_questions(project_id: int, payload: QuestionsUpdate) -> dict:
+def update_questions(project_id: int, payload: QuestionsUpdate, request: Request) -> dict:
+    _require_admin(request)
     project = db.get_project(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Resident not found")
@@ -165,7 +175,8 @@ def update_questions(project_id: int, payload: QuestionsUpdate) -> dict:
 
 
 @router.put("/projects/{project_id}/summary")
-def update_summary(project_id: int, payload: SummaryUpdate) -> dict:
+def update_summary(project_id: int, payload: SummaryUpdate, request: Request) -> dict:
+    _require_admin(request)
     project = db.get_project(project_id)
     if not project:
         raise HTTPException(status_code=404, detail="Resident not found")

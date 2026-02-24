@@ -13,7 +13,7 @@
     {% endif %}
     <script src="/static/js/app.js" defer></script>
   </head>
-  <body>
+  <body data-can-edit-resident-notes="{{ 'true' if session_is_admin else 'false' }}">
     <main class="page">
       {% include "partials/top_nav.html" with context %}
       <section class="card card-compact project-card">
@@ -41,6 +41,7 @@
             </div>
           </div>
           <div class="field field-full">
+            {% if session_is_admin %}
             <label class="field-label" for="summary-input">Resident Summary</label>
             <textarea
               id="summary-input"
@@ -49,12 +50,17 @@
               autocomplete="off"
               placeholder="Capture a short resident summary..."
             ></textarea>
+            {% else %}
+            <p class="field-label">Resident Summary</p>
+            <p id="summary-display" class="readonly-paragraph">-</p>
+            {% endif %}
           </div>
         </header>
       </section>
 
       <section class="card card-compact">
         <div class="questions">
+          {% if session_is_admin %}
           <label class="field-label" for="questions-input">Questions</label>
           <textarea
             id="questions-input"
@@ -63,6 +69,10 @@
             autocomplete="off"
             placeholder="Capture any open questions, risks, or clarifications needed..."
           ></textarea>
+          {% else %}
+          <p class="field-label">Questions</p>
+          <p id="questions-display" class="readonly-paragraph">-</p>
+          {% endif %}
         </div>
       </section>
 

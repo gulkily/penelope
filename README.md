@@ -65,6 +65,7 @@ Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
 - Settings includes a database backup download for saving recovery copies.
 - Settings includes admin tools to generate one-click magic login links with preconfigured usernames.
 - Settings includes a read-only Users page that lists accounts and shows current admin status.
+- Resident Summary and Questions fields are read-only for non-admin users.
 - The North Star objective can be updated per resident via the Save button.
 - The North Star goal value sets the progress slider range per resident.
 - Progress updates happen immediately via the integrated slider.
