@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Users</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="/static/css/main.css" />
+    <script src="/static/js/theme.js" defer></script>
+    {% if lobby_auth_enabled %}
+    <script src="/static/js/lobby-indicator.js" defer></script>
+    {% endif %}
+    <script src="/static/js/logout.js" defer></script>
+    <script src="/static/js/users.js" defer></script>
+  </head>
+  <body>
+    <main class="page">
+      {% include "partials/top_nav.html" with context %}
+      <header class="page-header">
+        <div>
+          <h1>Users</h1>
+          <p class="hint">Read-only account roster and admin status.</p>
+        </div>
+      </header>
+
+      <section class="card">
+        <div class="table-wrapper">
+          <table class="project-table">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Role</th>
+                <th>Created</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body"></tbody>
+          </table>
+        </div>
+        <p class="hint" id="users-empty" hidden>No users found.</p>
+        <p class="hint" id="users-status" role="status" aria-live="polite"></p>
+      </section>
+    </main>
+    <button type="button" class="theme-toggle" id="theme-toggle">
+      System
+    </button>
+  </body>
+</html>

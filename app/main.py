@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 from dotenv import load_dotenv
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
@@ -235,6 +235,17 @@ def settings(request: Request) -> HTMLResponse:
 def magic_links(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         "magic_links.html",
+        _build_template_context(request, "settings"),
+    )
+
+
+@app.get("/settings/users", response_class=HTMLResponse)
+def users(request: Request) -> HTMLResponse:
+    session = getattr(request.state, "session_account", None)
+    if not session or not auth.is_admin_account(session.account_id):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return templates.TemplateResponse(
+        "users.html",
         _build_template_context(request, "settings"),
     )
 
