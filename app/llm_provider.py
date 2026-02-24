@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 
-from app.schemas import TranscriptUpdateProposal
+from app.schemas import QuestionsRegenerationProposal, TranscriptUpdateProposal
 
 DEFAULT_LLM_MODEL = "openai/gpt-4o-mini"
 
@@ -45,3 +45,25 @@ async def run_transcript_llm(messages: list[dict]) -> TranscriptUpdateProposal:
         raise LLMProviderError("Dedalus returned no parsed output.")
 
     return parsed
+
+
+async def run_questions_llm(messages: list[dict]) -> str:
+    client = _get_dedalus_client()
+    model = os.getenv("LLM_MODEL", DEFAULT_LLM_MODEL).strip() or DEFAULT_LLM_MODEL
+
+    completion = await client.chat.completions.parse(
+        model=model,
+        messages=messages,
+        response_format=QuestionsRegenerationProposal,
+        temperature=0,
+    )
+
+    try:
+        parsed = completion.choices[0].message.parsed
+    except (AttributeError, IndexError) as exc:
+        raise LLMProviderError("Dedalus returned an empty response.") from exc
+
+    if parsed is None or not parsed.questions.strip():
+        raise LLMProviderError("Dedalus returned no generated questions.")
+
+    return parsed.questions.strip()

@@ -1,0 +1,9 @@
+Return a JSON object with this shape:
+- questions: string
+
+Rules:
+- `questions` must contain 3 to 5 follow-up questions.
+- Format as one question per line.
+- Each line must end with a question mark.
+- Keep each question concise and specific.
+- Do not include headings, bullets, numbering, or extra commentary.

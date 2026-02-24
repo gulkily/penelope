@@ -124,6 +124,31 @@ class TranscriptUpdateResponse(BaseModel):
     proposal: TranscriptUpdateProposal
 
 
+class QuestionsRegenerationProposal(BaseModel):
+    questions: str = Field(..., min_length=1, description="Generated follow-up questions.")
+
+
+QuestionsRegenerationStatus = Literal["queued", "running", "completed", "failed"]
+
+
+class QuestionsRegenerationStartResponse(BaseModel):
+    job_id: str = Field(..., description="Questions regeneration job identifier.")
+    status: QuestionsRegenerationStatus = Field(..., description="Current job status.")
+
+
+class QuestionsRegenerationStatusResponse(BaseModel):
+    job_id: str = Field(..., description="Questions regeneration job identifier.")
+    status: QuestionsRegenerationStatus = Field(..., description="Current job status.")
+    questions: str | None = Field(
+        None,
+        description="Generated questions when status is completed.",
+    )
+    error: str | None = Field(
+        None,
+        description="Error detail when status is failed.",
+    )
+
+
 class TranscriptionResponse(BaseModel):
     text: str = Field("", description="Transcribed text.")
     status: str = Field("complete", description="Status: queued|processing|complete|error.")

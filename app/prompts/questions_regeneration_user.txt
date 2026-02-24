@@ -1,0 +1,9 @@
+Resident: {resident_name}
+
+Current resident data:
+{project_context}
+
+Recent progress history (oldest to newest):
+{progress_history}
+
+Generate fresh follow-up questions using the rules provided.
