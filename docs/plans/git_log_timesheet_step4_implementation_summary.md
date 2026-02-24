@@ -45,3 +45,13 @@
   - Ran Markdown output and confirmed totals matched text/CSV outputs for the same range.
 - Notes:
   - Export path writes plain UTF-8 text; parent directory creation is not automatic.
+
+## Stage 5 - Document usage and run smoke validation
+- Changes:
+  - Updated `README.md` with standalone script commands, author filtering, export usage, and estimation assumptions.
+  - Updated `AGENTS.md` command guidance to include the new `scripts/git_timesheet.py` workflow.
+- Verification:
+  - Ran documented command `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24`.
+  - Confirmed report output included per-day estimates and total hours.
+- Notes:
+  - This feature remains outside the FastAPI application surface as requested.
