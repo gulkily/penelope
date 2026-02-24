@@ -2592,6 +2592,9 @@ async function startQuestionsRegeneration(projectId) {
   const data = await requestJSON(`/api/projects/${projectId}/questions/regenerate`, {
     method: "POST",
   });
+  if (state.projectId !== projectId) {
+    return;
+  }
   const jobId = String(data.job_id || "").trim();
   if (!jobId) {
     throw new Error("Missing regeneration job id");

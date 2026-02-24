@@ -58,6 +58,7 @@
 ## Stage 5 - Regression coverage and operator checks
 - Changes:
   - Hardened prompt context formatting in `app/questions_prompts.py` to safely handle non-numeric goal/progress/history values without raising parsing errors.
+  - Added a frontend guard in `startQuestionsRegeneration(projectId)` to skip stale polling/status attachment if the active resident changed before regeneration startup returned.
   - Finalized implementation notes and prepared manual operator smoke checks for transcript apply + Questions regeneration states.
 - Verification:
   - Ran `python -m py_compile app/questions_prompts.py app/questions_ai.py app/questions_regeneration_jobs.py app/api_transcript.py app/llm_provider.py app/schemas.py`.
