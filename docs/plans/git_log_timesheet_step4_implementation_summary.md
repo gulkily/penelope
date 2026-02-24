@@ -33,3 +33,15 @@
   - Confirmed repeat runs over unchanged git history produced identical per-day and total values.
 - Notes:
   - Day grouping is based on normalized UTC timestamps from Stage 2.
+
+## Stage 4 - Add report rendering and export output
+- Changes:
+  - Added text, CSV, and Markdown report renderers.
+  - Added format router `render_report(...)` and file output helper `write_report(...)`.
+  - Added optional `--output` file path support while preserving terminal output when no file is specified.
+- Verification:
+  - Ran text output: `python3 scripts/git_timesheet.py --since 2026-02-20 --until 2026-02-24`.
+  - Ran CSV export: `python3 scripts/git_timesheet.py --since 2026-02-20 --until 2026-02-24 --format csv --output /tmp/timesheet.csv`.
+  - Ran Markdown output and confirmed totals matched text/CSV outputs for the same range.
+- Notes:
+  - Export path writes plain UTF-8 text; parent directory creation is not automatic.

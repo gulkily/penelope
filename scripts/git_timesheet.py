@@ -12,8 +12,11 @@ from __future__ import annotations
 
 import argparse
 from collections import defaultdict
+import csv
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from io import StringIO
+from pathlib import Path
 import subprocess
 import sys
 
@@ -153,6 +156,69 @@ def calculate_total_hours(days: list[DailyEstimate]) -> float:
     return round(sum(day.estimated_hours for day in days), 2)
 
 
+def render_text_report(
+    days: list[DailyEstimate], total_hours: float, since: str, until: str, author: str | None
+) -> str:
+    lines = [f"Timesheet estimate for {since} to {until}"]
+    if author:
+        lines.append(f"Author filter: {author}")
+    lines.append("")
+    if not days:
+        lines.append("No commits found in the requested range.")
+        lines.append("TOTAL estimated_hours=0.00")
+        return "\n".join(lines)
+
+    lines.append("DATE         COMMITS  ESTIMATED_HOURS")
+    for day in days:
+        lines.append(f"{day.day}  {day.commit_count:>7}  {day.estimated_hours:>15.2f}")
+    lines.append("")
+    lines.append(f"TOTAL estimated_hours={total_hours:.2f}")
+    return "\n".join(lines)
+
+
+def render_csv_report(days: list[DailyEstimate], total_hours: float) -> str:
+    buffer = StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(["date", "commit_count", "estimated_hours"])
+    for day in days:
+        writer.writerow([day.day, day.commit_count, f"{day.estimated_hours:.2f}"])
+    writer.writerow(["TOTAL", "", f"{total_hours:.2f}"])
+    return buffer.getvalue().strip()
+
+
+def render_markdown_report(days: list[DailyEstimate], total_hours: float) -> str:
+    lines = [
+        "| Date | Commits | Estimated Hours |",
+        "| --- | ---: | ---: |",
+    ]
+    for day in days:
+        lines.append(f"| {day.day} | {day.commit_count} | {day.estimated_hours:.2f} |")
+    lines.append(f"| **TOTAL** |  | **{total_hours:.2f}** |")
+    return "\n".join(lines)
+
+
+def render_report(
+    days: list[DailyEstimate],
+    total_hours: float,
+    fmt: str,
+    since: str,
+    until: str,
+    author: str | None,
+) -> str:
+    if fmt == "text":
+        return render_text_report(days, total_hours, since, until, author)
+    if fmt == "csv":
+        return render_csv_report(days, total_hours)
+    if fmt == "markdown":
+        return render_markdown_report(days, total_hours)
+    raise ValueError(f"Unsupported format: {fmt}")
+
+
+def write_report(content: str, output_path: str) -> None:
+    path = Path(output_path)
+    path.write_text(f"{content}\n", encoding="utf-8")
+
+
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
@@ -162,13 +228,25 @@ def main(argv: list[str]) -> int:
         return 1
     daily_estimates = estimate_daily_hours(events)
     total_hours = calculate_total_hours(daily_estimates)
+    report = render_report(
+        days=daily_estimates,
+        total_hours=total_hours,
+        fmt=args.format,
+        since=args.since,
+        until=args.until,
+        author=args.author,
+    )
 
-    print(f"Timesheet estimate for {args.since} to {args.until}")
-    for day in daily_estimates:
-        print(
-            f"{day.day} commits={day.commit_count} estimated_hours={day.estimated_hours:.2f}"
-        )
-    print(f"TOTAL estimated_hours={total_hours:.2f}")
+    if args.output:
+        try:
+            write_report(report, args.output)
+        except OSError as exc:
+            print(f"Failed to write report: {exc}", file=sys.stderr)
+            return 1
+        print(f"Wrote {args.format} report to {args.output}")
+        return 0
+
+    print(report)
     return 0
 
 
