@@ -44,6 +44,12 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 5. Optional: run in parallel with `pytest -n 4` or `./pnl test --workers 4` (uses the current database).
 6. Optional: loop tests with `./pnl test --loop 10 --workers 2` or `python scripts/run_e2e_loop.py 10 --workers 2`.
 
+## Generate test audio
+Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
+- `python scripts/generate_test_audio.py --script-path tests/fixtures/transcripts/long_conversation_15min_all_fields_script.txt --output-path tests/fixtures/audio/long_conversation_15min_all_fields.wav`
+- Requires `DEDALUS_API_KEY` (in env or `.env`).
+- Use `python scripts/generate_test_audio.py --help` for voice/model/chunk options.
+
 ## Test coverage matrix
 - See `docs/test_matrix.md` for frontend flow coverage and gaps.
 
