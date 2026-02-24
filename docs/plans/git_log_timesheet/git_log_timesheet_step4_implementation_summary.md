@@ -51,6 +51,7 @@
 - Changes:
   - Updated `README.md` with standalone script commands, author filtering, export usage, and estimation assumptions.
   - Updated `AGENTS.md` command guidance to include the new `scripts/git_timesheet.py` workflow.
+  - Added progress logging in `scripts/git_timesheet.py` so major execution steps are reported to `stderr`.
 - Verification:
   - Ran documented command `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24`.
   - Confirmed report output included per-day estimates and total hours.

@@ -20,6 +20,10 @@ from git_timesheet_core import render_report
 from git_timesheet_core import write_report
 
 
+def log_step(message: str) -> None:
+    print(f"[git-timesheet] {message}", file=sys.stderr)
+
+
 def parse_args(argv: list[str]) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         prog="git_timesheet",
@@ -67,14 +71,20 @@ def parse_args(argv: list[str]) -> argparse.Namespace:
 
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
+    log_step(
+        f"Loading commits from git log (since={args.since}, until={args.until}, author={args.author or 'any'})"
+    )
     try:
         events = load_commit_events(since=args.since, until=args.until, author=args.author)
     except RuntimeError as exc:
         print(f"Failed to load git history: {exc}", file=sys.stderr)
         return 1
 
+    log_step(f"Loaded {len(events)} commit(s); estimating daily hours")
     daily_estimates = estimate_daily_hours(events)
     total_hours = calculate_total_hours(daily_estimates)
+    log_step(f"Calculated {len(daily_estimates)} day estimate(s), total={total_hours:.2f}h")
+    log_step(f"Rendering report format: {args.format}")
     report = render_report(
         days=daily_estimates,
         total_hours=total_hours,
@@ -85,6 +95,7 @@ def main(argv: list[str]) -> int:
     )
 
     if args.output:
+        log_step(f"Writing report to {args.output}")
         try:
             write_report(report, args.output)
         except OSError as exc:
@@ -93,6 +104,7 @@ def main(argv: list[str]) -> int:
         print(f"Wrote {args.format} report to {args.output}")
         return 0
 
+    log_step("Printing report to stdout")
     print(report)
     return 0
 
