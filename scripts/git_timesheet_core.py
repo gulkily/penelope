@@ -11,7 +11,7 @@ from pathlib import Path
 import subprocess
 
 MIN_DAY_HOURS = 0.5
-MAX_GAP_HOURS = 2.0
+MAX_GAP_HOURS = 0.5
 MAX_DAY_HOURS = 8.0
 
 

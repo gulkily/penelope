@@ -31,7 +31,8 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24` to run a specific date range.
 - `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24 --author \"Jane Doe\"` to filter by author.
 - `python3 scripts/git_timesheet.py --since 2026-02-17 --until 2026-02-24 --format csv --output timesheet.csv` to export CSV.
-- Estimation assumptions are deterministic: commits are grouped by UTC day, each active day has a 0.5h minimum, commit gaps are capped at 2.0h each, and daily totals are capped at 8.0h.
+- Estimator details: the estimator groups commits by UTC day, gives each active day a 0.5-hour baseline, then adds elapsed time between consecutive commits with each gap capped at 0.5 hours.
+- Each day is capped at 8.0 total hours, and the script sums those daily estimates into the final range total deterministically.
 
 ## Public hosting
 - Server setup guide: `docs/production_install.md`
