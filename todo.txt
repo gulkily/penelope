@@ -88,8 +88,8 @@ Roadmap:
 lobby_badge_realtime_step1_solution_assessment.md
 
 bug
-	Unset=> all optional nav items enabled.
-	in .env still added by env-sync
+	Unset=> all optional nav items enabled. x
+	in .env still added by env-sync x
 
 assign each community leader to a house, and remove house selector x
 
@@ -98,8 +98,8 @@ re-check the file upload x
 show confetti after the upload is added x
 	instead of when the north start status is updated x
 
-are original values included in the prompting?
-	yes
+are original values included in the prompting? x
+	yes x
 
 get rid of [import] notes in questions
 
