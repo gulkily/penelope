@@ -1,0 +1,69 @@
+#!/usr/bin/env python3
+"""Generate basic estimated-hours timesheets from git history.
+
+Estimation contract (deterministic):
+- Group commits by UTC calendar day.
+- Base minimum of 0.5 hours for any day with at least one commit.
+- Add time gaps between consecutive commits, capped at 2.0 hours per gap.
+- Cap each day at 8.0 estimated hours.
+"""
+
+from __future__ import annotations
+
+import argparse
+import sys
+
+MIN_DAY_HOURS = 0.5
+MAX_GAP_HOURS = 2.0
+MAX_DAY_HOURS = 8.0
+
+
+def parse_args(argv: list[str]) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(
+        prog="git_timesheet",
+        description="Generate a basic timesheet estimate from git log history.",
+        epilog=(
+            "Examples:\n"
+            "  python scripts/git_timesheet.py --since 2026-02-01 --until 2026-02-07\n"
+            "  python scripts/git_timesheet.py --since 2026-02-01 --until 2026-02-07 --author 'Jane Doe'\n"
+            "  python scripts/git_timesheet.py --since 2026-02-01 --until 2026-02-07 --format csv --output timesheet.csv\n"
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    parser.add_argument(
+        "--since",
+        required=True,
+        help="Start date/time for git log filtering (passed to git --since).",
+    )
+    parser.add_argument(
+        "--until",
+        required=True,
+        help="End date/time for git log filtering (passed to git --until).",
+    )
+    parser.add_argument(
+        "--author",
+        help="Optional author filter (name or email pattern; passed to git --author).",
+    )
+    parser.add_argument(
+        "--format",
+        choices=["text", "csv", "markdown"],
+        default="text",
+        help="Output format (default: text).",
+    )
+    parser.add_argument(
+        "--output",
+        help="Optional file path to write the generated report.",
+    )
+    return parser.parse_args(argv)
+
+
+def main(argv: list[str]) -> int:
+    _ = parse_args(argv)
+    print(
+        "Interface configured. Full git ingestion and estimation logic is implemented in subsequent stages."
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main(sys.argv[1:]))
