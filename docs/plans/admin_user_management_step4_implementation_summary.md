@@ -30,3 +30,13 @@
   - Ran `rg -n ...` checks to confirm Settings link wiring and users page script/api references.
 - Notes:
   - Users page is intentionally read-only; no permission mutation controls were introduced.
+
+## Stage 4 - Access-control regression checks and rollout notes
+- Changes:
+  - Updated `README.md` notes to document the new Settings Users page and clarify that admin status display is driven by `MAGIC_LINK_ADMIN_USERNAMES` runtime logic.
+  - Confirmed both page and API surfaces use admin gating (`_require_admin` for API and `auth.is_admin_account` check for page route).
+- Verification:
+  - Ran `rg -n ...` checks in `app/api_auth.py` and `app/main.py` to confirm explicit admin checks on both `/api/auth/users` and `/settings/users`.
+  - Per process guardrails, no new automated tests were added in Step 4.
+- Notes:
+  - Manual browser validation (admin vs non-admin sessions) still needs to be performed in a running app environment.

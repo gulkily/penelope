@@ -64,6 +64,7 @@ Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
 - Project Management lists are paginated at 100 items per page with next/previous controls.
 - Settings includes a database backup download for saving recovery copies.
 - Settings includes admin tools to generate one-click magic login links with preconfigured usernames.
+- Settings includes a read-only Users page that lists accounts and shows current admin status.
 - The North Star objective can be updated per resident via the Save button.
 - The North Star goal value sets the progress slider range per resident.
 - Progress updates happen immediately via the integrated slider.
@@ -75,6 +76,7 @@ Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
 - On mobile widths, the interview guide opens as a bottom drawer and closes via backdrop tap.
 - Keyboard shortcuts: Enter submits add/edit, Shift+Enter inserts a newline, Escape cancels edits.
 - Configure magic-link admins with `MAGIC_LINK_ADMIN_USERNAMES` (comma-separated usernames); when unset, any signed-in account can issue/revoke links.
+- The Users page admin badge follows the same `MAGIC_LINK_ADMIN_USERNAMES` runtime logic used by admin-only APIs.
 - Magic links remain valid until revoked by an admin.
 - Configure optional navbar links with `NAVBAR_ENABLED_ITEMS` (valid keys: `lobby,projects,settings`; Dashboard remains visible).
 - Set `LOBBY_AUTH_ENABLED=false` to disable general lobby request/approval flows while keeping magic-link login usable.
