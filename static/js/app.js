@@ -1760,6 +1760,10 @@ async function applyTranscriptUpdates() {
     setTranscriptStatus("Updates applied.");
     clearTranscriptDraft();
     closeTranscriptDialog();
+    const confetti = window.NorthStarConfetti;
+    if (confetti && typeof confetti.triggerConfetti === "function") {
+      confetti.triggerConfetti();
+    }
   } catch (error) {
     console.warn("Failed to apply transcript updates", error);
     setTranscriptStatus("Failed to apply updates. Try again.", true);
