@@ -11,6 +11,7 @@ Estimation contract (deterministic):
 from __future__ import annotations
 
 import argparse
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import subprocess
@@ -67,6 +68,13 @@ class CommitEvent:
     author_email: str
 
 
+@dataclass(frozen=True)
+class DailyEstimate:
+    day: str
+    commit_count: int
+    estimated_hours: float
+
+
 def run_git_log(since: str, until: str, author: str | None) -> str:
     command = [
         "git",
@@ -108,6 +116,43 @@ def load_commit_events(since: str, until: str, author: str | None) -> list[Commi
     return events
 
 
+def estimate_day_hours(events_for_day: list[CommitEvent]) -> float:
+    if not events_for_day:
+        return 0.0
+
+    ordered = sorted(events_for_day, key=lambda event: event.timestamp)
+    estimated = MIN_DAY_HOURS
+    for previous, current in zip(ordered, ordered[1:]):
+        gap_hours = (current.timestamp - previous.timestamp).total_seconds() / 3600.0
+        if gap_hours <= 0:
+            continue
+        estimated += min(gap_hours, MAX_GAP_HOURS)
+    return min(estimated, MAX_DAY_HOURS)
+
+
+def estimate_daily_hours(events: list[CommitEvent]) -> list[DailyEstimate]:
+    grouped: dict[str, list[CommitEvent]] = defaultdict(list)
+    for event in events:
+        day_key = event.timestamp.date().isoformat()
+        grouped[day_key].append(event)
+
+    estimates: list[DailyEstimate] = []
+    for day_key in sorted(grouped.keys()):
+        day_events = grouped[day_key]
+        estimates.append(
+            DailyEstimate(
+                day=day_key,
+                commit_count=len(day_events),
+                estimated_hours=round(estimate_day_hours(day_events), 2),
+            )
+        )
+    return estimates
+
+
+def calculate_total_hours(days: list[DailyEstimate]) -> float:
+    return round(sum(day.estimated_hours for day in days), 2)
+
+
 def main(argv: list[str]) -> int:
     args = parse_args(argv)
     try:
@@ -115,9 +160,15 @@ def main(argv: list[str]) -> int:
     except RuntimeError as exc:
         print(f"Failed to load git history: {exc}", file=sys.stderr)
         return 1
-    print(
-        f"Loaded {len(events)} commit event(s) from {args.since} to {args.until}."
-    )
+    daily_estimates = estimate_daily_hours(events)
+    total_hours = calculate_total_hours(daily_estimates)
+
+    print(f"Timesheet estimate for {args.since} to {args.until}")
+    for day in daily_estimates:
+        print(
+            f"{day.day} commits={day.commit_count} estimated_hours={day.estimated_hours:.2f}"
+        )
+    print(f"TOTAL estimated_hours={total_hours:.2f}")
     return 0
 
 

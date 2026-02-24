@@ -22,3 +22,14 @@
   - Compared results with `git rev-list --count --since=2026-02-15 --until=2026-02-24 HEAD` and confirmed matching count.
 - Notes:
   - Author filtering uses git's native `--author` behavior (pattern-based matching).
+
+## Stage 3 - Implement daily hour estimation and totals
+- Changes:
+  - Added `DailyEstimate` dataclass and deterministic day-grouping logic.
+  - Added estimation rule implementation with per-day minimum, per-gap cap, and daily max cap.
+  - Added `calculate_total_hours(...)` aggregation across day estimates.
+- Verification:
+  - Ran `python3 scripts/git_timesheet.py --since 2026-02-20 --until 2026-02-24` twice and compared outputs.
+  - Confirmed repeat runs over unchanged git history produced identical per-day and total values.
+- Notes:
+  - Day grouping is based on normalized UTC timestamps from Stage 2.
