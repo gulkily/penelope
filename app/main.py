@@ -5,6 +5,7 @@ from urllib.parse import urlencode
 
 from dotenv import load_dotenv
 
+from fastapi.exception_handlers import http_exception_handler
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.trustedhost import TrustedHostMiddleware
@@ -98,6 +99,14 @@ app.include_router(api_router, prefix="/api")
 app.include_router(auth_router, prefix="/api")
 app.include_router(transcript_router, prefix="/api")
 app.include_router(transcription_router, prefix="/api")
+
+
+@app.exception_handler(HTTPException)
+async def app_http_exception_handler(request: Request, exc: HTTPException):
+    accepts_html = "text/html" in request.headers.get("accept", "").lower()
+    if exc.status_code == 403 and request.url.path.startswith("/settings") and accepts_html:
+        return RedirectResponse(url="/", status_code=302)
+    return await http_exception_handler(request, exc)
 
 
 def _build_template_context(request: Request, current_page: str) -> dict:

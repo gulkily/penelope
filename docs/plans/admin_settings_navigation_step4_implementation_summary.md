@@ -14,10 +14,11 @@
   - Added `_require_admin_session(request: Request)` in `app/main.py`.
   - Applied the guard to `/settings` and `/settings/magic-links`.
   - Reused the same guard for `/settings/users` to keep error behavior consistent.
+  - Added a targeted HTTP exception handler so browser (HTML) 403s on `/settings*` redirect to `/` instead of showing raw JSON.
 - Verification:
   - Added/ran unit coverage in `tests/test_settings_access_controls.py` to confirm non-admin/missing-session requests are rejected with `403`.
 - Notes:
-  - Denial response is `{"detail": "Admin access required"}` for all protected Settings routes.
+  - Route guards still raise `403`; the new exception handler converts Settings-page browser responses to a redirect.
 
 ## Stage 3 - Keep Settings surface internally consistent for admins
 - Changes:
@@ -34,7 +35,8 @@
     - Navbar `settings` visibility by admin role.
     - Admin-guard helper behavior.
     - Route-level denial for non-admin and allow path for admin.
+    - 403 exception handling behavior for Settings HTML requests (redirect) vs non-HTML/non-Settings requests (JSON 403).
 - Verification:
-  - Command run: `python3 -m pytest tests/test_settings_access_controls.py` (passed: 6 tests).
+  - Command run: `python3 -m pytest tests/test_settings_access_controls.py` (passed: 9 tests).
 - Notes:
   - `fastapi.testclient.TestClient` hangs in this environment with the current app lifecycle, so coverage uses direct route/helper invocation for deterministic checks.

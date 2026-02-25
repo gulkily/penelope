@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from types import SimpleNamespace
 
 import pytest
@@ -32,6 +33,23 @@ def _request_with_session(account_id: int | None) -> Request:
             username=f"user-{account_id}",
         )
     return request
+
+
+def _request_for_exception_handler(path: str, accept: str = "text/html") -> Request:
+    return Request(
+        {
+            "type": "http",
+            "http_version": "1.1",
+            "method": "GET",
+            "scheme": "http",
+            "path": path,
+            "raw_path": path.encode("utf-8"),
+            "query_string": b"",
+            "headers": [(b"accept", accept.encode("utf-8"))],
+            "client": ("testclient", 50000),
+            "server": ("testserver", 80),
+        }
+    )
 
 
 def test_build_navbar_items_hides_settings_for_non_admin() -> None:
@@ -86,3 +104,39 @@ def test_settings_routes_allow_admin(monkeypatch) -> None:
     assert settings_response.status_code == 200
     assert magic_links_response.status_code == 200
     assert users_response.status_code == 200
+
+
+def test_http_exception_handler_redirects_settings_403_for_html() -> None:
+    request = _request_for_exception_handler("/settings", accept="text/html")
+    response = asyncio.run(
+        main.app_http_exception_handler(
+            request,
+            HTTPException(status_code=403, detail="Admin access required"),
+        )
+    )
+    assert response.status_code == 302
+    assert response.headers["location"] == "/"
+
+
+def test_http_exception_handler_keeps_non_html_settings_403() -> None:
+    request = _request_for_exception_handler("/settings", accept="application/json")
+    response = asyncio.run(
+        main.app_http_exception_handler(
+            request,
+            HTTPException(status_code=403, detail="Admin access required"),
+        )
+    )
+    assert response.status_code == 403
+    assert response.body == b'{"detail":"Admin access required"}'
+
+
+def test_http_exception_handler_keeps_non_settings_403() -> None:
+    request = _request_for_exception_handler("/api/auth/users", accept="text/html")
+    response = asyncio.run(
+        main.app_http_exception_handler(
+            request,
+            HTTPException(status_code=403, detail="Admin access required"),
+        )
+    )
+    assert response.status_code == 403
+    assert response.body == b'{"detail":"Admin access required"}'
