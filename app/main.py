@@ -55,8 +55,16 @@ def _parse_csv_env(name: str) -> list[str]:
     return [entry.strip() for entry in raw_value.split(",") if entry.strip()]
 
 
-def _build_navbar_items(enabled_keys: set[str]) -> list[dict]:
-    return [item for item in NAVBAR_ITEM_DEFINITIONS if item["key"] in enabled_keys]
+def _build_navbar_items(enabled_keys: set[str], *, session_is_admin: bool) -> list[dict]:
+    navbar_items: list[dict] = []
+    for item in NAVBAR_ITEM_DEFINITIONS:
+        key = item["key"]
+        if key not in enabled_keys:
+            continue
+        if key == "settings" and not session_is_admin:
+            continue
+        navbar_items.append(item)
+    return navbar_items
 
 
 def _normalize_session_reset_next(raw_value: str) -> str:
@@ -98,7 +106,10 @@ def _build_template_context(request: Request, current_page: str) -> dict:
         auth.is_admin_account(session_account.account_id) if session_account else False
     )
     feature_flags = get_feature_flags()
-    navbar_items = _build_navbar_items(set(feature_flags.navbar_enabled_items))
+    navbar_items = _build_navbar_items(
+        set(feature_flags.navbar_enabled_items),
+        session_is_admin=session_is_admin,
+    )
     return {
         "request": request,
         "current_page": current_page,
@@ -219,6 +230,13 @@ def favicon() -> FileResponse:
     return FileResponse(BASE_DIR / "static" / "favicon.ico")
 
 
+def _require_admin_session(request: Request) -> auth.SessionInfo:
+    session = getattr(request.state, "session_account", None)
+    if not session or not auth.is_admin_account(session.account_id):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return session
+
+
 @app.get("/projects", response_class=HTMLResponse)
 def manage_projects(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
@@ -229,6 +247,7 @@ def manage_projects(request: Request) -> HTMLResponse:
 
 @app.get("/settings", response_class=HTMLResponse)
 def settings(request: Request) -> HTMLResponse:
+    _require_admin_session(request)
     return templates.TemplateResponse(
         "settings.html",
         _build_template_context(request, "settings"),
@@ -237,6 +256,7 @@ def settings(request: Request) -> HTMLResponse:
 
 @app.get("/settings/magic-links", response_class=HTMLResponse)
 def magic_links(request: Request) -> HTMLResponse:
+    _require_admin_session(request)
     return templates.TemplateResponse(
         "magic_links.html",
         _build_template_context(request, "settings"),
@@ -245,9 +265,7 @@ def magic_links(request: Request) -> HTMLResponse:
 
 @app.get("/settings/users", response_class=HTMLResponse)
 def users(request: Request) -> HTMLResponse:
-    session = getattr(request.state, "session_account", None)
-    if not session or not auth.is_admin_account(session.account_id):
-        raise HTTPException(status_code=403, detail="Admin access required")
+    _require_admin_session(request)
     return templates.TemplateResponse(
         "users.html",
         _build_template_context(request, "settings"),
