@@ -111,5 +111,7 @@ generate the questions field x
 resident summary and questions should not be editable x
 
 why do the boxes have all the same dates? x
+	follow up by manually checking
+	ensure all updates are imported, not just latest
 
 when generating a magic link, create a placeholder user right away, so that we can assign to a house x
