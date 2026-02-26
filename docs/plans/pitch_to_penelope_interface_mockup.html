@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pitch to Penelope - Interface Mockup</title>
+    <link rel="icon" href="data:," />
+    <link rel="stylesheet" href="../../static/css/main.css" />
+    <script src="../../static/js/theme.js" defer></script>
+    <style>
+      .pitch-layout {
+        grid-template-columns: repeat(2, minmax(280px, 1fr));
+      }
+
+      .pitch-card {
+        min-height: 520px;
+      }
+
+      .pitch-feedback-header {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .pitch-score {
+        margin: 0;
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--accent-strong);
+      }
+
+      .pitch-list {
+        margin: 0;
+        padding-left: 18px;
+        display: grid;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      .pitch-label {
+        margin: 0;
+        font-size: 13px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--text-muted);
+      }
+
+      .pitch-rewrite {
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        background: var(--surface-alt);
+        padding: 12px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .pitch-rewrite-block {
+        display: grid;
+        gap: 4px;
+      }
+
+      .pitch-rewrite-tag {
+        margin: 0;
+        font-size: 11px;
+        color: var(--text-subtle);
+        font-weight: 600;
+      }
+
+      .pitch-rewrite-copy {
+        margin: 0;
+        font-size: 13px;
+        color: var(--text-primary);
+        line-height: 1.45;
+      }
+
+      .pitch-actions {
+        margin-top: auto;
+      }
+
+      .pitch-upload {
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        background: var(--surface-alt);
+        padding: 10px 12px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .pitch-upload input[type="file"] {
+        display: none;
+      }
+
+      .pitch-status {
+        margin-top: 8px;
+      }
+
+      .pitch-undo {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 8px;
+      }
+
+      @media (max-width: 900px) {
+        .pitch-layout {
+          grid-template-columns: 1fr;
+        }
+
+        .pitch-card {
+          min-height: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <section class="card card-compact">
+        <header class="page-header">
+          <h1 class="page-title">Pitch to Penelope</h1>
+        </header>
+      </section>
+
+      <section class="cards pitch-layout">
+        <article class="card pitch-card">
+          <h2>Pitch Input</h2>
+          <div class="field field-full">
+            <label class="field-label" for="pitch-text">Pitch text</label>
+            <textarea id="pitch-text" class="field-input field-textarea" rows="12">
+We are building a community-based platform to help families find and keep affordable childcare. Parents can search providers, compare real availability, and get verified pricing.
+
+Unlike generic listing sites, we focus on real-time slot updates and trust signals from other local families. We already ran a pilot with 35 families and matched 21 of them within two weeks.
+
+We are raising support to expand into three new neighborhoods this quarter.</textarea
+            >
+          </div>
+          <p class="pitch-label">Upload transcript</p>
+          <div class="pitch-upload">
+            <label class="link-button" for="pitch-transcript-file">
+              Choose transcript file
+            </label>
+            <input
+              id="pitch-transcript-file"
+              type="file"
+              accept=".txt,.md,text/plain"
+            />
+            <p class="hint">Selected: childcare_pitch_v2.txt</p>
+            <div class="dialog-actions">
+              <button type="button" class="action-button">
+                Upload transcript
+              </button>
+            </div>
+          </div>
+          <div class="dialog-actions pitch-actions">
+            <button type="button" class="action-button">Get feedback</button>
+          </div>
+          <p class="hint pitch-status" role="status" aria-live="polite">
+            Ready to analyze.
+          </p>
+        </article>
+
+        <article class="card pitch-card">
+          <div class="pitch-feedback-header">
+            <h2>Feedback</h2>
+            <p class="pitch-score">74/100</p>
+          </div>
+          <p class="hint">
+            Verdict: Strong problem framing, but the ask is still too broad.
+          </p>
+
+          <p class="pitch-label">Top 3 fixes</p>
+          <ol class="pitch-list">
+            <li>Define the exact amount/support you are asking for.</li>
+            <li>Add one outcome metric beyond pilot match count.</li>
+            <li>State why your moat is hard to copy.</li>
+          </ol>
+
+          <p class="pitch-label">Rewrite suggestion</p>
+          <div class="pitch-rewrite">
+            <div class="pitch-rewrite-block">
+              <p class="pitch-rewrite-tag">Weak line</p>
+              <p class="pitch-rewrite-copy">"We are raising support to expand..."</p>
+            </div>
+            <div class="pitch-rewrite-block">
+              <p class="pitch-rewrite-tag">Suggested rewrite</p>
+              <p class="pitch-rewrite-copy">
+                "We are seeking $250k to expand to three neighborhoods, onboarding
+                120 families and 40 providers by Q4."
+              </p>
+            </div>
+          </div>
+
+          <div class="dialog-actions pitch-actions">
+            <button type="button" class="action-button">
+              Apply rewrite #1 to draft
+            </button>
+            <button type="button" class="link-button">Re-score after edits</button>
+          </div>
+          <p class="hint pitch-undo">
+            Applied rewrite #1 to draft.
+            <button type="button" class="link-button small">Undo</button>
+          </p>
+          <p class="hint pitch-status" role="status" aria-live="polite">
+            Feedback updated just now.
+          </p>
+        </article>
+      </section>
+    </main>
+  </body>
+</html>
