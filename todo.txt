@@ -101,7 +101,7 @@ show confetti after the upload is added x
 are original values included in the prompting? x
 	yes x
 
-get rid of [import] notes in questions
+get rid of [import] notes in questions x
 
 keep the functionality of the questions x
 
