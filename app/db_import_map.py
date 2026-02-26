@@ -53,6 +53,19 @@ def get_checkin_map_for_source_builder(source_builder_id: str) -> dict | None:
     return dict(row) if row else None
 
 
+def get_checkin_map_for_source_checkin(source_checkin_id: str) -> dict | None:
+    with connect() as conn:
+        row = conn.execute(
+            """
+            SELECT source_checkin_id, source_builder_id, week_of, project_id
+            FROM import_checkin_map
+            WHERE source_checkin_id = ?
+            """,
+            (source_checkin_id,),
+        ).fetchone()
+    return dict(row) if row else None
+
+
 def upsert_checkin_map(
     source_checkin_id: str,
     source_builder_id: str,

@@ -3,7 +3,11 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Callable
 
-from app.builder_import_llm import DEFAULT_IMPORT_LLM_MODEL, enrich_payload_with_llm
+from app.builder_import_llm import (
+    DEFAULT_IMPORT_LLM_MODEL,
+    classify_duplicate_pair_with_llm,
+    enrich_payload_with_llm,
+)
 from app.builder_import_source import SourceBuilderRecord, load_source_snapshot
 from app.db_connection import connect
 from app.db_import_content import (
@@ -12,12 +16,12 @@ from app.db_import_content import (
     seed_resident_summary_if_empty,
 )
 from app.db_import_map import (
-    get_checkin_map_for_source_builder,
+    get_checkin_map_for_source_checkin,
     get_project_id_for_source_builder,
     upsert_builder_map,
     upsert_checkin_map,
 )
-from app.builder_import_transform import build_section_payloads
+from app.builder_import_transform import build_builder_import_notes, build_section_payloads
 
 
 @dataclass
@@ -27,10 +31,18 @@ class ImportReport:
     builders_updated: int = 0
     builders_skipped: int = 0
     builders_without_checkins: int = 0
-    latest_checkins_created: int = 0
-    latest_checkins_updated: int = 0
-    latest_checkins_skipped: int = 0
+    checkins_scanned: int = 0
+    checkins_created: int = 0
+    checkins_updated: int = 0
+    checkins_skipped: int = 0
     missing_progress_latest: int = 0
+    missing_progress_checkins: int = 0
+    imported_items_inserted: int = 0
+    exact_duplicates_skipped: int = 0
+    near_duplicates_skipped: int = 0
+    llm_duplicate_arbitration_attempted: int = 0
+    llm_duplicate_arbitration_kept: int = 0
+    llm_duplicate_arbitration_dropped: int = 0
     house_warnings: list[str] = field(default_factory=list)
     llm_attempted: int = 0
     llm_enriched: int = 0
@@ -120,58 +132,10 @@ def run_import(config: ImportConfig, progress_callback: ProgressCallback | None 
                     )
                 )
             continue
-        if builder.latest_checkin is None:
+        if not builder.checkins:
             report.builders_without_checkins += 1
-        elif builder.latest_checkin.north_star_value is None:
+        elif builder.latest_checkin and builder.latest_checkin.north_star_value is None:
             report.missing_progress_latest += 1
-        payload = build_section_payloads(builder, builder.latest_checkin)
-        if config.enable_llm and builder.latest_checkin is not None:
-            if progress_callback:
-                progress_callback(
-                    ImportProgressEvent(
-                        current=idx,
-                        total=total_builders,
-                        source_builder_id=builder.source_builder_id,
-                        full_name=builder.full_name,
-                        phase="llm_start",
-                        detail=f"week {builder.latest_checkin.week_of}",
-                    )
-                )
-            report.llm_attempted += 1
-            payload, llm_status, llm_error = enrich_payload_with_llm(
-                payload=payload,
-                checkin=builder.latest_checkin,
-                model=config.llm_model,
-                confidence_threshold=config.llm_confidence_threshold,
-                timeout_seconds=config.llm_timeout_seconds,
-            )
-            if llm_status == "enriched":
-                report.llm_enriched += 1
-            elif llm_status == "low_confidence":
-                report.llm_low_confidence += 1
-            else:
-                report.llm_errors += 1
-                error_type = (
-                    (llm_error.split(":", 1)[0].strip() or "UnknownError")
-                    if llm_error
-                    else "UnknownError"
-                )
-                report.llm_error_types[error_type] = report.llm_error_types.get(error_type, 0) + 1
-                if llm_error and len(report.llm_error_samples) < 5:
-                    report.llm_error_samples.append(
-                        f"{builder.source_builder_id} week {builder.latest_checkin.week_of}: {llm_error}"
-                    )
-            if progress_callback:
-                progress_callback(
-                    ImportProgressEvent(
-                        current=idx,
-                        total=total_builders,
-                        source_builder_id=builder.source_builder_id,
-                        full_name=builder.full_name,
-                        phase="llm_done",
-                        detail=llm_status,
-                    )
-                )
 
         try:
             action, project_id = _upsert_builder_project(builder, config.dry_run)
@@ -197,34 +161,120 @@ def run_import(config: ImportConfig, progress_callback: ProgressCallback | None 
         else:
             report.builders_skipped += 1
 
-        if builder.latest_checkin is None:
-            report.latest_checkins_skipped += 1
-        else:
-            existing_checkin = get_checkin_map_for_source_builder(builder.source_builder_id)
+        builder_notes = build_builder_import_notes(builder, builder.checkins)
+        payloads = []
+        for checkin in builder.checkins:
+            report.checkins_scanned += 1
+            if checkin.north_star_value is None:
+                report.missing_progress_checkins += 1
+
+            payload = build_section_payloads(builder, checkin)
+            if config.enable_llm:
+                if progress_callback:
+                    progress_callback(
+                        ImportProgressEvent(
+                            current=idx,
+                            total=total_builders,
+                            source_builder_id=builder.source_builder_id,
+                            full_name=builder.full_name,
+                            phase="llm_start",
+                            detail=f"week {checkin.week_of}",
+                        )
+                    )
+                report.llm_attempted += 1
+                payload, llm_status, llm_error = enrich_payload_with_llm(
+                    payload=payload,
+                    checkin=checkin,
+                    model=config.llm_model,
+                    confidence_threshold=config.llm_confidence_threshold,
+                    timeout_seconds=config.llm_timeout_seconds,
+                )
+                if llm_status == "enriched":
+                    report.llm_enriched += 1
+                elif llm_status == "low_confidence":
+                    report.llm_low_confidence += 1
+                    builder_notes.append(
+                        "[Import] LLM enrichment confidence below threshold for "
+                        f"week {checkin.week_of}; kept deterministic text."
+                    )
+                else:
+                    report.llm_errors += 1
+                    error_type = (
+                        (llm_error.split(":", 1)[0].strip() or "UnknownError")
+                        if llm_error
+                        else "UnknownError"
+                    )
+                    report.llm_error_types[error_type] = report.llm_error_types.get(error_type, 0) + 1
+                    if llm_error and len(report.llm_error_samples) < 5:
+                        report.llm_error_samples.append(
+                            f"{builder.source_builder_id} week {checkin.week_of}: {llm_error}"
+                        )
+                if progress_callback:
+                    progress_callback(
+                        ImportProgressEvent(
+                            current=idx,
+                            total=total_builders,
+                            source_builder_id=builder.source_builder_id,
+                            full_name=builder.full_name,
+                            phase="llm_done",
+                            detail=llm_status,
+                        )
+                    )
+
+            payloads.append(payload)
+
+            existing_checkin = get_checkin_map_for_source_checkin(checkin.source_checkin_id)
             checkin_action = "created"
             if existing_checkin:
-                if existing_checkin.get("source_checkin_id") == builder.latest_checkin.source_checkin_id:
+                if (
+                    existing_checkin.get("source_builder_id") == builder.source_builder_id
+                    and existing_checkin.get("week_of") == checkin.week_of
+                    and int(existing_checkin.get("project_id") or -1) == project_id
+                ):
                     checkin_action = "skipped"
                 else:
                     checkin_action = "updated"
             if not config.dry_run:
                 upsert_checkin_map(
-                    source_checkin_id=builder.latest_checkin.source_checkin_id,
+                    source_checkin_id=checkin.source_checkin_id,
                     source_builder_id=builder.source_builder_id,
-                    week_of=builder.latest_checkin.week_of,
+                    week_of=checkin.week_of,
                     project_id=project_id,
                 )
             if checkin_action == "created":
-                report.latest_checkins_created += 1
+                report.checkins_created += 1
             elif checkin_action == "updated":
-                report.latest_checkins_updated += 1
+                report.checkins_updated += 1
             else:
-                report.latest_checkins_skipped += 1
+                report.checkins_skipped += 1
 
         if not config.dry_run:
-            replace_import_snapshot_items(project_id, payload)
-            replace_import_notes(project_id, payload.question_notes)
-            seed_resident_summary_if_empty(project_id, payload.summary)
+            duplicate_arbitration_callback = None
+            if config.enable_llm:
+                duplicate_arbitration_callback = (
+                    lambda candidate, existing, section: classify_duplicate_pair_with_llm(
+                        candidate_text=candidate,
+                        existing_text=existing,
+                        section=section,
+                        model=config.llm_model,
+                        confidence_threshold=config.llm_confidence_threshold,
+                        timeout_seconds=config.llm_timeout_seconds,
+                    )
+                )
+            write_metrics = replace_import_snapshot_items(
+                project_id,
+                payloads,
+                duplicate_arbitration_callback=duplicate_arbitration_callback,
+            )
+            latest_summary = payloads[-1].summary if payloads else ""
+            seed_resident_summary_if_empty(project_id, latest_summary)
+            report.imported_items_inserted += write_metrics.items_inserted
+            report.exact_duplicates_skipped += write_metrics.exact_duplicates_skipped
+            report.near_duplicates_skipped += write_metrics.near_duplicates_skipped
+            report.llm_duplicate_arbitration_attempted += write_metrics.llm_arbitration_attempted
+            report.llm_duplicate_arbitration_kept += write_metrics.llm_arbitration_kept
+            report.llm_duplicate_arbitration_dropped += write_metrics.llm_arbitration_dropped
+            replace_import_notes(project_id, builder_notes)
         if progress_callback:
             progress_callback(
                 ImportProgressEvent(
@@ -233,7 +283,7 @@ def run_import(config: ImportConfig, progress_callback: ProgressCallback | None 
                     source_builder_id=builder.source_builder_id,
                     full_name=builder.full_name,
                     phase="builder_done",
-                    detail=action,
+                    detail=f"{action}; checkins={len(builder.checkins)}",
                 )
             )
     return report

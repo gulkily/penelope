@@ -23,7 +23,7 @@ from app.db_init import init_db
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Load and summarize latest builder snapshot data from source SQLite.",
+        description="Load and summarize builder check-in history data from source SQLite.",
     )
     parser.add_argument(
         "--source-db",
@@ -75,17 +75,18 @@ def render_snapshot_preview(source_db: str, sample: int) -> str:
     snapshot = load_source_snapshot(source_db)
     builders = snapshot.builders
     with_checkins = sum(1 for row in builders if row.latest_checkin is not None)
+    total_checkins = sum(len(row.checkins) for row in builders)
     missing_progress = sum(
-        1
+        len([checkin for checkin in row.checkins if checkin.north_star_value is None])
         for row in builders
-        if row.latest_checkin is not None and row.latest_checkin.north_star_value is None
     )
 
     lines = [
         f"Source DB: {Path(source_db)}",
         f"Builders: {len(builders)}",
+        f"Weekly check-ins: {total_checkins}",
         f"Builders with latest check-in: {with_checkins}",
-        f"Latest check-ins missing north_star_value: {missing_progress}",
+        f"Check-ins missing north_star_value: {missing_progress}",
         f"House normalization warnings: {len(snapshot.house_warnings)}",
         "",
         "Sample builders:",
@@ -94,7 +95,7 @@ def render_snapshot_preview(source_db: str, sample: int) -> str:
     for row in builders[: max(0, sample)]:
         checkin_week = row.latest_checkin.week_of if row.latest_checkin else "none"
         lines.append(
-            f"- {row.full_name} | house={row.normalized_house} | latest_week={checkin_week}"
+            f"- {row.full_name} | house={row.normalized_house} | latest_week={checkin_week} | checkins={len(row.checkins)}"
         )
 
     if snapshot.house_warnings:
@@ -314,10 +315,18 @@ def render_import_report(
         f"Builders updated: {report.builders_updated}",
         f"Builders skipped: {report.builders_skipped}",
         f"Builders without check-ins: {report.builders_without_checkins}",
-        f"Latest check-ins created: {report.latest_checkins_created}",
-        f"Latest check-ins updated: {report.latest_checkins_updated}",
-        f"Latest check-ins skipped: {report.latest_checkins_skipped}",
+        f"Check-ins scanned: {report.checkins_scanned}",
+        f"Check-ins created: {report.checkins_created}",
+        f"Check-ins updated: {report.checkins_updated}",
+        f"Check-ins skipped: {report.checkins_skipped}",
+        f"Check-ins missing north_star_value: {report.missing_progress_checkins}",
         f"Latest check-ins missing north_star_value: {report.missing_progress_latest}",
+        f"Imported items inserted: {report.imported_items_inserted}",
+        f"Exact duplicates skipped: {report.exact_duplicates_skipped}",
+        f"Near-duplicates skipped: {report.near_duplicates_skipped}",
+        f"LLM duplicate arbitration attempted: {report.llm_duplicate_arbitration_attempted}",
+        f"LLM duplicate arbitration kept: {report.llm_duplicate_arbitration_kept}",
+        f"LLM duplicate arbitration dropped: {report.llm_duplicate_arbitration_dropped}",
         f"House normalization warnings: {len(report.house_warnings)}",
         f"LLM attempted: {report.llm_attempted}",
         f"LLM enriched: {report.llm_enriched}",

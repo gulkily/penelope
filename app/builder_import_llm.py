@@ -32,6 +32,12 @@ class CheckinEnrichment(BaseModel):
     confidence: float = Field(..., ge=0, le=1)
 
 
+class DuplicatePairDecision(BaseModel):
+    decision: Literal["keep", "drop"]
+    confidence: float = Field(..., ge=0, le=1)
+    reason: str = ""
+
+
 def _maybe_load_dotenv() -> bool:
     if load_dotenv is None:
         return False
@@ -178,25 +184,11 @@ def enrich_payload_with_llm(
         return payload, "error", f"{type(exc).__name__}: {exc}"
 
     if parsed.confidence < confidence_threshold:
-        notes = list(payload.question_notes)
-        notes.append(
-            f"[Import] LLM enrichment confidence {parsed.confidence:.2f} below threshold "
-            f"{confidence_threshold:.2f}; kept deterministic text."
-        )
-        return (
-            SectionPayloads(
-                summary=payload.summary,
-                challenges=payload.challenges,
-                milestones=payload.milestones,
-                opportunities=payload.opportunities,
-                question_notes=notes,
-                created_at=payload.created_at,
-            ),
-            "low_confidence",
-            "",
-        )
+        return payload, "low_confidence", ""
 
     enriched = SectionPayloads(
+        source_checkin_id=payload.source_checkin_id,
+        week_of=payload.week_of,
         summary=_format_section_text(checkin.week_of, parsed.summary) or payload.summary,
         challenges=_format_section_text(checkin.week_of, parsed.challenges)
         or payload.challenges,
@@ -204,7 +196,55 @@ def enrich_payload_with_llm(
         or payload.milestones,
         opportunities=_format_section_text(checkin.week_of, parsed.opportunities)
         or payload.opportunities,
-        question_notes=list(payload.question_notes),
         created_at=payload.created_at,
     )
     return enriched, "enriched", ""
+
+
+def classify_duplicate_pair_with_llm(
+    candidate_text: str,
+    existing_text: str,
+    section: str,
+    model: str = DEFAULT_IMPORT_LLM_MODEL,
+    confidence_threshold: float = 0.7,
+    timeout_seconds: float = 20.0,
+) -> tuple[Literal["keep", "drop"], str]:
+    selected_model = model.strip() or DEFAULT_IMPORT_LLM_MODEL
+    client = _get_dedalus_client()
+    system_prompt = (
+        "You classify whether two resident update items are duplicates. "
+        "Return 'drop' only when they are materially the same update; otherwise return 'keep'."
+    )
+    user_prompt = (
+        f"Section: {section}\n"
+        f"Existing item: {existing_text}\n"
+        f"Candidate item: {candidate_text}\n"
+        "Should the candidate be dropped as a duplicate?"
+    )
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
+    try:
+        try:
+            completion = client.chat.completions.parse(
+                model=selected_model,
+                messages=messages,
+                response_format=DuplicatePairDecision,
+                temperature=0,
+                timeout=max(0.1, timeout_seconds),
+            )
+        except Exception as exc:
+            return "keep", f"{type(exc).__name__}: {exc}"
+    finally:
+        client.close()
+    try:
+        parsed = completion.choices[0].message.parsed
+    except (AttributeError, IndexError) as exc:
+        return "keep", f"{type(exc).__name__}: {exc}"
+    if parsed is None:
+        return "keep", "No parsed output."
+    if parsed.confidence < confidence_threshold:
+        return "keep", f"Low confidence {parsed.confidence:.2f}"
+    reason = (parsed.reason or "").strip()
+    return parsed.decision, reason

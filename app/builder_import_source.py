@@ -32,6 +32,7 @@ class SourceBuilderRecord:
     source_house_name: str
     normalized_house: str
     ca_name: str
+    checkins: list[SourceCheckinRecord]
     latest_checkin: SourceCheckinRecord | None
 
 
@@ -78,18 +79,6 @@ def load_source_snapshot(sqlite_path: str) -> SourceSnapshot:
 
         checkin_rows = conn.execute(
             """
-            WITH ranked AS (
-                SELECT
-                    wc.*,
-                    ROW_NUMBER() OVER (
-                        PARTITION BY wc.builder_id
-                        ORDER BY wc.week_of DESC,
-                                 COALESCE(wc.updated_at, '') DESC,
-                                 COALESCE(wc.created_at, '') DESC,
-                                 wc.id DESC
-                    ) AS rn
-                FROM weekly_checkins wc
-            )
             SELECT
                 id AS source_checkin_id,
                 builder_id AS source_builder_id,
@@ -102,16 +91,15 @@ def load_source_snapshot(sqlite_path: str) -> SourceSnapshot:
                 COALESCE(blockers_text, '') AS blockers_text,
                 COALESCE(created_at, '') AS created_at,
                 COALESCE(updated_at, '') AS updated_at
-            FROM ranked
-            WHERE rn = 1
+            FROM weekly_checkins
             """
         ).fetchall()
     finally:
         conn.close()
 
-    latest_by_builder: dict[str, SourceCheckinRecord] = {}
+    checkins_by_builder: dict[str, list[SourceCheckinRecord]] = {}
     for row in checkin_rows:
-        latest_by_builder[row["source_builder_id"]] = SourceCheckinRecord(
+        checkin = SourceCheckinRecord(
             source_checkin_id=row["source_checkin_id"],
             source_builder_id=row["source_builder_id"],
             week_of=row["week_of"],
@@ -124,6 +112,18 @@ def load_source_snapshot(sqlite_path: str) -> SourceSnapshot:
             created_at=row["created_at"],
             updated_at=row["updated_at"],
         )
+        checkins_by_builder.setdefault(row["source_builder_id"], []).append(checkin)
+
+    def _checkin_sort_key(checkin: SourceCheckinRecord) -> tuple[str, str, str, str]:
+        return (
+            checkin.week_of or "",
+            checkin.updated_at or "",
+            checkin.created_at or "",
+            checkin.source_checkin_id,
+        )
+
+    for source_builder_id, records in checkins_by_builder.items():
+        checkins_by_builder[source_builder_id] = sorted(records, key=_checkin_sort_key)
 
     builders: list[SourceBuilderRecord] = []
     house_warnings: list[str] = []
@@ -134,6 +134,7 @@ def load_source_snapshot(sqlite_path: str) -> SourceSnapshot:
                 f"Unknown source house '{row['source_house_name']}' for builder {row['full_name']} "
                 f"({row['source_builder_id']}); defaulted to {DEFAULT_HOUSE}."
             )
+        checkins = checkins_by_builder.get(row["source_builder_id"], [])
         builders.append(
             SourceBuilderRecord(
                 source_builder_id=row["source_builder_id"],
@@ -144,7 +145,8 @@ def load_source_snapshot(sqlite_path: str) -> SourceSnapshot:
                 source_house_name=row["source_house_name"],
                 normalized_house=normalized_house,
                 ca_name=row["ca_name"],
-                latest_checkin=latest_by_builder.get(row["source_builder_id"]),
+                checkins=checkins,
+                latest_checkin=(checkins[-1] if checkins else None),
             )
         )
     return SourceSnapshot(builders=builders, house_warnings=house_warnings)
