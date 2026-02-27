@@ -967,6 +967,9 @@ function formatUploadProgress(received, total) {
     return "Uploading...";
   }
   const percent = Math.min(100, Math.round((received / total) * 100));
+  if (percent >= 100) {
+    return "Upload complete. Starting transcription...";
+  }
   return `Uploading... ${percent}%`;
 }
 
@@ -1147,6 +1150,7 @@ async function uploadAudioChunked(blob, filename) {
   }
 
   transcriptState.uploadPaused = false;
+  let stopTranscribingTicker = null;
   for (let index = session.nextIndex; index < session.totalChunks; index += 1) {
     if (!isNavigatorOnline()) {
       throw new Error("offline");
@@ -1166,12 +1170,19 @@ async function uploadAudioChunked(blob, filename) {
     });
     session.nextIndex = index + 1;
     transcriptState.uploadProgress = result.received_chunks || session.nextIndex;
-    setUploadProgressStatus(
-      formatUploadProgress(transcriptState.uploadProgress, session.totalChunks),
-    );
+    const uploadComplete = transcriptState.uploadProgress >= session.totalChunks;
+    if (uploadComplete && !stopTranscribingTicker) {
+      stopTranscribingTicker = startTranscribingStatusTicker();
+    } else if (!uploadComplete) {
+      setUploadProgressStatus(
+        formatUploadProgress(transcriptState.uploadProgress, session.totalChunks),
+      );
+    }
   }
 
-  const stopTranscribingTicker = startTranscribingStatusTicker();
+  if (!stopTranscribingTicker) {
+    stopTranscribingTicker = startTranscribingStatusTicker();
+  }
   const response = await completeChunkedUpload(
     session.uploadId,
     transcriptState.uploadController,
