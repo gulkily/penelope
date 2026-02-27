@@ -10,6 +10,7 @@ const TRANSCRIPTION_CHUNK_SIZE_FALLBACK = 5 * 1024 * 1024;
 const TRANSCRIPTION_CHUNK_THRESHOLD_BYTES = 5 * 1024 * 1024;
 const TRANSCRIPTION_UPLOAD_RETRY_ATTEMPTS = 3;
 const TRANSCRIPTION_UPLOAD_RETRY_DELAY_MS = 800;
+const TRANSCRIPTION_STATUS_TICK_MS = 1000;
 const QUESTIONS_REGEN_POLL_DELAY_MS = 1200;
 const QUESTIONS_REGEN_STATUS_CLEAR_DELAY_MS = 2500;
 const HOUSE_FILTER_STORAGE_KEY = "houseFilter";
@@ -969,6 +970,26 @@ function formatUploadProgress(received, total) {
   return `Uploading... ${percent}%`;
 }
 
+function formatTranscribingStatus(seconds) {
+  if (!seconds) {
+    return "Upload complete. Transcribing audio...";
+  }
+  const unit = seconds === 1 ? "second" : "seconds";
+  return `Upload complete. Transcribing audio... ${seconds} ${unit}`;
+}
+
+function startTranscribingStatusTicker() {
+  let elapsedSeconds = 0;
+  setUploadProgressStatus(formatTranscribingStatus(elapsedSeconds));
+  const timer = window.setInterval(() => {
+    elapsedSeconds += 1;
+    setUploadProgressStatus(formatTranscribingStatus(elapsedSeconds));
+  }, TRANSCRIPTION_STATUS_TICK_MS);
+  return () => {
+    window.clearInterval(timer);
+  };
+}
+
 async function readErrorDetail(response) {
   try {
     const data = await response.json();
@@ -1079,6 +1100,7 @@ async function completeChunkedUpload(uploadId, controller) {
 async function uploadAudioSingle(blob, filename) {
   const formData = new FormData();
   formData.append("file", blob, filename);
+  setUploadProgressStatus("Uploading audio and transcribing...");
   const response = await fetch("/api/transcriptions", {
     method: "POST",
     body: formData,
@@ -1149,10 +1171,13 @@ async function uploadAudioChunked(blob, filename) {
     );
   }
 
+  const stopTranscribingTicker = startTranscribingStatusTicker();
   const response = await completeChunkedUpload(
     session.uploadId,
     transcriptState.uploadController,
-  );
+  ).finally(() => {
+    stopTranscribingTicker();
+  });
   transcriptState.uploadSession = null;
   return response;
 }
