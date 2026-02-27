@@ -51,6 +51,7 @@ DEDALUS_API_KEY=your_key_here
 LLM_MODEL=openai/gpt-4o-mini
 TRANSCRIPTION_UPLOAD_DIR=/srv/penelope/uploads
 TRUSTED_HOSTS=beta.penelope.livetheresidency.com,127.0.0.1,localhost
+MAGIC_LINK_BASE_URL=https://beta.penelope.livetheresidency.com
 SESSION_COOKIE_SECURE=true
 # Optional:
 # SESSION_COOKIE_DOMAIN=beta.penelope.livetheresidency.com

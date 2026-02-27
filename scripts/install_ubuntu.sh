@@ -109,6 +109,17 @@ clone_or_use_repo() {
   echo "${app_dir}"
 }
 
+extract_host_from_url() {
+  local raw_url="$1"
+  local value="${raw_url#http://}"
+  value="${value#https://}"
+  value="${value%%/*}"
+  value="${value%%\?*}"
+  value="${value%%#*}"
+  value="${value%%:*}"
+  echo "${value}"
+}
+
 setup_venv() {
   local app_dir="$1"
   if [[ ! -d "${app_dir}/.venv" ]]; then
@@ -135,6 +146,28 @@ write_env_file() {
   llm_model="$(prompt "LLM_MODEL" "openai/gpt-4o-mini")"
   local upload_dir
   upload_dir="$(prompt "TRANSCRIPTION_UPLOAD_DIR" "${app_dir}/uploads")"
+  local magic_link_base_url
+  magic_link_base_url="$(
+    prompt "MAGIC_LINK_BASE_URL (optional, e.g. https://app.example.com)" ""
+  )"
+  local trusted_hosts_default=""
+  if [[ -n "${magic_link_base_url}" ]]; then
+    local magic_link_host
+    magic_link_host="$(extract_host_from_url "${magic_link_base_url}")"
+    if [[ -n "${magic_link_host}" ]]; then
+      trusted_hosts_default="${magic_link_host},127.0.0.1,localhost"
+    fi
+  fi
+  local trusted_hosts
+  trusted_hosts="$(prompt "TRUSTED_HOSTS (optional, comma-separated)" "${trusted_hosts_default}")"
+  local session_cookie_secure_default=""
+  if [[ "${magic_link_base_url}" == https://* ]]; then
+    session_cookie_secure_default="true"
+  fi
+  local session_cookie_secure
+  session_cookie_secure="$(
+    prompt "SESSION_COOKIE_SECURE (optional true/false)" "${session_cookie_secure_default}"
+  )"
 
   {
     echo "DATABASE_URL=${database_url}"
@@ -146,6 +179,15 @@ write_env_file() {
     fi
     if [[ -n "${upload_dir}" ]]; then
       echo "TRANSCRIPTION_UPLOAD_DIR=${upload_dir}"
+    fi
+    if [[ -n "${magic_link_base_url}" ]]; then
+      echo "MAGIC_LINK_BASE_URL=${magic_link_base_url}"
+    fi
+    if [[ -n "${trusted_hosts}" ]]; then
+      echo "TRUSTED_HOSTS=${trusted_hosts}"
+    fi
+    if [[ -n "${session_cookie_secure}" ]]; then
+      echo "SESSION_COOKIE_SECURE=${session_cookie_secure}"
     fi
   } > "${env_path}"
 

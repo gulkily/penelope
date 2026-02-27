@@ -18,6 +18,7 @@ from app.api import router as api_router
 from app.api_auth import router as auth_router
 from app.api_transcript import router as transcript_router
 from app.api_transcription import router as transcription_router
+from app.base_url_store import maybe_cache_base_url_from_request, seed_cached_base_url
 from app.db import get_db_path, get_missing_import_map_tables, init_db
 from app.env_sync import get_missing_env_defaults
 from app.feature_flags import NAVBAR_ITEM_DEFINITIONS
@@ -135,6 +136,7 @@ async def require_auth(request: Request, call_next):
     path = request.url.path
     if request.method == "OPTIONS":
         return await call_next(request)
+    maybe_cache_base_url_from_request(request)
     request.state.session_account = auth.get_session_account(request)
     if (
         path.startswith("/static/")
@@ -165,6 +167,7 @@ async def require_auth(request: Request, call_next):
 
 @app.on_event("startup")
 def startup() -> None:
+    seed_cached_base_url()
     init_db()
     missing_import_tables = get_missing_import_map_tables()
     if missing_import_tables:

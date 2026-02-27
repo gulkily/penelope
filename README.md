@@ -23,8 +23,9 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 - `./pnl test --help` for test-specific options (looping, delay, parallelism, etc).
 - `./pnl seed-demo` to add demo data (use `--allow-duplicates` if needed).
 - `./pnl env-sync` to append missing `.env` settings from `.env.example`.
-- `./pnl magic-link --admin-username <issuer> --username <target> [--house <house>]` to generate an admin-issued magic login link and assign house immediately.
+- `./pnl magic-link --admin-username <issuer> --username <target> [--house <house>] [--base-url <url>]` to generate an admin-issued magic login link and assign house immediately.
   - If `MAGIC_LINK_ADMIN_USERNAMES` is unset and the issuer account does not exist yet, the command bootstraps that account locally.
+  - If `--base-url` is omitted, `./pnl magic-link` uses `MAGIC_LINK_BASE_URL` (or `APP_BASE_URL`/`PUBLIC_BASE_URL`), then cached base URL learned from app startup/request traffic, then `TRUSTED_HOSTS`, then `http://127.0.0.1:8000`.
 
 ## Git log timesheet script
 - `python3 scripts/git_timesheet.py` to print a basic estimated-hours report for the last 2 weeks (default range).

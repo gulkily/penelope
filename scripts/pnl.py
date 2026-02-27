@@ -10,10 +10,28 @@ import signal
 import subprocess
 import sys
 from pathlib import Path
+from urllib.parse import urlparse
+
+try:
+    from dotenv import load_dotenv
+except ImportError:  # pragma: no cover - optional dependency guard
+    load_dotenv = None
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+MAGIC_LINK_BASE_URL_ENV_KEYS = (
+    "MAGIC_LINK_BASE_URL",
+    "APP_BASE_URL",
+    "PUBLIC_BASE_URL",
+)
+LOCAL_HOSTS = {
+    "127.0.0.1",
+    "localhost",
+    "0.0.0.0",
+    "::1",
+}
 
 
 def run_command(command: list[str]) -> int:
@@ -254,8 +272,70 @@ def run_magic_link_command(
     print(f"assigned_house: {issued['assigned_house']}")
     print(f"account_created: {issued['account_created']}")
     print(f"token_id: {issued['token_id']}")
+    print(f"base_url: {base_url}")
     print(f"magic_link: {issued['magic_link']}")
     return 0
+
+
+def load_repo_env() -> None:
+    if load_dotenv is None:
+        return
+    load_dotenv(dotenv_path=REPO_ROOT / ".env", override=False)
+
+
+def _validate_base_url(value: str, source: str) -> str:
+    candidate = (value or "").strip()
+    if not candidate:
+        raise ValueError(f"{source} cannot be empty.")
+    parsed = urlparse(candidate)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError(
+            f"{source} must include scheme and host, for example: https://example.com"
+        )
+    return candidate.rstrip("/")
+
+
+def _infer_base_url_from_trusted_hosts() -> str | None:
+    raw_hosts = os.getenv("TRUSTED_HOSTS", "")
+    for entry in raw_hosts.split(","):
+        host = entry.strip()
+        if not host:
+            continue
+        host_lower = host.lower()
+        if host_lower in LOCAL_HOSTS:
+            continue
+        if "*" in host_lower:
+            continue
+        if host_lower.startswith(("http://", "https://")):
+            return host
+        return f"https://{host}"
+    return None
+
+
+def resolve_magic_link_base_url(cli_base_url: str) -> str:
+    cli_candidate = (cli_base_url or "").strip()
+    if cli_candidate:
+        return _validate_base_url(cli_candidate, "--base-url")
+
+    for key in MAGIC_LINK_BASE_URL_ENV_KEYS:
+        value = os.getenv(key, "").strip()
+        if value:
+            return _validate_base_url(value, key)
+
+    try:
+        from app.base_url_store import get_cached_base_url
+
+        cached = get_cached_base_url()
+    except Exception:
+        cached = None
+    if cached:
+        return _validate_base_url(cached, "cached MAGIC_LINK_BASE_URL")
+
+    inferred = _infer_base_url_from_trusted_hosts()
+    if inferred:
+        return _validate_base_url(inferred, "TRUSTED_HOSTS")
+
+    return "http://127.0.0.1:8000"
 
 
 def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
@@ -372,8 +452,13 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
     )
     magic_link_parser.add_argument(
         "--base-url",
-        default="http://127.0.0.1:8000",
-        help="Base app URL used to compose the output link.",
+        default="",
+        help=(
+            "Base app URL used to compose the output link. "
+            "Defaults to MAGIC_LINK_BASE_URL (or APP_BASE_URL/PUBLIC_BASE_URL), "
+            "then cached learned base URL, then first non-local TRUSTED_HOSTS host, "
+            "then http://127.0.0.1:8000."
+        ),
     )
 
     return parser, parser.parse_args()
@@ -382,6 +467,7 @@ def parse_args() -> tuple[argparse.ArgumentParser, argparse.Namespace]:
 def main() -> int:
     parser, args = parse_args()
     os.chdir(REPO_ROOT)
+    load_repo_env()
 
     if args.command in (None, "help"):
         parser.print_help()
@@ -409,11 +495,16 @@ def main() -> int:
     if args.command == "env-sync":
         return run_env_sync()
     if args.command == "magic-link":
+        try:
+            resolved_base_url = resolve_magic_link_base_url(args.base_url)
+        except ValueError as exc:
+            print(f"Invalid magic link base URL: {exc}", file=sys.stderr)
+            return 2
         return run_magic_link_command(
             admin_username=args.admin_username,
             target_username=args.username,
             house=args.house,
-            base_url=args.base_url,
+            base_url=resolved_base_url,
         )
 
     return 1
