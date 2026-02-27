@@ -1614,16 +1614,40 @@ html {
 
   .transcript-workspace.has-guide-open {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 34vw);
+    align-items: stretch;
+    block-size: clamp(280px, 42vh, 400px);
+    min-height: 0;
+  }
+
+  .transcript-workspace.has-guide-open .transcript-field {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  .transcript-workspace.has-guide-open #transcript-input {
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    resize: none;
   }
 
   .transcript-workspace.has-guide-open .interview-guide {
-    position: sticky;
-    top: 0;
-    max-height: 64vh;
-    overflow: auto;
+    position: static;
+    max-height: none;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
     resize: horizontal;
     min-width: 280px;
     max-width: 520px;
+  }
+
+  .transcript-workspace.has-guide-open .interview-guide-content {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
   }
 
   .interview-guide-backdrop,
