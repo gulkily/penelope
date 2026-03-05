@@ -8,3 +8,15 @@
   - Ran `python -c "import app.main as m; m._get_build_metadata.cache_clear(); m._run_git_command=lambda args: None; print(m._get_build_metadata())"` and confirmed fallback output (`{'commit_sha': 'Unknown', 'commit_date': 'Unknown'}`).
 - Notes:
   - Metadata is cached per process to avoid invoking git on every request.
+
+## Stage 2 - Render build metadata in admin Settings surface
+- Changes:
+  - Extended `templates/settings.html` with a new `Version` card on the admin Settings page.
+  - Added server-rendered display fields for commit SHA and commit date using `build_metadata` (`{{ build_metadata.commit_sha }}` and `{{ build_metadata.commit_date }}`).
+  - Kept existing Settings cards, links, and access-control behavior unchanged.
+- Verification:
+  - Ran a manual route-render smoke command:
+    - `python - <<'PY' ... response = m.settings(request) ... print(response.status_code); print(\"Version\" in body, \"Commit:\" in body, \"Date:\" in body) PY`
+  - Confirmed status `200` for admin route rendering and presence of `Version`, `Commit:`, and `Date:` in rendered HTML.
+- Notes:
+  - The render check emitted an existing environment warning about `NAVBAR_ENABLED_ITEMS=dashboard`; this did not affect Settings rendering for this feature.
