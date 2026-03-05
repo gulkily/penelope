@@ -122,3 +122,6 @@ loom demo
 easy to add:
 	directly view transcript with search
 	a way to view only what was added the past week
+
+improve what happens when there's a 500 (internal server error)
+
