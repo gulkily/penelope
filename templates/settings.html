@@ -95,8 +95,12 @@
             <p class="hint">Current build details for support and troubleshooting.</p>
           </div>
         </div>
-        <p class="hint">Commit: <code>{{ build_metadata.commit_sha }}</code></p>
-        <p class="hint">Date: <code>{{ build_metadata.commit_date }}</code></p>
+        <p class="hint">
+          Commit: <code>{{ build_metadata.commit_sha | default("Unknown", true) }}</code>
+        </p>
+        <p class="hint">
+          Date: <code>{{ build_metadata.commit_date | default("Unknown", true) }}</code>
+        </p>
       </section>
 
       <section class="card card-compact">

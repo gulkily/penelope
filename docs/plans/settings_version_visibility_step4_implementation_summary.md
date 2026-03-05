@@ -20,3 +20,15 @@
   - Confirmed status `200` for admin route rendering and presence of `Version`, `Commit:`, and `Date:` in rendered HTML.
 - Notes:
   - The render check emitted an existing environment warning about `NAVBAR_ENABLED_ITEMS=dashboard`; this did not affect Settings rendering for this feature.
+
+## Stage 3 - Add focused regression coverage for metadata visibility
+- Changes:
+  - Hardened `templates/settings.html` metadata rendering with Jinja `default("Unknown", true)` filters for both commit SHA and commit date.
+  - Preserved existing admin-only access behavior for Settings routes while validating fallback rendering path.
+- Verification:
+  - Ran a manual fallback render + access-control smoke command:
+    - `python - <<'PY' ... m._run_git_command = lambda args: None ... print(\"fallback_unknown_rendered\", ...) ... print(\"non_admin_blocked\", ...) PY`
+  - Confirmed fallback values render as `Unknown` when metadata lookup is unavailable (`fallback_unknown_rendered True`).
+  - Confirmed non-admin Settings access remains blocked with `403` (`non_admin_blocked True`).
+- Notes:
+  - Kept verification manual and targeted to align with Step 4 guidance (no new automated tests/fixtures).
