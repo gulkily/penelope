@@ -115,3 +115,10 @@ why do the boxes have all the same dates? x
 	ensure all updates are imported, not just latest
 
 when generating a magic link, create a placeholder user right away, so that we can assign to a house x
+
+loom demo
+	show upload process using an existing file x
+	
+easy to add:
+	directly view transcript with search
+	a way to view only what was added the past week
