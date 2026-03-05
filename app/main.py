@@ -1,5 +1,7 @@
 import logging
 import os
+import subprocess
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import urlencode
 
@@ -26,6 +28,7 @@ from app.feature_flags import get_feature_flags
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 logger = logging.getLogger(__name__)
+UNKNOWN_BUILD_METADATA = "Unknown"
 
 
 def _notify_env_defaults_status_on_launch() -> None:
@@ -78,6 +81,31 @@ def _normalize_session_reset_next(raw_value: str) -> str:
     return candidate
 
 
+def _run_git_command(args: list[str]) -> str | None:
+    try:
+        result = subprocess.run(
+            args,
+            cwd=BASE_DIR,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return None
+    value = result.stdout.strip()
+    return value or None
+
+
+@lru_cache(maxsize=1)
+def _get_build_metadata() -> dict[str, str]:
+    commit_sha = _run_git_command(["git", "rev-parse", "--short", "HEAD"])
+    commit_date = _run_git_command(["git", "show", "-s", "--format=%cs", "HEAD"])
+    return {
+        "commit_sha": commit_sha or UNKNOWN_BUILD_METADATA,
+        "commit_date": commit_date or UNKNOWN_BUILD_METADATA,
+    }
+
+
 app = FastAPI()
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
@@ -128,6 +156,7 @@ def _build_template_context(request: Request, current_page: str) -> dict:
         "navbar_items": navbar_items,
         "lobby_auth_enabled": feature_flags.lobby_auth_enabled,
         "recorder_enabled": feature_flags.recorder_enabled,
+        "build_metadata": _get_build_metadata(),
     }
 
 
