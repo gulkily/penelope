@@ -34,6 +34,16 @@ Each step MUST be a separate file in `docs/plans/`:
 
 **Plan review**: Do not commit Step 1–3 plan files until the user explicitly reviews and approves them. Deliver the drafts for feedback, wait for “Approved Step N,” then commit before beginning the next step. Step 4 must start on a feature branch with the approved plan already committed.
 
+**Step 4 commit cadence (mandatory)**:
+- Make one planning commit at the start of Step 4 containing only approved Step 1–3 docs.
+- Then make exactly one implementation commit per Step 3 stage.
+- Do not start Stage `N+1` until Stage `N` has:
+  - manual verification completed,
+  - Step 4 summary updated for that stage,
+  - a commit recorded on the branch.
+- Do not squash/rebase/amend stage commits during active Step 4 execution.
+- Expected commit count by end of Step 4: `1 + (# of Step 3 stages)`.
+
 ## Key Rules
 
 **AI coding assistant**
@@ -42,6 +52,7 @@ Each step MUST be a separate file in `docs/plans/`:
 - After delivering each step, explicitly request “Approved Step N” and pause until the user responds with that exact phrase
 - Create the current step’s draft file before requesting approval; do not create the next step’s file until the current step is approved
 - ALWAYS create a feature branch before Step 4 implementation
+- Enforce Step 4 commit cadence: one commit per implemented stage, plus one initial planning-doc commit
 - Prefer shared components/API contracts first; reuse or extend instead of forking markup, CSS, or payloads
 - Flag scope creep early and bounce back to planning steps rather than improvising mid-implementation
 - Keep projected work within roughly a day or eight Step 3 stages; otherwise recommend splitting the feature
@@ -57,7 +68,7 @@ Each step MUST be a separate file in `docs/plans/`:
 - **Step 1**: >1 page, >4 options, or verbose explanations
 - **Step 2**: >1 page, includes code/DB details, or drifts into UI mockups
 - **Step 3**: >1 page, stages >2 hours, or tangled dependencies
-- **Step 4**: Missing feature branch, skipping stages, or changing requirements mid-flight
+- **Step 4**: Missing feature branch, skipping stages, changing requirements mid-flight, or commit count lower than `1 + stage count`
 
 ## Workflows
 - **Simple**: Step 2 → Step 3 → Step 4 (feature branch → implement stages → test/commit → complete)
