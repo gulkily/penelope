@@ -4,17 +4,14 @@ import re
 from playwright.sync_api import expect
 
 from tests.e2e.data_factory import unique_project_name
+from tests.e2e.helpers import create_resident, open_dashboard_project
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
 def create_project(page, project_name):
-    page.goto(f"{BASE_URL}/projects")
-    expect(page.locator("#project-house")).not_to_have_value("")
-    page.get_by_label("Resident name").fill(project_name)
-    page.get_by_role("button", name="Add resident").click()
-    expect(page.get_by_role("link", name=project_name)).to_be_visible()
-    page.get_by_role("link", name=project_name).click()
+    project_id = create_resident(page, BASE_URL, project_name)
+    open_dashboard_project(page, BASE_URL, project_id)
     # Wait for dashboard interactivity to be restored for the selected resident.
     expect(page.locator("#objective-input")).to_be_enabled()
     expect(page.locator("#transcript-open")).to_be_enabled()

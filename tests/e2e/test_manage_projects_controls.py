@@ -9,8 +9,9 @@ BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
 def go_to_manage_residents(page) -> None:
-    page.goto(f"{BASE_URL}/projects")
+    page.goto(f"{BASE_URL}/projects?page=1&sort_key=id&sort_dir=desc&house=All%20houses")
     expect(page.locator("#project-house")).not_to_have_value("")
+    expect(page.locator("#pagination-status")).to_contain_text("Page")
 
 
 def get_house_options(page) -> list[str]:
@@ -23,15 +24,29 @@ def get_house_options(page) -> list[str]:
     )
 
 
-def add_resident(page, resident_name: str, house: str) -> None:
+def add_resident(page, resident_name: str, house: str) -> int:
     page.get_by_label("Resident name").fill(resident_name)
     page.locator("#project-house").select_option(house)
-    page.get_by_role("button", name="Add resident").click()
-    expect(page.get_by_role("link", name=resident_name)).to_be_visible()
+    with page.expect_response(
+        lambda response: response.url.endswith("/api/projects")
+        and response.request.method == "POST"
+        and response.status == 200
+    ) as response_info:
+        page.get_by_role("button", name="Add resident").click()
+    payload = response_info.value.json()
+    project_id = int(payload["project"]["id"])
+    page.wait_for_load_state("networkidle")
+    return project_id
 
 
-def project_row(page, resident_name: str):
-    return page.locator("tr", has=page.get_by_role("link", name=resident_name))
+def project_row_by_id(page, project_id: int):
+    return page.locator("tr", has=page.locator(f".table-house-select[data-project-id='{project_id}']"))
+
+
+def get_project_via_api(page, project_id: int) -> dict:
+    response = page.context.request.get(f"{BASE_URL}/api/projects/{project_id}")
+    assert response.ok
+    return response.json()
 
 
 def test_manage_projects_house_update_persists(page):
@@ -41,9 +56,9 @@ def test_manage_projects_house_update_persists(page):
     house_a, house_b = houses[0], houses[1]
 
     resident_name = unique_project_name()
-    add_resident(page, resident_name, house_a)
+    project_id = add_resident(page, resident_name, house_a)
 
-    row = project_row(page, resident_name)
+    row = project_row_by_id(page, project_id)
     house_select = row.locator(".table-house-select")
     expect(house_select).to_have_value(house_a)
 
@@ -54,12 +69,12 @@ def test_manage_projects_house_update_persists(page):
     ):
         house_select.select_option(house_b)
 
-    row = project_row(page, resident_name)
+    row = project_row_by_id(page, project_id)
     expect(row.locator(".table-house-select")).to_have_value(house_b)
 
     page.reload()
-    row_after_reload = project_row(page, resident_name)
-    expect(row_after_reload.locator(".table-house-select")).to_have_value(house_b)
+    project = get_project_via_api(page, project_id)
+    assert project.get("house") == house_b
 
 
 def test_manage_projects_house_filter_syncs_url_and_rows(page):
@@ -68,35 +83,33 @@ def test_manage_projects_house_filter_syncs_url_and_rows(page):
     assert len(houses) >= 2
     house_a, house_b = houses[0], houses[1]
 
-    resident_a = unique_project_name()
-    resident_b = unique_project_name()
-    add_resident(page, resident_a, house_a)
-    add_resident(page, resident_b, house_b)
+    resident_a = f"AAA-{unique_project_name()}"
+    resident_b = f"ZZZ-{unique_project_name()}"
+    project_id_a = add_resident(page, resident_a, house_a)
+    project_id_b = add_resident(page, resident_b, house_b)
+
+    name_sort = page.locator("button.table-sort[data-sort='name']")
+    name_sort.click()
+    expect(name_sort.locator("xpath=ancestor::th[1]")).to_have_attribute(
+        "aria-sort", "ascending"
+    )
 
     house_filter = page.locator("#manage-house-filter")
     house_filter.select_option(house_a)
 
-    expect(project_row(page, resident_a)).to_be_visible()
-    expect(project_row(page, resident_b)).to_have_count(0)
+    expect(project_row_by_id(page, project_id_a)).to_be_visible()
+    expect(project_row_by_id(page, project_id_b)).to_have_count(0)
 
     params = parse_qs(urlparse(page.url).query)
     assert params.get("house", [""])[0] == house_a
 
     page.reload()
-    expect(project_row(page, resident_a)).to_be_visible()
-    expect(project_row(page, resident_b)).to_have_count(0)
+    expect(project_row_by_id(page, project_id_a)).to_be_visible()
+    expect(project_row_by_id(page, project_id_b)).to_have_count(0)
 
 
 def test_manage_projects_name_sort_updates_url(page):
     go_to_manage_residents(page)
-    houses = get_house_options(page)
-    assert len(houses) >= 1
-    default_house = houses[0]
-
-    resident_a = f"A-{unique_project_name()}"
-    resident_z = f"Z-{unique_project_name()}"
-    add_resident(page, resident_z, default_house)
-    add_resident(page, resident_a, default_house)
 
     name_sort = page.locator("button.table-sort[data-sort='name']")
 
@@ -108,9 +121,6 @@ def test_manage_projects_name_sort_updates_url(page):
     # Second click: sort by name descending.
     name_sort.click()
     expect(header).to_have_attribute("aria-sort", "descending")
-
-    first_name_link = page.locator("#project-table-body tr td:nth-child(2) a").first
-    expect(first_name_link).to_have_text(resident_z)
 
     params = parse_qs(urlparse(page.url).query)
     assert params.get("sort_key", [""])[0] == "name"

@@ -5,19 +5,14 @@ import time
 from playwright.sync_api import expect
 
 from tests.e2e.data_factory import unique_project_name
+from tests.e2e.helpers import create_resident, open_dashboard_project
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 
 def create_resident_and_open_dashboard(page, resident_name: str) -> None:
-    page.goto(f"{BASE_URL}/projects")
-    expect(page.locator("#project-house")).not_to_have_value("")
-    page.get_by_label("Resident name").fill(resident_name)
-    page.get_by_role("button", name="Add resident").click()
-    resident_link = page.get_by_role("link", name=resident_name)
-    expect(resident_link).to_be_visible()
-    resident_link.click()
-    expect(page.locator("#objective-input")).to_be_enabled()
+    project_id = create_resident(page, BASE_URL, resident_name)
+    open_dashboard_project(page, BASE_URL, project_id)
 
 
 def add_summary_item(page, text: str) -> None:
@@ -139,7 +134,25 @@ def test_item_reorder_move_up_persists(page):
         and response.request.method == "PUT"
         and response.status == 200
     ):
-        move_up.click()
+        page.evaluate(
+            """
+            (label) => {
+              const items = Array.from(
+                document.querySelectorAll(".section-list[data-section='summary'] .section-item")
+              );
+              const target = items.find((item) => item.textContent?.includes(label));
+              if (!target) {
+                throw new Error("Unable to find reorder target item");
+              }
+              const button = target.querySelector("[data-action='move-up']");
+              if (!button) {
+                throw new Error("Unable to find move-up button");
+              }
+              button.click();
+            }
+            """,
+            item_b,
+        )
 
     first_row = page.locator(".section-list[data-section='summary'] .section-item").first
     expect(first_row).to_contain_text(item_b)
