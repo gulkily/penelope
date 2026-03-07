@@ -1,8 +1,9 @@
 import os
 import re
 
-import pytest
 from playwright.sync_api import expect
+
+from app import auth
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
@@ -36,41 +37,56 @@ def test_session_reset_with_active_session_redirects_to_next(page):
     assert page.url.startswith(f"{BASE_URL}/projects")
 
 
-def test_session_reset_restore_success_redirects_to_requested_route(page):
-    page.context.clear_cookies()
-    seed_browser_keypair(page)
+def test_session_reset_restore_success_redirects_to_requested_route(
+    page,
+    e2e_admin_account_id: int,
+):
+    # Use a fresh browser context so this test doesn't inherit autouse admin cookies.
+    context = page.context.browser.new_context(base_url=BASE_URL)
+    fresh_page = context.new_page()
+    try:
+        seed_browser_keypair(fresh_page)
 
-    route_hits = {"challenge": 0, "restore": 0}
+        route_hits = {"challenge": 0, "restore": 0}
 
-    def handle_challenge(route):
-        route_hits["challenge"] += 1
-        route.fulfill(
-            status=200,
-            content_type="application/json",
-            body='{"challenge":"test.challenge"}',
+        def handle_challenge(route):
+            route_hits["challenge"] += 1
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                body='{"challenge":"test.challenge"}',
+            )
+
+        def handle_restore(route):
+            route_hits["restore"] += 1
+            cookie_value = auth._encode_cookie(e2e_admin_account_id)
+            route.fulfill(
+                status=200,
+                content_type="application/json",
+                headers={
+                    "Set-Cookie": (
+                        f"{auth.COOKIE_NAME}={cookie_value}; "
+                        "Path=/; HttpOnly; SameSite=Lax"
+                    )
+                },
+                body='{"status":"ok"}',
+            )
+
+        fresh_page.route(
+            "**/api/auth/session/challenge",
+            handle_challenge,
+        )
+        fresh_page.route(
+            "**/api/auth/session/restore",
+            handle_restore,
         )
 
-    def handle_restore(route):
-        route_hits["restore"] += 1
-        route.fulfill(
-            status=200,
-            content_type="application/json",
-            body='{"status":"ok"}',
-        )
-
-    page.route(
-        "**/api/auth/session/challenge",
-        handle_challenge,
-    )
-    page.route(
-        "**/api/auth/session/restore",
-        handle_restore,
-    )
-
-    page.goto(f"{BASE_URL}/session/reset?next=/projects")
-    if route_hits["challenge"] == 0 or route_hits["restore"] == 0:
-        pytest.skip("Session restore JS flow did not initialize in this browser context.")
-    expect(page).to_have_url(re.compile(rf"{re.escape(BASE_URL)}/projects.*"))
+        fresh_page.goto(f"{BASE_URL}/session/reset?next=/projects")
+        expect(fresh_page).to_have_url(re.compile(rf"{re.escape(BASE_URL)}/projects.*"))
+        assert route_hits["challenge"] >= 1
+        assert route_hits["restore"] >= 1
+    finally:
+        context.close()
 
 
 def test_session_reset_without_keypair_redirects_to_welcome(page):
