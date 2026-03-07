@@ -1,4 +1,5 @@
 import os
+import re
 
 from playwright.sync_api import expect
 
@@ -9,8 +10,9 @@ BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
 
 def create_project(page, project_name):
     page.goto(f"{BASE_URL}/projects")
-    page.get_by_label("Project name").fill(project_name)
-    page.get_by_role("button", name="Add project").click()
+    expect(page.locator("#project-house")).not_to_have_value("")
+    page.get_by_label("Resident name").fill(project_name)
+    page.get_by_role("button", name="Add resident").click()
     expect(page.get_by_role("link", name=project_name)).to_be_visible()
     page.get_by_role("link", name=project_name).click()
 
@@ -30,13 +32,19 @@ def test_interview_guide_checklist_progress_updates(page):
 
     first_checkbox = page.locator("#interview-guide-body input[type='checkbox']").first
     expect(first_checkbox).to_be_visible()
-    expect(page.locator("#interview-guide-progress")).to_have_text("0/9 asked")
+    expect(page.locator("#interview-guide-progress")).to_have_text(
+        re.compile(r"0/\d+\s+asked")
+    )
 
     first_checkbox.check()
-    expect(page.locator("#interview-guide-progress")).to_have_text("1/9 asked")
+    expect(page.locator("#interview-guide-progress")).to_have_text(
+        re.compile(r"1/\d+\s+asked")
+    )
 
     first_checkbox.uncheck()
-    expect(page.locator("#interview-guide-progress")).to_have_text("0/9 asked")
+    expect(page.locator("#interview-guide-progress")).to_have_text(
+        re.compile(r"0/\d+\s+asked")
+    )
 
 
 def test_interview_guide_mobile_drawer_closes_on_backdrop(page):

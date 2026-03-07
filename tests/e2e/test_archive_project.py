@@ -12,8 +12,9 @@ def test_archive_unarchive_project(page):
     project_name = unique_project_name()
 
     page.goto(f"{BASE_URL}/projects")
-    page.get_by_label("Project name").fill(project_name)
-    page.get_by_role("button", name="Add project").click()
+    expect(page.locator("#project-house")).not_to_have_value("")
+    page.get_by_label("Resident name").fill(project_name)
+    page.get_by_role("button", name="Add resident").click()
     expect(page.get_by_role("link", name=project_name)).to_be_visible()
 
     row = page.locator("tr", has=page.get_by_role("link", name=project_name))

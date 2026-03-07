@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import time
 
 from playwright.sync_api import expect
@@ -18,8 +19,9 @@ SECTIONS = {
 
 def create_project(page, name):
     page.goto(f"{BASE_URL}/projects")
-    page.get_by_label("Project name").fill(name)
-    page.get_by_role("button", name="Add project").click()
+    expect(page.locator("#project-house")).not_to_have_value("")
+    page.get_by_label("Resident name").fill(name)
+    page.get_by_role("button", name="Add resident").click()
     expect(page.get_by_role("link", name=name)).to_be_visible()
     page.get_by_role("link", name=name).click()
 
@@ -72,7 +74,7 @@ def test_populates_all_fields(page):
             }
             """
         )
-    expect(page.locator("#progress-percent")).to_have_text("75%")
+    expect(page.locator("#progress-percent")).to_have_text(re.compile(r"75\s*/\s*100"))
 
     questions_input = page.locator("#questions-input")
     with page.expect_response(
@@ -96,7 +98,7 @@ def test_populates_all_fields(page):
     page.reload()
     expect(page.locator("#objective-input")).to_have_value(objective_text)
     expect(page.locator("#questions-input")).to_have_value(questions_text)
-    expect(page.locator("#progress-percent")).to_have_text("75%")
+    expect(page.locator("#progress-percent")).to_have_text(re.compile(r"75\s*/\s*100"))
     for section, label in SECTIONS.items():
         for index in range(1, 6):
             item_text = f"{label} item {timestamp} #{index}"
