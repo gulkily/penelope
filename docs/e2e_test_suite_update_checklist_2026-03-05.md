@@ -12,6 +12,12 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - `tests/e2e/test_interview_guide.py::test_interview_guide_checklist_progress_updates`
 - `tests/e2e/test_interview_guide.py::test_interview_guide_mobile_drawer_closes_on_backdrop`
 - `tests/e2e/test_theme_toggle.py::test_theme_toggle_cycles_preferences`
+- `tests/e2e/test_dashboard_interactions.py::test_goal_autosave_updates_progress_scale`
+- `tests/e2e/test_dashboard_interactions.py::test_delete_item_can_be_undone`
+- `tests/e2e/test_dashboard_interactions.py::test_item_reorder_move_up_persists`
+- `tests/e2e/test_manage_projects_controls.py::test_manage_projects_house_update_persists`
+- `tests/e2e/test_manage_projects_controls.py::test_manage_projects_house_filter_syncs_url_and_rows`
+- `tests/e2e/test_manage_projects_controls.py::test_manage_projects_name_sort_updates_url`
 
 ## 1. Stabilize the test harness first
 - [x] Add deterministic auth bootstrap fixture for admin session cookie injection.
