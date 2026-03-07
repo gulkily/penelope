@@ -13,13 +13,14 @@
 ## Current Status
 - Full E2E run is green after coverage expansion.
 - Last full run command: `./pnl test e2e`
-- Last result: `26 passed in 27.96s`
+- Last result: `30 passed in 27.03s`
 - New coverage files added:
   - `tests/e2e/test_auth_and_settings_pages.py`
   - `tests/e2e/test_dashboard_graph_and_keyboard.py`
   - `tests/e2e/test_dashboard_interactions.py`
   - `tests/e2e/test_dashboard_selection_and_dialog.py`
   - `tests/e2e/test_manage_projects_controls.py`
+  - `tests/e2e/test_settings_subpages_and_theme.py`
   - `tests/e2e/helpers.py`
 
 ## Immediate Next Run

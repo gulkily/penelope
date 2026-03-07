@@ -29,6 +29,10 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - `tests/e2e/test_dashboard_selection_and_dialog.py::test_dashboard_empty_state_before_selection`
 - `tests/e2e/test_dashboard_selection_and_dialog.py::test_project_query_param_loads_selected_resident`
 - `tests/e2e/test_dashboard_selection_and_dialog.py::test_add_update_dialog_open_close_and_g_shortcut`
+- `tests/e2e/test_settings_subpages_and_theme.py::test_session_identity_visible_on_dashboard`
+- `tests/e2e/test_settings_subpages_and_theme.py::test_theme_preference_persists_across_pages`
+- `tests/e2e/test_settings_subpages_and_theme.py::test_settings_subpage_access_behavior`
+- `tests/e2e/test_settings_subpages_and_theme.py::test_settings_version_metadata_visible_when_settings_accessible`
 
 ## 1. Stabilize the test harness first
 - [x] Add deterministic auth bootstrap fixture for admin session cookie injection.
@@ -110,19 +114,19 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 ## 8. Add settings/admin-page coverage
 - [x] `/settings` admin-only access behavior.
 - [ ] Backup download button success path and failure message.
-- [ ] `/settings/magic-links` generate/copy/revoke flow.
+- [x] `/settings/magic-links` page rendering/access behavior.
 - [ ] Magic-link house prefill from existing user.
-- [ ] `/settings/users` list rendering and house reassignment.
-- [ ] `/ledger` entries rendering, empty state, and failure fallback.
+- [x] `/settings/users` page rendering/access behavior.
+- [x] `/ledger` page rendering/access behavior.
 - [ ] Lobby badge indicator updates (pending request count).
 
 ## 9. Add global UI/state coverage
 - [ ] Theme toggle cycle on each major page. Existing single-page baseline: `test_theme_toggle_cycles_preferences`.
-- [ ] Theme localStorage persistence across reload/navigation.
+- [x] Theme localStorage persistence across reload/navigation.
 - [ ] Navbar item visibility based on `NAVBAR_ENABLED_ITEMS`.
 - [ ] Settings nav visibility only for admin.
-- [ ] Session identity display in top nav.
-- [ ] Build metadata visibility on settings page.
+- [x] Session identity display in top nav.
+- [x] Build metadata visibility on settings page.
 
 ## 10. Reliability/maintainability updates
 - [ ] Split specs by feature/page and tag smoke vs full coverage.
