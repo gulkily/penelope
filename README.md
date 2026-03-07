@@ -43,15 +43,20 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 1. Install test dependencies:
    - `pip install -r requirements.txt`
    - `python -m playwright install`
+   - Optional (Firefox only): `python -m playwright install firefox`
 2. Start the server in a separate terminal:
    - `./start.sh`
 3. Run tests:
    - `pytest tests/e2e` (browser-driven E2E)
+   - `pytest tests/e2e --browser firefox` (run E2E with Firefox)
    - `pytest tests/http` (HTTP-level integration)
    - `pytest` (all tests)
 4. Optional: set `E2E_BASE_URL` to point at a non-default server.
-5. Optional: run in parallel with `pytest -n 4` or `./pnl test --workers 4` (uses the current database).
-6. Optional: loop tests with `./pnl test --loop 10 --workers 2` or `python scripts/run_e2e_loop.py 10 --workers 2`.
+5. Optional: run one specific test with readable progress/skip reasons:
+   - `pytest tests/e2e/test_magic_links_and_lobby_badge.py::test_lobby_badge_indicator_updates_with_pending_count -v -rs --maxfail=1`
+6. Optional: run in parallel with `pytest -n 4` or `./pnl test --workers 4` (uses the current database).
+7. Optional: loop tests with `./pnl test --loop 10 --workers 2` or `python scripts/run_e2e_loop.py 10 --workers 2`.
+8. If `.env` feature flags change (for example `NAVBAR_ENABLED_ITEMS` / `LOBBY_AUTH_ENABLED`), restart the app before running tests.
 
 ## Generate test audio
 Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
