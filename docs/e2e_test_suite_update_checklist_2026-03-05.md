@@ -33,17 +33,43 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - `tests/e2e/test_settings_subpages_and_theme.py::test_theme_preference_persists_across_pages`
 - `tests/e2e/test_settings_subpages_and_theme.py::test_settings_subpage_access_behavior`
 - `tests/e2e/test_settings_subpages_and_theme.py::test_settings_version_metadata_visible_when_settings_accessible`
+- `tests/e2e/test_settings_subpages_and_theme.py::test_settings_backup_download_success_and_failure_status`
+- `tests/e2e/test_settings_subpages_and_theme.py::test_theme_toggle_cycles_on_major_pages`
+- `tests/e2e/test_manage_projects_controls.py::test_manage_projects_id_and_archived_sort_update_url`
+- `tests/e2e/test_manage_projects_controls.py::test_manage_projects_pagination_next_prev_and_status`
+- `tests/e2e/test_manage_projects_controls.py::test_manage_projects_back_forward_restores_filter_and_sort`
+- `tests/e2e/test_session_and_lobby_flows.py::test_session_reset_with_active_session_redirects_to_next`
+- `tests/e2e/test_session_and_lobby_flows.py::test_session_reset_restore_success_redirects_to_requested_route`
+- `tests/e2e/test_session_and_lobby_flows.py::test_session_reset_without_keypair_redirects_to_welcome`
+- `tests/e2e/test_session_and_lobby_flows.py::test_lobby_page_renders_enabled_or_disabled_state`
+- `tests/e2e/test_session_and_lobby_flows.py::test_welcome_token_handoff_renders_lobby_request_panel`
+- `tests/e2e/test_session_and_lobby_flows.py::test_lobby_token_handoff_renders_request_panel`
+- `tests/e2e/test_dashboard_role_visibility.py::test_non_admin_scope_and_read_only_notes`
+- `tests/e2e/test_dashboard_role_visibility.py::test_non_admin_dashboard_hides_settings_nav`
+- `tests/e2e/test_dashboard_house_filter.py::test_dashboard_house_filter_syncs_url_storage_and_resident_options`
+- `tests/e2e/test_dashboard_keyboard_inputs.py::test_inline_add_shift_enter_newline_then_enter_submits`
+- `tests/e2e/test_dashboard_keyboard_inputs.py::test_item_edit_enter_key_saves`
+- `tests/e2e/test_transcript_dialog_flows.py::test_transcript_draft_autosave_restore_clear_per_resident`
+- `tests/e2e/test_transcript_dialog_flows.py::test_analyze_and_apply_transcript_updates_with_regeneration`
+- `tests/e2e/test_transcript_dialog_flows.py::test_transcript_analyze_error_and_offline_states`
+- `tests/e2e/test_transcript_dialog_flows.py::test_transcript_analyze_timeout_state`
+- `tests/e2e/test_transcript_dialog_flows.py::test_questions_regeneration_error_status_after_apply`
+- `tests/e2e/test_audio_upload_flows.py::test_small_audio_upload_uses_single_request_path`
+- `tests/e2e/test_audio_upload_flows.py::test_large_audio_upload_uses_chunked_path`
+- `tests/e2e/test_audio_upload_flows.py::test_audio_upload_failure_shows_error_message`
+- `tests/e2e/test_magic_links_and_lobby_badge.py::test_magic_link_house_prefills_from_existing_user`
+- `tests/e2e/test_magic_links_and_lobby_badge.py::test_lobby_badge_indicator_updates_with_pending_count`
 
 ## 1. Stabilize the test harness first
 - [x] Add deterministic auth bootstrap fixture for admin session cookie injection.
-- [ ] Add a deterministic auth bootstrap fixture (admin and non-admin).
+- [x] Add a deterministic auth bootstrap fixture (admin and non-admin).
 - [ ] Add a deterministic DB strategy per test run (ephemeral DB or isolated test schema).
 - [ ] Add fixture factories for account, resident, house, and seeded progress history.
 - [ ] Add fixture helpers for URL param setup (`project`, `house`, pagination/sort params).
 - [ ] Add route-mocking fixtures for LLM/transcription endpoints so tests do not depend on external APIs.
 - [ ] Add helper to assert network request payloads for autosave/update endpoints.
 - [ ] Standardize selectors strategy (`data-*` hooks) to avoid breakage from label/text copy changes.
-- [ ] Add a fail-fast check that app is reachable and authenticated session is active before UI assertions.
+- [x] Add a fail-fast check that app is reachable and authenticated session is active before UI assertions.
 
 ## 2. Repair outdated existing tests
 - [x] Update resident creation selectors (`Resident name`, `Add resident`, required house selection).
@@ -55,40 +81,40 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 ## 3. Add missing dashboard coverage (`/`)
 - [x] Authenticated load with no resident selected (empty state and disabled controls). Existing baseline page-load check: `test_dashboard_loads`.
 - [x] Resident selection by dropdown and by `?project=` URL parameter.
-- [ ] Admin house filter behavior, including localStorage persistence and URL sync.
-- [ ] Non-admin resident scoping by assigned house.
-- [ ] Summary field editable for admin, read-only rendering for non-admin.
-- [ ] Questions field editable for admin, read-only rendering for non-admin. Existing admin autosave test: `test_questions_autosave`.
-- [ ] Objective autosave and persistence. Existing test: `test_can_create_project_and_update_north_star`.
-- [ ] Goal autosave and slider max recalculation.
-- [ ] Progress slider update + persistence + display correctness. Existing baseline test: `test_can_create_project_and_update_north_star`.
+- [x] Admin house filter behavior, including localStorage persistence and URL sync.
+- [x] Non-admin resident scoping by assigned house.
+- [x] Summary field editable for admin, read-only rendering for non-admin.
+- [x] Questions field editable for admin, read-only rendering for non-admin. Existing admin autosave test: `test_questions_autosave`.
+- [x] Objective autosave and persistence. Existing test: `test_can_create_project_and_update_north_star`.
+- [x] Goal autosave and slider max recalculation.
+- [x] Progress slider update + persistence + display correctness. Existing baseline test: `test_can_create_project_and_update_north_star`.
 - [x] Progress graph toggle and progress-history rendering.
-- [ ] Inline add in all four sections (summary/challenges/opportunities/milestones). Existing broad add coverage: `test_populates_all_fields`.
-- [ ] Item edit/save/cancel behavior. Existing summary-item flow: `test_item_add_edit_delete`.
+- [x] Inline add in all four sections (summary/challenges/opportunities/milestones). Existing broad add coverage: `test_populates_all_fields`.
+- [x] Item edit/save/cancel behavior. Existing summary-item flow: `test_item_add_edit_delete`.
 - [x] Item delete + undo toast restore path.
 - [x] Item reorder via up/down buttons.
 - [x] Item reorder via keyboard (`ArrowUp`/`ArrowDown` on drag handle).
 - [ ] Item reorder via pointer drag.
-- [ ] Keyboard behavior (Enter submit, Shift+Enter newline, Escape cancel).
+- [x] Keyboard behavior (Enter submit, Shift+Enter newline, Escape cancel).
 
 ## 4. Add transcript/update-dialog coverage
 - [x] Open/close Add Update dialog. Existing dialog usage in interview-guide tests.
-- [ ] Transcript draft autosave/restore/clear per resident.
+- [x] Transcript draft autosave/restore/clear per resident.
 - [x] Interview guide load/toggle. Existing tests: `test_interview_guide_checklist_progress_updates`, `test_interview_guide_mobile_drawer_closes_on_backdrop`.
 - [x] Interview guide keyboard shortcut (`g`) behavior.
 - [x] Interview guide mobile drawer/backdrop close behavior. Existing test: `test_interview_guide_mobile_drawer_closes_on_backdrop`.
-- [ ] Analyze transcript success path (mocked backend response).
-- [ ] Analyze transcript offline/error/timeout states.
-- [ ] Suggested updates render and selectable apply logic.
-- [ ] Apply updates writes objective/goal/progress/items and refreshes resident view.
-- [ ] Questions regeneration lifecycle after apply (`queued/running/completed/error`).
-- [ ] Confetti trigger after successful apply.
+- [x] Analyze transcript success path (mocked backend response).
+- [x] Analyze transcript offline/error/timeout states.
+- [x] Suggested updates render and selectable apply logic.
+- [x] Apply updates writes objective/goal/progress/items and refreshes resident view.
+- [x] Questions regeneration lifecycle after apply (`queued/running/completed/error`).
+- [x] Confetti trigger after successful apply.
 
 ## 5. Add audio upload/recording coverage
-- [ ] File upload single-request path (small file).
-- [ ] Chunked upload path (large file) with progress updates.
+- [x] File upload single-request path (small file).
+- [x] Chunked upload path (large file) with progress updates.
 - [ ] Upload pause/resume messaging when offline.
-- [ ] Upload failure handling and retry messaging.
+- [x] Upload failure handling and retry messaging.
 - [ ] Recorder start/stop/reset UI behavior (if permissions are mocked).
 - [ ] `RECORDER_ENABLED=false` hides/disables recorder UI appropriately.
 
@@ -97,34 +123,34 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - [x] Archive/unarchive resident. Existing test: `test_archive_unarchive_project`.
 - [x] Change resident house inline.
 - [x] House filter on table.
-- [ ] Sort by ID/name/archived.
-- [ ] Pagination prev/next and status text.
-- [ ] URL sync for page/sort/house and back/forward behavior.
+- [x] Sort by ID/name/archived.
+- [x] Pagination prev/next and status text.
+- [x] URL sync for page/sort/house and back/forward behavior.
 
 ## 7. Add auth/session flow coverage
 - [x] Unauthenticated access redirects to `/session/reset` with normalized `next`.
-- [ ] `/session/reset` success restore redirects to requested route.
-- [ ] `/session/reset` failure redirects to `/welcome`.
+- [x] `/session/reset` success restore redirects to requested route.
+- [x] `/session/reset` failure redirects to `/welcome`.
 - [x] `/welcome` unauthenticated rendering.
-- [ ] `/welcome?token=...` lobby handoff behavior.
+- [x] `/welcome?token=...` lobby handoff behavior.
 - [ ] `/lobby` rendering when lobby auth disabled.
-- [ ] `/lobby?token=...` behavior when lobby auth disabled but token flow allowed.
+- [x] `/lobby?token=...` behavior when lobby auth disabled but token flow allowed.
 - [x] Logout button clears session and redirects to `/lobby`.
 
 ## 8. Add settings/admin-page coverage
 - [x] `/settings` admin-only access behavior.
-- [ ] Backup download button success path and failure message.
+- [x] Backup download button success path and failure message.
 - [x] `/settings/magic-links` page rendering/access behavior.
-- [ ] Magic-link house prefill from existing user.
+- [x] Magic-link house prefill from existing user.
 - [x] `/settings/users` page rendering/access behavior.
 - [x] `/ledger` page rendering/access behavior.
 - [ ] Lobby badge indicator updates (pending request count).
 
 ## 9. Add global UI/state coverage
-- [ ] Theme toggle cycle on each major page. Existing single-page baseline: `test_theme_toggle_cycles_preferences`.
+- [x] Theme toggle cycle on each major page. Existing single-page baseline: `test_theme_toggle_cycles_preferences`.
 - [x] Theme localStorage persistence across reload/navigation.
 - [ ] Navbar item visibility based on `NAVBAR_ENABLED_ITEMS`.
-- [ ] Settings nav visibility only for admin.
+- [x] Settings nav visibility only for admin.
 - [x] Session identity display in top nav.
 - [x] Build metadata visibility on settings page.
 
