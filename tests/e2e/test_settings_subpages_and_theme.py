@@ -54,3 +54,51 @@ def test_settings_version_metadata_visible_when_settings_accessible(page):
 
     expect(page.get_by_text("Commit:", exact=False)).to_be_visible()
     expect(page.get_by_text("Date:", exact=False)).to_be_visible()
+
+
+def test_settings_backup_download_success_and_failure_status(page):
+    page.goto(f"{BASE_URL}/settings")
+    if not page_is_at(page, "/settings"):
+        pytest.skip("Settings page requires admin access in this environment.")
+
+    page.route(
+        "**/api/backup",
+        lambda route: route.fulfill(
+            status=200,
+            headers={
+                "Content-Type": "application/x-sqlite3",
+                "Content-Disposition": 'attachment; filename="north_star_backup.sqlite"',
+            },
+            body="sqlite",
+        ),
+    )
+    page.locator("#backup-download").click()
+    expect(page.locator("#backup-status")).to_have_text("Backup downloaded.")
+
+    page.unroute("**/api/backup")
+    page.route(
+        "**/api/backup",
+        lambda route: route.fulfill(status=500, body='{"detail":"failed"}'),
+    )
+    page.locator("#backup-download").click()
+    expect(page.locator("#backup-status")).to_have_text("Backup failed. Please try again.")
+
+
+def test_theme_toggle_cycles_on_major_pages(page):
+    page.goto(f"{BASE_URL}/")
+    page.evaluate("() => localStorage.removeItem('theme-preference')")
+    page.reload()
+
+    paths = ["/", "/projects", "/settings"]
+    for path in paths:
+        page.goto(f"{BASE_URL}{path}")
+        if path == "/settings" and not page_is_at(page, "/settings"):
+            continue
+        toggle = page.locator("#theme-toggle")
+        expect(toggle).to_be_visible()
+        before = toggle.get_attribute("data-preference")
+        toggle.click()
+        after = toggle.get_attribute("data-preference")
+        assert before is not None
+        assert after is not None
+        assert after != before
