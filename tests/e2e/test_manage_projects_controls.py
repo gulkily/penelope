@@ -3,6 +3,7 @@ from urllib.parse import parse_qs, urlparse
 
 from playwright.sync_api import expect
 
+from app import db
 from tests.e2e.data_factory import unique_project_name
 
 BASE_URL = os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
@@ -47,6 +48,22 @@ def get_project_via_api(page, project_id: int) -> dict:
     response = page.context.request.get(f"{BASE_URL}/api/projects/{project_id}")
     assert response.ok
     return response.json()
+
+
+def ensure_manage_projects_multiple_pages(page, minimum_total: int = 101) -> None:
+    response = page.context.request.get(
+        f"{BASE_URL}/api/projects?include_archived=1&page=1&house=All%20houses"
+    )
+    assert response.ok
+    payload = response.json()
+    current_total = int(payload.get("total") or 0)
+    if current_total >= minimum_total:
+        return
+    houses = get_house_options(page)
+    assert houses
+    seed_house = houses[0]
+    for _ in range(minimum_total - current_total):
+        db.create_project(unique_project_name(), seed_house)
 
 
 def test_manage_projects_house_update_persists(page):
@@ -125,3 +142,80 @@ def test_manage_projects_name_sort_updates_url(page):
     params = parse_qs(urlparse(page.url).query)
     assert params.get("sort_key", [""])[0] == "name"
     assert params.get("sort_dir", [""])[0] == "desc"
+
+
+def test_manage_projects_id_and_archived_sort_update_url(page):
+    go_to_manage_residents(page)
+
+    id_sort = page.locator("button.table-sort[data-sort='id']")
+    id_header = id_sort.locator("xpath=ancestor::th[1]")
+    id_sort.click()
+    expect(id_header).to_have_attribute("aria-sort", "ascending")
+    id_sort.click()
+    expect(id_header).to_have_attribute("aria-sort", "descending")
+
+    params = parse_qs(urlparse(page.url).query)
+    assert params.get("sort_key", [""])[0] == "id"
+    assert params.get("sort_dir", [""])[0] == "desc"
+
+    archived_sort = page.locator("button.table-sort[data-sort='archived']")
+    archived_header = archived_sort.locator("xpath=ancestor::th[1]")
+    archived_sort.click()
+    expect(archived_header).to_have_attribute("aria-sort", "ascending")
+
+    params = parse_qs(urlparse(page.url).query)
+    assert params.get("sort_key", [""])[0] == "archived"
+    assert params.get("sort_dir", [""])[0] == "asc"
+
+
+def test_manage_projects_pagination_next_prev_and_status(page):
+    go_to_manage_residents(page)
+    ensure_manage_projects_multiple_pages(page)
+
+    page.goto(f"{BASE_URL}/projects?page=1&sort_key=id&sort_dir=asc&house=All%20houses")
+    expect(page.locator("#pagination-status")).to_contain_text("Page 1 of")
+    next_button = page.locator("#pagination-next")
+    prev_button = page.locator("#pagination-prev")
+    expect(next_button).to_be_enabled()
+    expect(prev_button).to_be_disabled()
+
+    next_button.click()
+    expect(page.locator("#pagination-status")).to_contain_text("Page 2 of")
+    expect(prev_button).to_be_enabled()
+    params = parse_qs(urlparse(page.url).query)
+    assert params.get("page", [""])[0] == "2"
+
+    prev_button.click()
+    expect(page.locator("#pagination-status")).to_contain_text("Page 1 of")
+    expect(prev_button).to_be_disabled()
+
+
+def test_manage_projects_back_forward_restores_filter_and_sort(page):
+    go_to_manage_residents(page)
+    houses = get_house_options(page)
+    selected_house = houses[1] if len(houses) > 1 else houses[0]
+
+    house_filter = page.locator("#manage-house-filter")
+    house_filter.select_option(selected_house)
+    params = parse_qs(urlparse(page.url).query)
+    assert params.get("house", [""])[0] == selected_house
+
+    name_sort = page.locator("button.table-sort[data-sort='name']")
+    name_header = name_sort.locator("xpath=ancestor::th[1]")
+    name_sort.click()
+    expect(name_header).to_have_attribute("aria-sort", "ascending")
+    url_after_name_sort = page.url
+
+    archived_sort = page.locator("button.table-sort[data-sort='archived']")
+    archived_header = archived_sort.locator("xpath=ancestor::th[1]")
+    archived_sort.click()
+    expect(archived_header).to_have_attribute("aria-sort", "ascending")
+
+    page.go_back()
+    expect(page).to_have_url(url_after_name_sort)
+    expect(name_header).to_have_attribute("aria-sort", "ascending")
+    expect(house_filter).to_have_value(selected_house)
+
+    page.go_forward()
+    expect(archived_header).to_have_attribute("aria-sort", "ascending")
+    expect(house_filter).to_have_value(selected_house)
