@@ -9,6 +9,20 @@ This matrix summarizes what our automated tests currently cover and how to run t
 - HTTP tests: `python3 -m pytest tests/http -q`
 - Task-runner shortcuts: `./pnl test e2e`, `./pnl test http`, `./pnl test`
 
+## Troubleshooting: all tests show `E`
+If nearly every E2E test reports `E`, treat it as environment/setup failure first.
+
+Typical causes:
+- App server is down or unreachable at `E2E_BASE_URL`.
+- App needs restart after `.env` feature-flag changes.
+- Playwright browser binaries are not installed.
+
+Quick triage:
+- `./start.sh` (separate terminal)
+- `curl -I http://127.0.0.1:8000/welcome`
+- `python -m playwright install`
+- `python3 -m pytest tests/e2e -x -vv -rs`
+
 ## E2E Coverage By Feature
 
 | Area | Test files | Key behaviors covered |

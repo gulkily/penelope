@@ -58,6 +58,23 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 7. Optional: loop tests with `./pnl test --loop 10 --workers 2` or `python scripts/run_e2e_loop.py 10 --workers 2`.
 8. If `.env` feature flags change (for example `NAVBAR_ENABLED_ITEMS` / `LOBBY_AUTH_ENABLED`), restart the app before running tests.
 
+### Troubleshooting: every E2E test shows `E`
+If output looks like all tests erroring (`E`) instead of failing (`F`), it is usually setup/bootstrap, not feature logic.
+
+Common causes:
+- Server is not running (or not reachable at `E2E_BASE_URL`).
+- Server was started before `.env` changes and needs restart.
+- Playwright browser binaries are missing.
+- Running direct `pytest` with env mismatch while server uses different env.
+
+Quick checks:
+- Start server in another terminal: `./start.sh`
+- Check app is reachable: `curl -I http://127.0.0.1:8000/welcome`
+- Reinstall browsers if needed: `python -m playwright install`
+- Re-run with setup details and first-error stop:
+  - `python3 -m pytest tests/e2e -x -vv -rs`
+  - or `./pnl test e2e`
+
 ## Generate test audio
 Generate a long WAV fixture from a transcript script using Dedalus Labs TTS:
 - `python scripts/generate_test_audio.py --script-path tests/fixtures/transcripts/long_conversation_15min_all_fields_script.txt --output-path tests/fixtures/audio/long_conversation_15min_all_fields.wav`
