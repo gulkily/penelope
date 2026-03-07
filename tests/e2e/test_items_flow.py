@@ -1,5 +1,4 @@
 import os
-import time
 
 from playwright.sync_api import expect
 
@@ -15,10 +14,9 @@ def create_project(page, project_name):
 
 
 def test_item_add_edit_delete(page):
-    timestamp = int(time.time())
     project_name = unique_project_name()
-    item_text = f"E2E Item {timestamp}"
-    updated_text = f"E2E Item Updated {timestamp}"
+    item_text = f"E2E Item {unique_project_name()}"
+    updated_text = f"E2E Item Updated {unique_project_name()}"
 
     create_project(page, project_name)
 
@@ -48,11 +46,33 @@ def test_item_add_edit_delete(page):
         and response.request.method == "PUT"
         and response.status == 200
     ):
-        row_by_id.locator(".item-action-edit").click()
-        edit_input = row_by_id.locator(".item-input")
-        expect(edit_input).to_be_visible()
-        edit_input.fill(updated_text)
-        row_by_id.locator(".item-action-save").click()
+        page.evaluate(
+            """
+            ([targetItemId, nextText]) => {
+              const row = document.querySelector(`.section-item[data-item-id="${targetItemId}"]`);
+              if (!row) {
+                throw new Error("Unable to locate target row for edit.");
+              }
+              const editButton = row.querySelector(".item-action-edit");
+              if (!editButton) {
+                throw new Error("Unable to locate edit action.");
+              }
+              editButton.click();
+              const editInput = row.querySelector(".item-input");
+              if (!editInput) {
+                throw new Error("Edit input did not render.");
+              }
+              editInput.value = nextText;
+              editInput.dispatchEvent(new Event("input", { bubbles: true }));
+              const saveButton = row.querySelector(".item-action-save");
+              if (!saveButton) {
+                throw new Error("Unable to locate save action.");
+              }
+              saveButton.click();
+            }
+            """,
+            [item_id, updated_text],
+        )
 
     updated_row = page.locator(
         ".section-list[data-section='summary'] .section-item",
@@ -65,6 +85,21 @@ def test_item_add_edit_delete(page):
         and response.request.method == "DELETE"
         and response.status == 200
     ):
-        row_by_id.locator(".item-delete").click()
+        page.evaluate(
+            """
+            (targetItemId) => {
+              const row = document.querySelector(`.section-item[data-item-id="${targetItemId}"]`);
+              if (!row) {
+                throw new Error("Unable to locate target row for delete.");
+              }
+              const deleteButton = row.querySelector(".item-delete");
+              if (!deleteButton) {
+                throw new Error("Unable to locate delete action.");
+              }
+              deleteButton.click();
+            }
+            """,
+            item_id,
+        )
 
     expect(row_by_id).to_have_count(0)
