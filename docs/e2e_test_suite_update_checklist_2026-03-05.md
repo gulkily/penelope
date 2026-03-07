@@ -18,6 +18,14 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - `tests/e2e/test_manage_projects_controls.py::test_manage_projects_house_update_persists`
 - `tests/e2e/test_manage_projects_controls.py::test_manage_projects_house_filter_syncs_url_and_rows`
 - `tests/e2e/test_manage_projects_controls.py::test_manage_projects_name_sort_updates_url`
+- `tests/e2e/test_auth_and_settings_pages.py::test_unauthenticated_projects_redirects_to_session_reset`
+- `tests/e2e/test_auth_and_settings_pages.py::test_unauthenticated_api_projects_returns_401`
+- `tests/e2e/test_auth_and_settings_pages.py::test_welcome_page_renders_unauthenticated`
+- `tests/e2e/test_auth_and_settings_pages.py::test_settings_route_access_behavior`
+- `tests/e2e/test_auth_and_settings_pages.py::test_logout_from_settings_redirects_to_lobby`
+- `tests/e2e/test_dashboard_graph_and_keyboard.py::test_progress_graph_toggle_shows_panel_and_empty_state`
+- `tests/e2e/test_dashboard_graph_and_keyboard.py::test_keyboard_reorder_moves_item_up`
+- `tests/e2e/test_dashboard_graph_and_keyboard.py::test_escape_cancels_item_edit`
 
 ## 1. Stabilize the test harness first
 - [x] Add deterministic auth bootstrap fixture for admin session cookie injection.
@@ -34,8 +42,8 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - [x] Update resident creation selectors (`Resident name`, `Add resident`, required house selection).
 - [x] Update progress assertions from percent-only text to current unit format (`x / goal`).
 - [x] Update project naming assumptions to resident naming.
-- [ ] Remove duplicated create-resident helper logic into one shared helper.
-- [ ] Verify all existing tests pass under current auth middleware and role rendering rules.
+- [x] Remove duplicated create-resident helper logic into one shared helper.
+- [x] Verify all existing tests pass under current auth middleware and role rendering rules.
 
 ## 3. Add missing dashboard coverage (`/`)
 - [ ] Authenticated load with no resident selected (empty state and disabled controls). Existing baseline page-load check: `test_dashboard_loads`.
@@ -47,12 +55,12 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - [ ] Objective autosave and persistence. Existing test: `test_can_create_project_and_update_north_star`.
 - [ ] Goal autosave and slider max recalculation.
 - [ ] Progress slider update + persistence + display correctness. Existing baseline test: `test_can_create_project_and_update_north_star`.
-- [ ] Progress graph toggle and progress-history rendering.
+- [x] Progress graph toggle and progress-history rendering.
 - [ ] Inline add in all four sections (summary/challenges/opportunities/milestones). Existing broad add coverage: `test_populates_all_fields`.
 - [ ] Item edit/save/cancel behavior. Existing summary-item flow: `test_item_add_edit_delete`.
-- [ ] Item delete + undo toast restore path. Existing delete (without undo assertion): `test_item_add_edit_delete`.
-- [ ] Item reorder via up/down buttons.
-- [ ] Item reorder via keyboard (`ArrowUp`/`ArrowDown` on drag handle).
+- [x] Item delete + undo toast restore path.
+- [x] Item reorder via up/down buttons.
+- [x] Item reorder via keyboard (`ArrowUp`/`ArrowDown` on drag handle).
 - [ ] Item reorder via pointer drag.
 - [ ] Keyboard behavior (Enter submit, Shift+Enter newline, Escape cancel).
 
@@ -78,26 +86,26 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - [ ] `RECORDER_ENABLED=false` hides/disables recorder UI appropriately.
 
 ## 6. Add resident management coverage (`/projects`)
-- [ ] Create resident with house. Existing coverage in multiple tests including `test_can_create_project_and_update_north_star`.
-- [ ] Archive/unarchive resident. Existing test: `test_archive_unarchive_project`.
-- [ ] Change resident house inline.
-- [ ] House filter on table.
+- [x] Create resident with house. Existing coverage in multiple tests including `test_can_create_project_and_update_north_star`.
+- [x] Archive/unarchive resident. Existing test: `test_archive_unarchive_project`.
+- [x] Change resident house inline.
+- [x] House filter on table.
 - [ ] Sort by ID/name/archived.
 - [ ] Pagination prev/next and status text.
 - [ ] URL sync for page/sort/house and back/forward behavior.
 
 ## 7. Add auth/session flow coverage
-- [ ] Unauthenticated access redirects to `/session/reset` with normalized `next`.
+- [x] Unauthenticated access redirects to `/session/reset` with normalized `next`.
 - [ ] `/session/reset` success restore redirects to requested route.
 - [ ] `/session/reset` failure redirects to `/welcome`.
-- [ ] `/welcome` unauthenticated rendering.
+- [x] `/welcome` unauthenticated rendering.
 - [ ] `/welcome?token=...` lobby handoff behavior.
 - [ ] `/lobby` rendering when lobby auth disabled.
 - [ ] `/lobby?token=...` behavior when lobby auth disabled but token flow allowed.
-- [ ] Logout button clears session and redirects to `/lobby`.
+- [x] Logout button clears session and redirects to `/lobby`.
 
 ## 8. Add settings/admin-page coverage
-- [ ] `/settings` admin-only access behavior.
+- [x] `/settings` admin-only access behavior.
 - [ ] Backup download button success path and failure message.
 - [ ] `/settings/magic-links` generate/copy/revoke flow.
 - [ ] Magic-link house prefill from existing user.

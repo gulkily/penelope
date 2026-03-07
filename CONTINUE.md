@@ -3,16 +3,27 @@
 ## Branch
 - `fix/e2e-test-suite-refresh`
 
+## Session Rules (Persistent)
+- Work unattended; do not pause for prompt-by-prompt confirmation.
+- Continue until checklist completion and all work is committed by feature.
+- Design tests to avoid stalling/hanging.
+- Actually run tests locally after changes (do not leave as unverified).
+- Keep these rules in this file for the duration of the session.
+
 ## Current Status
-- Baseline suite reported green by user.
-- New tests added but not yet user-verified:
+- Full E2E run is green after coverage expansion.
+- Last full run command: `./pnl test e2e`
+- Last result: `23 passed in 25.48s`
+- New coverage files added:
+  - `tests/e2e/test_auth_and_settings_pages.py`
+  - `tests/e2e/test_dashboard_graph_and_keyboard.py`
   - `tests/e2e/test_dashboard_interactions.py`
   - `tests/e2e/test_manage_projects_controls.py`
+  - `tests/e2e/helpers.py`
 
 ## Immediate Next Run
-1. `python3 -m pytest tests/e2e/test_dashboard_interactions.py -q`
-2. `python3 -m pytest tests/e2e/test_manage_projects_controls.py -q`
-3. `./pnl test e2e`
+1. `./pnl test e2e`
+2. Continue implementing unchecked checklist items.
 
 ## Execution Loop
 1. Take first failing test only.
