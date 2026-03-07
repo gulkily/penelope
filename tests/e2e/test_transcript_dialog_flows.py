@@ -1,5 +1,6 @@
 import os
 import re
+import time
 
 import pytest
 from playwright.sync_api import expect
@@ -193,4 +194,80 @@ def test_transcript_analyze_error_and_offline_states(page):
     page.locator("#transcript-analyze").click()
     expect(page.locator("#transcript-status")).to_have_text(
         "You're offline. We'll keep your transcript so you can retry when connected."
+    )
+
+
+def test_transcript_analyze_timeout_state(page):
+    page.add_init_script(
+        """
+        (() => {
+          const originalSetTimeout = window.setTimeout.bind(window);
+          window.setTimeout = (handler, timeout, ...args) => {
+            if (timeout === 45000) {
+              return originalSetTimeout(handler, 50, ...args);
+            }
+            return originalSetTimeout(handler, timeout, ...args);
+          };
+        })();
+        """
+    )
+
+    project_id = create_resident(page, BASE_URL, unique_project_name())
+    open_dashboard_project(page, BASE_URL, project_id)
+
+    def delayed_transcript(route):
+        time.sleep(0.2)
+        route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"proposal":{"objective":"Should timeout before this arrives"}}',
+        )
+
+    page.route(f"**/api/projects/{project_id}/transcript", delayed_transcript)
+
+    open_add_update_dialog(page)
+    page.locator("#transcript-input").fill("Transcript timeout check")
+    page.locator("#transcript-analyze").click()
+    expect(page.locator("#transcript-status")).to_have_text(
+        "Analysis timed out on a slow connection. Try again when ready."
+    )
+
+
+def test_questions_regeneration_error_status_after_apply(page):
+    project_id = create_resident(page, BASE_URL, unique_project_name())
+    open_dashboard_project(page, BASE_URL, project_id)
+
+    page.route(
+        f"**/api/projects/{project_id}/transcript",
+        lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"proposal":{"objective":"Objective for regen error"}}',
+        ),
+    )
+    page.route(
+        f"**/api/projects/{project_id}/questions/regenerate",
+        lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"job_id":"job-error","status":"queued"}',
+        ),
+    )
+    page.route(
+        f"**/api/projects/{project_id}/questions/regeneration/job-error",
+        lambda route: route.fulfill(
+            status=200,
+            content_type="application/json",
+            body='{"job_id":"job-error","status":"error","error":"mock regeneration failure"}',
+        ),
+    )
+
+    open_add_update_dialog(page)
+    page.locator("#transcript-input").fill("Transcript for regeneration error state.")
+    page.locator("#transcript-analyze").click()
+    expect(page.locator("#transcript-apply")).to_be_enabled()
+    page.locator("#transcript-apply").click()
+    expect(page.locator("#transcript-dialog")).to_be_hidden()
+    expect(page.locator("#questions-status")).to_have_text(
+        "Questions refresh failed: mock regeneration failure"
     )

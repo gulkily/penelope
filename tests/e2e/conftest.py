@@ -46,7 +46,10 @@ def e2e_base_url() -> str:
 
 
 @pytest.fixture(scope="session", autouse=True)
-def ensure_e2e_server_is_reachable(e2e_base_url: str) -> None:
+def ensure_e2e_server_is_reachable(
+    e2e_base_url: str,
+    e2e_admin_account_id: int,
+) -> None:
     try:
         with urlopen(f"{e2e_base_url}/welcome", timeout=5) as response:
             status = getattr(response, "status", 200)
@@ -59,6 +62,21 @@ def ensure_e2e_server_is_reachable(e2e_base_url: str) -> None:
             f"E2E target is unreachable at {e2e_base_url}. "
             "Start the app before running tests."
         ) from exc
+
+    admin_cookie = auth._encode_cookie(e2e_admin_account_id)
+    from urllib.request import Request  # local import to keep module imports tidy
+
+    request = Request(
+        f"{e2e_base_url}/",
+        headers={"Cookie": f"{auth.COOKIE_NAME}={admin_cookie}"},
+    )
+    with urlopen(request, timeout=5) as dashboard_response:
+        dashboard_status = getattr(dashboard_response, "status", 200)
+        if dashboard_status >= 400:
+            raise RuntimeError(
+                "E2E authenticated bootstrap check failed: "
+                f"GET / returned {dashboard_status} with admin session cookie."
+            )
 
 
 @pytest.fixture(scope="session")

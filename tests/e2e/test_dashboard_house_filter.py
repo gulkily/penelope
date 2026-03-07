@@ -32,6 +32,17 @@ def test_dashboard_house_filter_syncs_url_storage_and_resident_options(page):
     stored_house_filter = page.evaluate("() => localStorage.getItem('houseFilter')")
     assert stored_house_filter == house_a
 
+    page.wait_for_function(
+        """
+        (excludedId) => {
+          const options = Array.from(document.querySelectorAll("#project-select option"))
+            .map((option) => option.value)
+            .filter((value) => Boolean(value));
+          return !options.includes(excludedId);
+        }
+        """,
+        arg=str(project_b["id"]),
+    )
     resident_option_values = page.evaluate(
         """
         () => Array.from(document.querySelectorAll("#project-select option"))

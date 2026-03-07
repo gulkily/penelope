@@ -67,12 +67,20 @@ def test_large_audio_upload_uses_chunked_path(page):
 
     def handle_chunk(route):
         calls["chunk"] += 1
+        if calls["chunk"] <= 2:
+            route.fulfill(
+                status=500,
+                content_type="application/json",
+                body='{"detail":"retry please"}',
+            )
+            return
+        received_chunks = calls["chunk"] - 2
         route.fulfill(
             status=200,
             content_type="application/json",
             body=(
                 '{"upload_id":"upload-e2e",'
-                f'"status":"uploading","received_chunks":{calls["chunk"]},"total_chunks":6'
+                f'"status":"uploading","received_chunks":{received_chunks},"total_chunks":6'
                 "}"
             ),
         )
@@ -101,7 +109,7 @@ def test_large_audio_upload_uses_chunked_path(page):
     expect(page.locator("#upload-status")).to_have_text("Transcript ready.")
     expect(page.locator("#transcript-input")).to_have_value("Chunked upload transcript")
     assert calls["create"] == 1
-    assert calls["chunk"] >= 2
+    assert calls["chunk"] > 6
     assert calls["complete"] == 1
 
 
