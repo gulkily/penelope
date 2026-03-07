@@ -26,6 +26,9 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - `tests/e2e/test_dashboard_graph_and_keyboard.py::test_progress_graph_toggle_shows_panel_and_empty_state`
 - `tests/e2e/test_dashboard_graph_and_keyboard.py::test_keyboard_reorder_moves_item_up`
 - `tests/e2e/test_dashboard_graph_and_keyboard.py::test_escape_cancels_item_edit`
+- `tests/e2e/test_dashboard_selection_and_dialog.py::test_dashboard_empty_state_before_selection`
+- `tests/e2e/test_dashboard_selection_and_dialog.py::test_project_query_param_loads_selected_resident`
+- `tests/e2e/test_dashboard_selection_and_dialog.py::test_add_update_dialog_open_close_and_g_shortcut`
 
 ## 1. Stabilize the test harness first
 - [x] Add deterministic auth bootstrap fixture for admin session cookie injection.
@@ -46,8 +49,8 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - [x] Verify all existing tests pass under current auth middleware and role rendering rules.
 
 ## 3. Add missing dashboard coverage (`/`)
-- [ ] Authenticated load with no resident selected (empty state and disabled controls). Existing baseline page-load check: `test_dashboard_loads`.
-- [ ] Resident selection by dropdown and by `?project=` URL parameter.
+- [x] Authenticated load with no resident selected (empty state and disabled controls). Existing baseline page-load check: `test_dashboard_loads`.
+- [x] Resident selection by dropdown and by `?project=` URL parameter.
 - [ ] Admin house filter behavior, including localStorage persistence and URL sync.
 - [ ] Non-admin resident scoping by assigned house.
 - [ ] Summary field editable for admin, read-only rendering for non-admin.
@@ -65,11 +68,11 @@ Current suite is in `tests/e2e`, but app behavior now depends on auth/session, r
 - [ ] Keyboard behavior (Enter submit, Shift+Enter newline, Escape cancel).
 
 ## 4. Add transcript/update-dialog coverage
-- [ ] Open/close Add Update dialog. Existing dialog usage in interview-guide tests.
+- [x] Open/close Add Update dialog. Existing dialog usage in interview-guide tests.
 - [ ] Transcript draft autosave/restore/clear per resident.
-- [ ] Interview guide load/toggle. Existing tests: `test_interview_guide_checklist_progress_updates`, `test_interview_guide_mobile_drawer_closes_on_backdrop`.
-- [ ] Interview guide keyboard shortcut (`g`) behavior.
-- [ ] Interview guide mobile drawer/backdrop close behavior. Existing test: `test_interview_guide_mobile_drawer_closes_on_backdrop`.
+- [x] Interview guide load/toggle. Existing tests: `test_interview_guide_checklist_progress_updates`, `test_interview_guide_mobile_drawer_closes_on_backdrop`.
+- [x] Interview guide keyboard shortcut (`g`) behavior.
+- [x] Interview guide mobile drawer/backdrop close behavior. Existing test: `test_interview_guide_mobile_drawer_closes_on_backdrop`.
 - [ ] Analyze transcript success path (mocked backend response).
 - [ ] Analyze transcript offline/error/timeout states.
 - [ ] Suggested updates render and selectable apply logic.
