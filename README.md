@@ -50,6 +50,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 3. Run tests:
    - `pytest tests/e2e` (browser-driven E2E)
    - `pytest tests/e2e --browser firefox` (run E2E with Firefox)
+   - `pytest tests/e2e -m prod_smoke -v -rs --maxfail=1` (safe read-only smoke checks for production-like targets)
    - `pytest tests/http` (HTTP-level integration)
    - `pytest` (all tests)
 4. Optional: set `E2E_BASE_URL` to point at a non-default server.
@@ -58,6 +59,7 @@ This project provides a lightweight FastAPI + vanilla HTML/CSS/JS dashboard for 
 6. Optional: run in parallel with `pytest -n 4` or `./pnl test --workers 4` (uses the current database).
 7. Optional: loop tests with `./pnl test --loop 10 --workers 2` or `python scripts/run_e2e_loop.py 10 --workers 2`.
 8. If `.env` feature flags change (for example `NAVBAR_ENABLED_ITEMS` / `LOBBY_AUTH_ENABLED`), restart the app before running tests.
+9. For staging setup guidance and prod-smoke workflow, see `docs/staging_e2e_setup.md`.
 
 ### Troubleshooting: every E2E test shows `E`
 If output looks like all tests erroring (`E`) instead of failing (`F`), it is usually setup/bootstrap, not feature logic.

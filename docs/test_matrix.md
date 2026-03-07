@@ -5,6 +5,7 @@ This matrix summarizes what our automated tests currently cover and how to run t
 ## Run Commands
 - Full E2E suite (Chromium): `python3 -m pytest tests/e2e -q`
 - Full E2E suite (Firefox): `python3 -m pytest tests/e2e --browser firefox -q`
+- Prod-safe smoke subset: `python3 -m pytest tests/e2e -m prod_smoke -v -rs --maxfail=1`
 - Single E2E test with readable progress + skip reason: `python3 -m pytest tests/e2e/test_magic_links_and_lobby_badge.py::test_lobby_badge_indicator_updates_with_pending_count -v -rs --maxfail=1`
 - HTTP tests: `python3 -m pytest tests/http -q`
 - Task-runner shortcuts: `./pnl test e2e`, `./pnl test http`, `./pnl test`
@@ -36,6 +37,7 @@ Quick triage:
 | Manage residents | `tests/e2e/test_manage_projects_controls.py`, `tests/e2e/test_archive_project.py` | House update/filter, id/name/archived sorting, pagination, URL/back-forward sync, archive/unarchive. |
 | Settings/admin pages | `tests/e2e/test_auth_and_settings_pages.py`, `tests/e2e/test_settings_subpages_and_theme.py`, `tests/e2e/test_magic_links_and_lobby_badge.py` | Admin page access patterns, backup success/failure status, version/session metadata, magic-link house prefill, lobby badge indicator. |
 | Session/lobby routes | `tests/e2e/test_session_and_lobby_flows.py` | `/session/reset` redirect/restore/failure flow, `/welcome` + token handoff, `/lobby` token handoff behavior. |
+| Production-safe smoke | `tests/e2e/test_prod_smoke.py` | Read-only reachability/auth-gate checks safe for production-like targets. |
 | Theme | `tests/e2e/test_theme_toggle.py`, `tests/e2e/test_settings_subpages_and_theme.py` | Theme cycle and cross-page persistence checks. |
 
 ## HTTP Coverage

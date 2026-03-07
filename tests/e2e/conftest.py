@@ -7,6 +7,8 @@ import pytest
 
 from app import auth, db
 
+LOCAL_E2E_HOSTS = {"127.0.0.1", "localhost"}
+
 
 def _resolve_base_url() -> str:
     return os.getenv("E2E_BASE_URL", "http://127.0.0.1:8000").rstrip("/")
@@ -32,17 +34,15 @@ def _pick_non_admin_username() -> str | None:
     return None
 
 
-@pytest.fixture(scope="session")
-def e2e_base_url() -> str:
-    base_url = _resolve_base_url()
+def _is_local_e2e_target(base_url: str) -> bool:
     parsed = urlparse(base_url)
     host = (parsed.hostname or "").lower()
-    if host not in {"127.0.0.1", "localhost"}:
-        raise RuntimeError(
-            "E2E auth fixture currently supports local servers only "
-            "(set E2E_BASE_URL to http://127.0.0.1:8000 or http://localhost:8000)."
-        )
-    return base_url
+    return host in LOCAL_E2E_HOSTS
+
+
+@pytest.fixture(scope="session")
+def e2e_base_url() -> str:
+    return _resolve_base_url()
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -63,20 +63,22 @@ def ensure_e2e_server_is_reachable(
             "Start the app before running tests."
         ) from exc
 
-    admin_cookie = auth._encode_cookie(e2e_admin_account_id)
-    from urllib.request import Request  # local import to keep module imports tidy
+    # Auth-cookie bootstrap checks are only deterministic for local E2E targets.
+    if _is_local_e2e_target(e2e_base_url):
+        admin_cookie = auth._encode_cookie(e2e_admin_account_id)
+        from urllib.request import Request  # local import to keep module imports tidy
 
-    request = Request(
-        f"{e2e_base_url}/",
-        headers={"Cookie": f"{auth.COOKIE_NAME}={admin_cookie}"},
-    )
-    with urlopen(request, timeout=5) as dashboard_response:
-        dashboard_status = getattr(dashboard_response, "status", 200)
-        if dashboard_status >= 400:
-            raise RuntimeError(
-                "E2E authenticated bootstrap check failed: "
-                f"GET / returned {dashboard_status} with admin session cookie."
-            )
+        request = Request(
+            f"{e2e_base_url}/",
+            headers={"Cookie": f"{auth.COOKIE_NAME}={admin_cookie}"},
+        )
+        with urlopen(request, timeout=5) as dashboard_response:
+            dashboard_status = getattr(dashboard_response, "status", 200)
+            if dashboard_status >= 400:
+                raise RuntimeError(
+                    "E2E authenticated bootstrap check failed: "
+                    f"GET / returned {dashboard_status} with admin session cookie."
+                )
 
 
 @pytest.fixture(scope="session")
@@ -126,20 +128,35 @@ def set_session_account(page, e2e_base_url: str):
 
 @pytest.fixture(autouse=True)
 def authenticated_admin_page(
-    page,
+    request,
     e2e_admin_account_id: int,
-    set_session_account,
+    e2e_base_url: str,
 ) -> None:
+    if request.node.get_closest_marker("prod_smoke"):
+        return
+    if not _is_local_e2e_target(e2e_base_url):
+        raise RuntimeError(
+            "Full E2E suite with injected auth cookie supports local targets only. "
+            "Run against local/staging on localhost, or use `-m prod_smoke` for remote checks."
+        )
+    request.getfixturevalue("page")
+    set_session_account = request.getfixturevalue("set_session_account")
     # Inject a signed session cookie before each test so routes behind auth load normally.
     set_session_account(e2e_admin_account_id)
 
 
 @pytest.fixture
 def authenticated_non_admin_page(
+    request,
     page,
     e2e_non_admin_account_id: int | None,
+    e2e_base_url: str,
     set_session_account,
 ):
+    if request.node.get_closest_marker("prod_smoke"):
+        pytest.skip("Non-admin auth fixture is not used for prod_smoke tests.")
+    if not _is_local_e2e_target(e2e_base_url):
+        pytest.skip("Non-admin auth fixture requires a local E2E target.")
     if e2e_non_admin_account_id is None:
         pytest.skip(
             "Non-admin E2E fixture requires MAGIC_LINK_ADMIN_USERNAMES "
