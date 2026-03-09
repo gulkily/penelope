@@ -57,6 +57,7 @@ Each folder groups Step 1-4 planning artifacts for a single feature.
 - `screen_space_utilization/`
 - `settings_rollout_graceful_error_handling/`
 - `settings_version_visibility/`
+- `supabase_backend_transition/`
 - `test_matrix_gaps/`
 - `test_suite_transcript_transcription/`
 - `transcript_ai_questions_autorefresh/`
